@@ -325,8 +325,16 @@ with the mismatch shown.
 
 Builds are deterministic given fixed inputs; `make determinism` proves two
 builds are byte-identical. Dependencies are locked. Canonical table checksums
-are recorded in the release manifest, and CI fails if a committed artifact no
-longer matches its inputs. No secret appears in the repository, and a test
+are recorded in the release manifest, and `make check-stale` — run in CI — fails
+if a committed artifact no longer matches what the committed inputs produce.
+
+That check deliberately ignores four **build-time stamps**: `code_commit`,
+`repository_commit`, `release_date` and `generated_at`. They record when and
+where a build ran, not what it consumed. `code_commit` is also self-referential
+— the manifest records HEAD, and committing the manifest moves HEAD — so a
+plain `git diff` after a rebuild could never pass, and a check that cannot pass
+is a check people learn to ignore. Everything else must match exactly, and a
+test asserts the exclusion list stays limited to those four. No secret appears in the repository, and a test
 scans tracked files for credential patterns.
 
 The release manifest records the release id and date, code commit, schema,

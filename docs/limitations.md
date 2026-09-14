@@ -210,6 +210,12 @@ Stated so a reviewer does not have to find them.
    `--frozen-time`. Real builds stamp the actual time, so two production builds
    differ in that field by design. Everything else is byte-stable.
 
+   Relatedly, the staleness check (`make check-stale`) excludes four build-time
+   stamps — `code_commit`, `repository_commit`, `release_date`, `generated_at`.
+   Substantive drift in any of those four would not be caught. The exclusion is
+   unavoidable for `code_commit`, which is self-referential, and the list is
+   pinned by a test so it cannot quietly grow.
+
 5. **The audit's 500+ occupation claim is unresolved.** The brief listed a
    discrepancy between a 173-occupation dataset and a 500+ claim. No 500+ claim
    exists anywhere in this repository or its history. If one exists, it is on an

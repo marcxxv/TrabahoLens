@@ -298,6 +298,12 @@ def build_release_manifest(frozen_time: str | None) -> dict[str, Any]:
         "release_date": frozen_time or "unset",
         "generated_at": frozen_time or "unset",
         "code_commit": git_commit(),
+        "code_commit_note": (
+            "The commit the build ran at. It necessarily precedes the commit that "
+            "records it, because committing this manifest moves HEAD. Treat it as "
+            "'generated from this input state', not as a self-describing id. "
+            "`make check-stale` excludes it for the same reason."
+        ),
         "schema_version": SCHEMA_VERSION,
         "methodology_version": METHODOLOGY_VERSION,
         "exposure_rubric_version": RUBRIC_VERSION,

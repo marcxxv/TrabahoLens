@@ -10,7 +10,7 @@ make help                             # the full v2 pipeline
 
 Key targets: `make audit` · `fetch-data` · `build-metrics` · `score-exposure` ·
 `sensitivity` · `build-site` · `validate-release` · `test` · `check` ·
-`determinism`.
+`check-stale` · `determinism`.
 
 Run `make check && make test && make determinism` before committing. If you
 touched a canonical table, run `make build-release` and commit the regenerated
@@ -32,6 +32,7 @@ cites them line by line.
 | `v2/score_exposure.py` | Replicated task-exposure scoring harness |
 | `v2/exposure_analysis.py` | Stability and sensitivity report |
 | `v2/validate.py` | Release validation |
+| `v2/staleness.py` | Committed artifacts vs a fresh rebuild |
 | `v2/audit_baseline.py` | Profiles the archived v1 data |
 
 ## Non-negotiable rules

@@ -204,3 +204,55 @@ def test_env_files_are_ignored():
         ["git", "ls-files"], cwd=REPO_ROOT, capture_output=True, text=True, check=True
     ).stdout.split()
     assert ".env" not in tracked
+
+
+def test_staleness_check_passes_on_the_committed_tree():
+    from trabaholens.v2 import staleness
+
+    problems = staleness.check()
+    assert not problems, problems
+
+
+def test_staleness_check_ignores_build_time_stamps_only():
+    """It must catch real drift and ignore self-referential stamps.
+
+    `code_commit` records HEAD, and committing the artifact that holds it moves
+    HEAD. A staleness check that compared it would fail on every commit, which
+    is how a check gets ignored rather than fixed.
+    """
+    from trabaholens.v2 import staleness
+
+    base = {"code_commit": "abc", "release_date": "2026-01-01", "counts": {"occupations": 53}}
+    stamp_changed = {"code_commit": "def", "release_date": "1999-01-01", "counts": {"occupations": 53}}
+    substance_changed = {"code_commit": "abc", "release_date": "2026-01-01", "counts": {"occupations": 999}}
+
+    assert staleness.normalise(base) == staleness.normalise(stamp_changed)
+    assert staleness.normalise(base) != staleness.normalise(substance_changed)
+
+    difference = staleness._first_difference(
+        staleness.normalise(base), staleness.normalise(substance_changed)
+    )
+    assert difference and "counts.occupations" in difference
+
+
+def test_volatile_field_list_stays_minimal():
+    """Anything added here stops being checked, so the list must stay small."""
+    from trabaholens.v2 import staleness
+
+    assert staleness.VOLATILE_FIELDS == {
+        "code_commit", "repository_commit", "release_date", "generated_at",
+    }
+
+
+def test_staleness_check_does_not_discard_uncommitted_regeneration():
+    """Running the check must leave the working tree byte-identical.
+
+    An earlier version restored from git, which silently threw away a
+    legitimate rebuild that had not been committed yet.
+    """
+    from trabaholens.v2 import staleness
+
+    before = {path: path.read_bytes() for path in staleness.CHECKED_ARTIFACTS}
+    staleness.check()
+    after = {path: path.read_bytes() for path in staleness.CHECKED_ARTIFACTS}
+    assert before == after

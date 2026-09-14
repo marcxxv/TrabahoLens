@@ -7,7 +7,7 @@ PY := uv run python
 
 .PHONY: help audit fetch-data validate-raw build-crosswalk build-metrics \
         build-release score-exposure sensitivity validate-release build-site \
-        test check determinism all clean-generated
+        test check check-stale determinism all clean-generated
 
 help:
 	@echo "TrabahoLens v2"
@@ -24,6 +24,7 @@ help:
 	@echo "  make build-site       build-release + validate-release"
 	@echo "  make test             Run the test suite"
 	@echo "  make check            Compile sources and validate the release"
+	@echo "  make check-stale      Prove the committed artifacts match their inputs"
 	@echo "  make determinism      Prove two builds are byte-identical"
 	@echo "  make all              audit -> build -> validate -> test"
 
@@ -64,6 +65,12 @@ test:
 check:
 	$(PY) scripts/check.py
 
+# Build-time stamps (code_commit, release_date) are excluded: code_commit
+# records HEAD, and committing the artifact moves HEAD, so a plain diff after a
+# rebuild could never pass.
+check-stale:
+	$(PY) scripts/check_stale.py
+
 determinism:
 	@$(PY) scripts/build_release.py --frozen-time 2026-01-01T00:00:00Z >/dev/null
 	@sha256sum site/data.json data/release/manifest.json > /tmp/tl-build-1.sha
@@ -72,7 +79,7 @@ determinism:
 	@diff /tmp/tl-build-1.sha /tmp/tl-build-2.sha && echo "Deterministic: two builds are byte-identical."
 	@$(MAKE) --no-print-directory build-release
 
-all: audit build-metrics sensitivity build-site test
+all: audit build-metrics sensitivity build-site test check-stale
 
 clean-generated:
 	rm -rf data/raw

@@ -28,15 +28,12 @@ jobs:
       - name: Rebuild release
         run: make build-release
 
-      # A dirty tree here means a committed artifact no longer matches its
-      # inputs — the staleness that v1 had no way to detect.
+      # Compares the committed artifacts against a fresh rebuild, ignoring
+      # build-time stamps. `git status --porcelain` cannot be used here:
+      # code_commit records HEAD, and committing the manifest moves HEAD, so
+      # that check would fail on every commit regardless of staleness.
       - name: Fail on stale generated artifacts
-        run: |
-          if [ -n "$(git status --porcelain)" ]; then
-            echo "Generated artifacts are stale. Run 'make all' and commit the result."
-            git --no-pager diff --stat
-            exit 1
-          fi
+        run: make check-stale
 
       - name: Validate release
         run: make validate-release

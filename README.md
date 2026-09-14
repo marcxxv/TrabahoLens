@@ -85,6 +85,7 @@ make score-exposure MODEL=<provider/model-id>
 make sensitivity       # stability and sensitivity report
 make build-site        # release manifest + site payload, then validate
 make test              # validators, scoring harness, reproducibility
+make check-stale       # prove committed artifacts match their inputs
 make determinism       # prove two builds are byte-identical
 ```
 
