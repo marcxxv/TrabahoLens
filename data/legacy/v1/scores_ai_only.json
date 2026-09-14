@@ -1,0 +1,1040 @@
+[
+  {
+    "title": "Administrative Services Managers",
+    "exposure": 6,
+    "rationale": "Administrative services managers handle substantial document drafting, summarization, policy communication, and report preparation tasks that generative AI can accelerate or partially automate. In the Philippines, organizations adopting AI-enabled office suites can reduce manual coordination time, but managerial judgment and stakeholder handling remain essential.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Advertising and Promotions Managers",
+    "exposure": 6,
+    "rationale": "Advertising managers engage in strategic creative work that generative AI increasingly challenges through content generation, campaign ideation, and marketing copy production. While high-level strategic thinking remains human-driven, routine campaign elements and initial creative drafting are highly susceptible to LLM automation.",
+    "primary_risk_vector": "writing_automation"
+  },
+  {
+    "title": "Architectural and Engineering Managers",
+    "exposure": 6,
+    "rationale": "Architectural and engineering managers will experience significant AI disruption through generative design tools, automated project planning, and AI-assisted technical analysis. While strategic decision-making remains human-centric, routine planning, documentation, and technical documentation will be increasingly AI-augmented.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Biofuels Production Managers",
+    "exposure": 5,
+    "rationale": "Biofuels production management involves complex technical decision-making and operational oversight that requires domain-specific engineering knowledge. While generative AI can assist with data analysis, reporting, and procedural documentation, the core technical judgment and plant-specific optimization remain human-driven.",
+    "primary_risk_vector": "analysis_automation"
+  },
+  {
+    "title": "Biofuels/Biodiesel Technology and Product Development Managers",
+    "exposure": 5,
+    "rationale": "Biofuels research involves complex technical analysis and strategic decision-making that requires domain-specific scientific expertise. While generative AI can assist in literature review, experimental design documentation, and initial research synthesis, core technological innovation still demands human judgment and specialized knowledge.",
+    "primary_risk_vector": "analysis_automation"
+  },
+  {
+    "title": "Biomass Power Plant Managers",
+    "exposure": 5,
+    "rationale": "Biomass power plant managers require complex technical knowledge and site-specific operational judgment that current LLMs cannot fully replicate. However, generative AI will increasingly assist in operational planning, maintenance scheduling, and predictive analytics reporting.",
+    "primary_risk_vector": "analysis_automation"
+  },
+  {
+    "title": "Brownfield Redevelopment Specialists and Site Managers",
+    "exposure": 5,
+    "rationale": "Brownfield redevelopment requires complex spatial reasoning, site-specific technical knowledge, and regulatory compliance that current LLMs cannot fully replicate. However, AI will increasingly assist in environmental assessment, site mapping, contamination modeling, and regulatory documentation.",
+    "primary_risk_vector": "analysis_automation"
+  },
+  {
+    "title": "Computer and Information Systems Managers",
+    "exposure": 7,
+    "rationale": "Computer and Information Systems Managers handle strategic technology planning and coordination, which makes them vulnerable to generative AI's ability to synthesize complex technical recommendations and automate routine strategic analysis. While high-level strategic judgment remains human-driven, significant portions of documentation, technical scoping, and systems design can be AI-augmented or partially automated.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Farmers, Ranchers, and Other Agricultural Managers",
+    "exposure": 3,
+    "rationale": "Agricultural management involves complex physical tasks, localized knowledge, and site-specific decision-making that generative AI currently struggles to replicate. While AI can assist with planning and data analysis, the hands-on nature of farm management and contextual understanding of local agricultural conditions limits direct automation.",
+    "primary_risk_vector": "analysis_automation"
+  },
+  {
+    "title": "Food Service Managers",
+    "exposure": 5,
+    "rationale": "Food service managers handle complex operational tasks involving human interaction, menu planning, and customer service that are not fully automatable by current LLMs. However, AI will increasingly assist with scheduling, inventory management, and performance analytics.",
+    "primary_risk_vector": "analysis_automation"
+  },
+  {
+    "title": "Sales Managers",
+    "exposure": 5,
+    "rationale": "Sales managers involve strategic decision-making and relationship management that AI cannot fully replace, but generative AI will significantly transform sales analytics, territory planning, and performance reporting. LLMs can automate routine reporting, generate sales strategies, and provide predictive insights.",
+    "primary_risk_vector": "analysis_automation"
+  },
+  {
+    "title": "Security Managers",
+    "exposure": 4,
+    "rationale": "Security management involves complex situational judgment and physical risk assessment that generative AI cannot fully replicate. However, LLMs could assist in risk analysis, policy documentation, incident reporting, and strategic planning documentation.",
+    "primary_risk_vector": "analysis_automation"
+  },
+  {
+    "title": "Registered Nurses",
+    "exposure": 3,
+    "rationale": "Nursing requires complex physical and emotional interactions that generative AI cannot fully replicate. While documentation and administrative tasks may be partially automated, direct patient care, physical assessment, and empathetic communication remain human-centric.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Software Developers",
+    "exposure": 7,
+    "rationale": "Software development faces significant generative AI disruption through code generation tools like GitHub Copilot and GPT-based coding assistants that can auto-complete complex programming tasks. Large language models are increasingly capable of generating functional code across multiple programming languages, reducing manual coding effort.",
+    "primary_risk_vector": "code_generation"
+  },
+  {
+    "title": "Acute Care Nurses",
+    "exposure": 2,
+    "rationale": "Acute care nursing requires complex physical assessment, real-time clinical judgment, and direct patient interaction that generative AI cannot replicate. While AI might assist in documentation and diagnostic support, the core clinical work remains deeply human-dependent.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Advanced Practice Psychiatric Nurses",
+    "exposure": 5,
+    "rationale": "Advanced Practice Psychiatric Nurses require complex clinical judgment and therapeutic relationship skills that LLMs cannot fully replicate. However, AI will significantly augment diagnostic documentation, treatment planning, and initial patient screening processes.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Agricultural Sciences Teachers, Postsecondary",
+    "exposure": 5,
+    "rationale": "Agricultural science teaching involves complex domain knowledge and practical instruction that LLMs cannot fully replicate. However, generative AI will significantly transform lecture preparation, research literature review, curriculum design, and academic writing support.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Anthropology and Archeology Teachers, Postsecondary",
+    "exposure": 5,
+    "rationale": "Anthropology and archeology teaching involves complex interpretive work that AI cannot fully replicate, but generative AI will significantly impact research preparation, literature review, and initial analytical drafting. LLMs will augment rather than replace core scholarly work, particularly in research-intensive contexts.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Architecture Teachers, Postsecondary",
+    "exposure": 6,
+    "rationale": "Architecture teaching involves significant design critique, conceptual instruction, and complex spatial reasoning that generative AI can partially but not fully replace. AI tools like Midjourney and generative design platforms will augment teaching, but cannot fully substitute the nuanced pedagogical interaction and design critique required.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Area, Ethnic, and Cultural Studies Teachers, Postsecondary",
+    "exposure": 6,
+    "rationale": "Generative AI can significantly assist in research, literature review, and content generation for area studies, potentially automating substantial preparatory and analytical work. However, nuanced cultural interpretation and critical pedagogy still require human expertise and contextual understanding.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Art, Drama, and Music Teachers, Postsecondary",
+    "exposure": 5,
+    "rationale": "Postsecondary art instructors face moderate AI disruption, with generative AI tools capable of generating visual art, music compositions, and performance analysis, but unable to fully replace nuanced artistic pedagogy and human creative mentorship.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Atmospheric, Earth, Marine, and Space Sciences Teachers, Postsecondary",
+    "exposure": 5,
+    "rationale": "Postsecondary science teachers have complex knowledge work requiring deep domain expertise, but generative AI will increasingly assist in research literature review, grant writing, curriculum design, and academic paper drafting. LLMs are particularly strong in scientific writing and technical documentation.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Biological Science Teachers, Postsecondary",
+    "exposure": 5,
+    "rationale": "Postsecondary biology teachers face moderate AI disruption through automated lecture preparation, research literature synthesis, and curriculum design support. While domain expertise remains critical, generative AI can significantly augment research writing, grant proposals, and instructional material development.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Business Teachers, Postsecondary",
+    "exposure": 6,
+    "rationale": "Business education involves significant knowledge transfer and analysis that generative AI can increasingly automate through curriculum design, lecture preparation, research synthesis, and case study generation. LLMs are particularly strong in business domains with structured knowledge frameworks.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Career/Technical Education Teachers, Middle School",
+    "exposure": 5,
+    "rationale": "Middle school technical education teachers blend specialized domain knowledge with pedagogical skills, creating moderate AI exposure. Generative AI can assist lesson planning and curriculum development, but cannot fully replace contextual teaching and hands-on skill demonstration.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Career/Technical Education Teachers, Postsecondary",
+    "exposure": 5,
+    "rationale": "Postsecondary technical education teachers face moderate AI disruption, with generative AI potentially automating curriculum design, lesson planning, and skills assessment, but requiring human expertise for hands-on technical instruction and student mentorship.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Career/Technical Education Teachers, Secondary School",
+    "exposure": 5,
+    "rationale": "Career/Technical Education Teachers face moderate AI disruption, with generative AI capable of generating curriculum materials, lesson plans, and technical explanations, but requiring human pedagogical judgment and hands-on skill demonstration. LLMs can assist in content creation and lesson planning, but cannot fully replace interactive teaching and practical skills training.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Chemistry Teachers, Postsecondary",
+    "exposure": 5,
+    "rationale": "Chemistry teaching involves complex conceptual instruction and laboratory demonstration that AI cannot fully replicate, but generative AI can assist in curriculum design, lesson planning, problem set generation, and research literature review. LLMs will augment rather than replace postsecondary chemistry educators.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Clinical Nurse Specialists",
+    "exposure": 2,
+    "rationale": "Clinical Nurse Specialists require complex physical assessment, emotional intelligence, and direct patient interaction that generative AI cannot fully replicate. While AI might assist in documentation and protocol research, core clinical judgment and hands-on care remain human-dependent.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Communications Teachers, Postsecondary",
+    "exposure": 6,
+    "rationale": "Generative AI can significantly automate lecture preparation, research summaries, content writing, and draft communications materials. While domain expertise remains crucial, LLMs can handle substantial routine academic and professional communication tasks.",
+    "primary_risk_vector": "writing_automation"
+  },
+  {
+    "title": "Computer Hardware Engineers",
+    "exposure": 5,
+    "rationale": "Computer hardware engineers engage in complex design and testing tasks that require deep technical knowledge and physical prototyping, which limits full LLM automation. However, generative AI will significantly assist in design simulation, technical documentation, and preliminary engineering analysis.",
+    "primary_risk_vector": "analysis_automation"
+  },
+  {
+    "title": "Computer Network Architects",
+    "exposure": 6,
+    "rationale": "Network architects engage in complex design and strategic planning that requires deep technical judgment, but generative AI tools like GitHub Copilot and Claude are increasingly capable of network topology design, security configuration scripting, and infrastructure documentation.",
+    "primary_risk_vector": "code_generation"
+  },
+  {
+    "title": "Computer Programmers",
+    "exposure": 7,
+    "rationale": "Generative AI tools like GitHub Copilot and ChatGPT are already capable of generating significant code segments, automating routine programming tasks, and providing intelligent code completion. Philippine programmers will likely see substantial workflow transformation, with AI handling basic coding tasks while humans focus on complex system design and architectural challenges.",
+    "primary_risk_vector": "code_generation"
+  },
+  {
+    "title": "Computer Science Teachers, Postsecondary",
+    "exposure": 6,
+    "rationale": "Generative AI will significantly disrupt computer science education by automating code generation, providing instant technical explanations, and creating interactive learning modules. While human instructors remain critical for complex pedagogical interactions, AI will transform curriculum design and technical instruction.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Computer Systems Engineers/Architects",
+    "exposure": 7,
+    "rationale": "Computer Systems Engineers/Architects engage in complex design and integration tasks where generative AI can significantly augment code generation, system architecture modeling, and solution design. Large language models are increasingly capable of producing sophisticated architectural blueprints and solving complex technical problems.",
+    "primary_risk_vector": "code_generation"
+  },
+  {
+    "title": "Criminal Justice and Law Enforcement Teachers, Postsecondary",
+    "exposure": 5,
+    "rationale": "Criminal justice and law enforcement teaching involves complex knowledge transfer and contextual analysis that LLMs cannot fully replicate. However, AI will significantly transform lecture preparation, research assistance, case study generation, and administrative documentation.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Critical Care Nurses",
+    "exposure": 2,
+    "rationale": "Critical care nursing requires complex physical assessment, real-time clinical judgment, and direct patient interaction that generative AI cannot replicate. While AI might assist in documentation and data analysis, the core patient care tasks remain deeply human and require nuanced physical and emotional intelligence.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Economics Teachers, Postsecondary",
+    "exposure": 6,
+    "rationale": "Economics professors face significant AI disruption through automated research synthesis, lecture preparation, and analytical writing. Large language models can generate course materials, draft research papers, and provide complex economic modeling that challenges traditional teaching approaches.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Education Teachers, Postsecondary",
+    "exposure": 5,
+    "rationale": "Postsecondary education teachers have complex instructional tasks requiring nuanced domain expertise, but generative AI will increasingly support lesson planning, curriculum development, research assistance, and administrative documentation. LLMs will augment rather than fully replace pedagogical work, especially in specialized education domains.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Electronics Engineers, Except Computer",
+    "exposure": 5,
+    "rationale": "Electronics engineers have complex design tasks requiring domain-specific technical knowledge, but generative AI tools like GitHub Copilot and design synthesis models are increasingly capable of generating circuit schematics, simulation code, and technical documentation. LLMs will augment rather than fully replace engineering work in the Philippines.",
+    "primary_risk_vector": "code_generation"
+  },
+  {
+    "title": "Elementary School Teachers, Except Special Education",
+    "exposure": 4,
+    "rationale": "Elementary teachers require significant human interaction, emotional intelligence, and adaptive pedagogical skills that generative AI cannot fully replicate. However, AI will increasingly assist with lesson planning, curriculum design, student assessment, and administrative documentation.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Engineering Teachers, Postsecondary",
+    "exposure": 6,
+    "rationale": "Engineering teachers face significant AI disruption through automated curriculum development, research synthesis, and technical writing. Large language models can generate lecture materials, technical explanations, and research summaries, potentially reducing manual preparation time and standardizing instructional content.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "English Language and Literature Teachers, Postsecondary",
+    "exposure": 6,
+    "rationale": "Generative AI can produce academic essays, research summaries, and literary analysis with increasing sophistication, potentially automating significant portions of lesson preparation and student assignment evaluation. Philippine postsecondary English educators will likely use AI as a teaching augmentation tool while adapting curriculum to address AI-generated content.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Environmental Science Teachers, Postsecondary",
+    "exposure": 5,
+    "rationale": "Environmental science teaching involves complex knowledge transfer and research interpretation that AI cannot fully replicate, but generative AI will significantly augment lecture preparation, research synthesis, and curriculum development. LLMs can help generate teaching materials, draft research summaries, and provide supplementary explanatory content.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Family and Consumer Sciences Teachers, Postsecondary",
+    "exposure": 5,
+    "rationale": "Generative AI can assist in curriculum development, lesson planning, and research synthesis, but cannot fully replace the nuanced interpersonal and pedagogical skills required in postsecondary family and consumer sciences education. Complex domain knowledge and experiential learning components limit complete AI substitution.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Foreign Language and Literature Teachers, Postsecondary",
+    "exposure": 6,
+    "rationale": "Generative AI can produce lesson plans, translations, language learning materials, and even simulate conversational practice, directly challenging core teaching tasks. Advanced language models are increasingly capable of nuanced linguistic analysis and content generation across multiple languages.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Forestry and Conservation Science Teachers, Postsecondary",
+    "exposure": 5,
+    "rationale": "Forestry and conservation science teachers face moderate AI disruption through research assistance, literature review, and curriculum development support via generative AI. LLMs can help draft academic papers, generate research summaries, and provide pedagogical content, but cannot fully replace domain-specific expertise and field research.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Geography Teachers, Postsecondary",
+    "exposure": 5,
+    "rationale": "Generative AI can assist with lecture preparation, research synthesis, and content generation, but cannot fully replace the nuanced pedagogical skills and contextual knowledge required for geography instruction. Complex geospatial analysis and curriculum development still require human expertise and interpretative skills.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Health Specialties Teachers, Postsecondary",
+    "exposure": 6,
+    "rationale": "Health specialties teachers face significant AI disruption through automated lecture preparation, research synthesis, and curriculum design using large language models. While domain expertise remains critical, generative AI can dramatically reduce administrative and content creation workload.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "History Teachers, Postsecondary",
+    "exposure": 5,
+    "rationale": "Postsecondary history teachers face moderate AI disruption through research assistance, lecture preparation, and content generation tools. While domain expertise and critical interpretation remain human-driven, generative AI can significantly augment research, writing, and curriculum development processes.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Kindergarten Teachers, Except Special Education",
+    "exposure": 3,
+    "rationale": "Kindergarten teaching requires significant emotional intelligence, interpersonal interaction, and developmental nuance that generative AI cannot fully replicate. While AI might assist with lesson planning and administrative tasks, the core pedagogical work of nurturing young children demands human presence and adaptive emotional responsiveness.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Law Teachers, Postsecondary",
+    "exposure": 6,
+    "rationale": "Law teachers face significant AI disruption through legal research automation, case analysis generation, and curriculum content synthesis. While complex legal reasoning remains challenging for LLMs, routine lecture preparation, research summaries, and academic writing can be substantially augmented or partially automated.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Library Science Teachers, Postsecondary",
+    "exposure": 6,
+    "rationale": "Library science teaching involves significant research, writing, and curriculum development tasks that generative AI can increasingly automate. LLMs can generate syllabi, research summaries, and instructional materials, potentially reducing the manual workload of postsecondary library science educators.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Licensed Practical and Licensed Vocational Nurses",
+    "exposure": 2,
+    "rationale": "Licensed practical nurses perform hands-on physical care tasks requiring direct human interaction, tactile assessment, and complex situational judgment that generative AI cannot currently replicate. Physical patient care involves nuanced emotional intelligence and precise motor skills beyond current LLM capabilities.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Middle School Teachers, Except Special and Career/Technical Education",
+    "exposure": 5,
+    "rationale": "Middle school teachers face moderate AI disruption, with lesson planning, content creation, and basic instructional materials increasingly automatable by generative AI. However, direct student interaction, classroom management, and nuanced pedagogical judgment remain human-centric.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Nurse Anesthetists",
+    "exposure": 2,
+    "rationale": "Nurse anesthetists require complex physical interaction, real-time physiological monitoring, and nuanced clinical judgment that generative AI cannot currently replicate. While AI might assist in documentation or pre-operative risk assessment, direct patient care remains highly human-dependent.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Nurse Midwives",
+    "exposure": 2,
+    "rationale": "Nurse midwives perform complex physical and emotional care tasks requiring direct human interaction and nuanced clinical judgment that generative AI cannot currently replicate. While AI might assist in documentation and research, core patient care remains deeply human-centric.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Nurse Practitioners",
+    "exposure": 4,
+    "rationale": "Nurse practitioners perform complex clinical assessments requiring nuanced human judgment and direct patient interaction, which limits full generative AI replacement. LLMs can assist with documentation, research, and treatment protocol analysis, but cannot substitute critical hands-on clinical decision-making.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Nursing Instructors and Teachers, Postsecondary",
+    "exposure": 3,
+    "rationale": "Nursing instructors require complex clinical judgment, hands-on demonstration, and nuanced interpersonal skills that generative AI cannot fully replicate. While AI might assist with curriculum development and administrative documentation, core teaching and clinical skill assessment remain human-dependent.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Philosophy and Religion Teachers, Postsecondary",
+    "exposure": 5,
+    "rationale": "Postsecondary philosophy and religion teachers face moderate AI disruption, with generative AI capable of generating academic-style writing and research summaries, but less able to replace nuanced critical analysis and original philosophical discourse. LLMs can assist in research and draft generation, but cannot fully substitute complex interpretative scholarship.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Physics Teachers, Postsecondary",
+    "exposure": 5,
+    "rationale": "Physics teaching involves complex conceptual explanation and interactive learning, which limits but does not eliminate generative AI's potential. LLMs can assist in lesson planning, generating problem sets, and providing supplementary explanations, but cannot fully replace the nuanced pedagogical interactions required in physics instruction.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Political Science Teachers, Postsecondary",
+    "exposure": 6,
+    "rationale": "Political science teaching involves significant research, writing, and analytical tasks that generative AI can increasingly support or partially automate. LLMs can generate lecture outlines, research summaries, and draft academic content, potentially reducing preparation time and augmenting scholarly work.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Postsecondary Teachers, All Other",
+    "exposure": 5,
+    "rationale": "Generative AI will significantly impact postsecondary teaching by automating lecture preparation, assessment design, and content generation, but cannot fully replace human interaction, contextual expertise, and pedagogical judgment. Philippine higher education will likely see AI as a teaching assistant and curriculum enhancement tool rather than a complete replacement.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Preschool Teachers, Except Special Education",
+    "exposure": 3,
+    "rationale": "Preschool teaching requires significant emotional intelligence, interpersonal interaction, and developmental nuance that generative AI cannot fully replicate. While AI might assist with lesson planning and administrative tasks, core teaching interactions remain human-dependent.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Psychology Teachers, Postsecondary",
+    "exposure": 5,
+    "rationale": "Psychology teaching involves complex human interaction and nuanced interpretation that LLMs cannot fully replicate. However, generative AI will significantly transform lecture preparation, research assistance, curriculum design, and administrative documentation.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Recreation and Fitness Studies Teachers, Postsecondary",
+    "exposure": 4,
+    "rationale": "Postsecondary recreation and fitness studies have specialized pedagogical and practical components that limit full AI replacement. LLMs can assist with curriculum design, research summaries, and lecture preparation, but cannot fully replicate hands-on instruction and physical skill demonstration.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Secondary School Teachers, Except Special and Career/Technical Education",
+    "exposure": 5,
+    "rationale": "Secondary school teachers face moderate AI disruption, with lesson planning, content creation, and administrative tasks being most susceptible to generative AI automation. However, core teaching interactions, classroom management, and nuanced student engagement remain human-dependent.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Advertising Sales Agents",
+    "exposure": 6,
+    "rationale": "Advertising sales agents face significant AI disruption through automated pitch decks, market research, client targeting, and proposal generation. Large language models can rapidly synthesize compelling sales materials and conduct initial client outreach more efficiently than human agents.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Cashiers",
+    "exposure": 7,
+    "rationale": "Philippine cashiers face high AI exposure due to point-of-sale automation, digital payment platforms, and generative AI's ability to handle transaction logging, receipt generation, and basic customer interaction. Self-checkout and AI-powered payment systems will progressively reduce traditional cashier roles.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Counter and Rental Clerks",
+    "exposure": 6,
+    "rationale": "Counter and rental clerks perform routine transactional interactions involving information processing, price calculation, and service description - tasks highly amenable to generative AI language models. Philippine service sector digitization and growing enterprise AI adoption will accelerate replacement of standardized customer interaction roles.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Crematory Operators",
+    "exposure": 2,
+    "rationale": "Crematory operations require precise physical handling, equipment monitoring, and regulatory compliance that generative AI cannot easily replicate. The work involves complex spatial and mechanical tasks with minimal text-based processing.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "First-Line Supervisors of Correctional Officers",
+    "exposure": 4,
+    "rationale": "Correctional supervision involves significant human judgment, interpersonal risk assessment, and contextual decision-making that current LLMs cannot fully replicate. While administrative documentation and reporting might be AI-assisted, core supervisory functions require direct human interaction and complex situational evaluation.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "First-Line Supervisors of Entertainment and Recreation Workers, Except Gambling Services",
+    "exposure": 5,
+    "rationale": "Entertainment supervisors manage complex human interactions and require contextual judgment, but routine administrative tasks like scheduling, reporting, and performance tracking are increasingly automatable by generative AI. Philippine service sector's mixed digital maturity means gradual, uneven AI integration.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "First-Line Supervisors of Firefighting and Prevention Workers",
+    "exposure": 2,
+    "rationale": "Firefighting supervision requires physical situational awareness, real-time decision-making, and emergency response skills that generative AI cannot replicate. While administrative documentation might be assisted by AI, core supervisory and emergency management tasks remain human-dependent.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "First-Line Supervisors of Gambling Services Workers",
+    "exposure": 5,
+    "rationale": "Gambling services supervision involves complex interpersonal monitoring and regulatory compliance that AI cannot fully replicate. However, LLMs could assist in shift planning, reporting, and operational documentation, potentially reducing manual coordination tasks.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "First-Line Supervisors of Non-Retail Sales Workers",
+    "exposure": 5,
+    "rationale": "First-line sales supervisors have mixed tasks involving human interaction, performance management, and strategic coordination that cannot be fully automated. LLMs can assist with reporting, performance analysis, and documentation, but cannot replace nuanced interpersonal supervision and contextual decision-making.",
+    "primary_risk_vector": "analysis_automation"
+  },
+  {
+    "title": "First-Line Supervisors of Personal Service Workers",
+    "exposure": 5,
+    "rationale": "First-line supervisors manage service workers and perform routine coordination tasks that can be partially automated by generative AI for scheduling, performance tracking, and communication. However, direct interpersonal management and context-specific decision-making remain challenging for current LLM technologies.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "First-Line Supervisors of Police and Detectives",
+    "exposure": 4,
+    "rationale": "Philippine police supervisory roles involve significant human judgment, interpersonal interaction, and contextual decision-making that current LLMs cannot fully replicate. While administrative documentation and reporting might be AI-assisted, core supervisory and investigative functions require human discretion and local cultural understanding.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "First-Line Supervisors of Protective Service Workers, All Other",
+    "exposure": 4,
+    "rationale": "First-line supervisors have complex interpersonal and situational judgment tasks that limit full AI replacement. However, generative AI could assist with reporting, scheduling, incident documentation, and administrative coordination.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "First-Line Supervisors of Retail Sales Workers",
+    "exposure": 5,
+    "rationale": "Retail supervisors handle complex interpersonal management and operational tasks that require contextual judgment, but routine reporting, scheduling, and performance tracking are increasingly automatable by generative AI systems. Philippine retail's high informality moderates immediate AI displacement.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "First-Line Supervisors of Security Workers",
+    "exposure": 3,
+    "rationale": "Security supervision involves significant physical coordination and contextual judgment that current LLMs cannot easily replicate. While documentation and reporting might be AI-assisted, core supervisory tasks require human interaction and real-time situational assessment.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Massage Therapists",
+    "exposure": 2,
+    "rationale": "Massage therapy requires direct physical human touch, tactile assessment, and personalized kinesthetic interaction that generative AI cannot replicate. While AI might assist in documentation or treatment planning, the core service delivery remains fundamentally human-dependent.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Physical Therapist Aides",
+    "exposure": 3,
+    "rationale": "Physical therapist aides require significant hands-on, physical interaction with patients that cannot be easily automated by generative AI. While documentation and basic patient intake might be assisted by AI, core therapeutic preparation and patient interaction remain human-dependent.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Physical Therapist Assistants",
+    "exposure": 4,
+    "rationale": "Physical therapy requires nuanced physical interaction and patient-specific judgment that generative AI cannot fully replicate. However, LLMs could assist with documentation, treatment plan drafting, and patient progress tracking, potentially reducing administrative workload.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Sales Engineers",
+    "exposure": 6,
+    "rationale": "Sales engineers require technical product knowledge and complex consultative selling, but generative AI can increasingly assist with technical documentation, proposal generation, and initial customer interaction scripting. LLMs will augment rather than fully replace the relationship-building and technical problem-solving aspects of the role.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Bill and Account Collectors",
+    "exposure": 7,
+    "rationale": "Bill and account collectors perform highly routinized information processing tasks involving communication, record-keeping, and standardized decision trees that generative AI can increasingly automate through conversational interfaces and workflow management tools. Philippine financial institutions are rapidly digitizing, accelerating potential LLM replacement of routine collection activities.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Billing and Posting Clerks",
+    "exposure": 8,
+    "rationale": "Billing and posting clerks perform highly routinized numerical data entry and invoice processing tasks that are prime candidates for LLM and RPA automation. Philippine enterprises are rapidly adopting cloud-based accounting platforms with embedded AI capabilities that can handle most transactional documentation workflows.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Bookkeeping, Accounting, and Auditing Clerks",
+    "exposure": 7,
+    "rationale": "Bookkeeping involves highly structured, rule-based numerical processing which generative AI and LLMs can increasingly automate through precise data extraction, reconciliation, and financial reporting. Philippine accounting firms are rapidly adopting AI tools for transaction classification, error detection, and standardized financial documentation.",
+    "primary_risk_vector": "analysis_automation"
+  },
+  {
+    "title": "Brokerage Clerks",
+    "exposure": 7,
+    "rationale": "Brokerage clerks perform highly routinized information processing tasks involving stock transactions, record-keeping, and transaction verification - precisely the type of structured work generative AI excels at automating. LLMs can rapidly process financial data, generate transaction reports, and cross-reference complex financial records with high accuracy.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Correspondence Clerks",
+    "exposure": 8,
+    "rationale": "Correspondence clerks perform highly routinized text-based tasks that generative AI can effectively replicate, with LLMs capable of drafting standardized responses, analyzing context, and generating precise communication across multiple communication channels.",
+    "primary_risk_vector": "writing_automation"
+  },
+  {
+    "title": "Court, Municipal, and License Clerks",
+    "exposure": 8,
+    "rationale": "Court and municipal clerks perform highly routinized document processing, record-keeping, and administrative tasks that generative AI can efficiently automate through structured text generation, form completion, and standardized correspondence drafting. Philippine government digitization efforts will accelerate LLM adoption in administrative workflows.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Credit Authorizers, Checkers, and Clerks",
+    "exposure": 7,
+    "rationale": "Credit authorization involves significant routine information processing, document verification, and standardized decision rules that large language models can increasingly automate through pattern recognition and data synthesis. Philippine banks are rapidly digitalizing, creating fertile ground for AI-powered credit assessment tools.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "File Clerks",
+    "exposure": 8,
+    "rationale": "File clerks perform highly routinized digital information processing tasks that generative AI can systematically handle through advanced document classification, indexing, and retrieval algorithms. Philippine administrative systems with standardized filing protocols make this occupation particularly susceptible to LLM-driven automation.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Financial Clerks, All Other",
+    "exposure": 7,
+    "rationale": "Financial clerks handle routine data processing, transaction recording, and documentation tasks that generative AI can increasingly automate through structured information extraction, template generation, and standardized financial reporting. Philippine financial institutions are rapidly adopting digital transformation strategies that accelerate LLM integration.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "First-Line Supervisors of Office and Administrative Support Workers",
+    "exposure": 6,
+    "rationale": "First-line supervisors manage routine administrative workflows that are increasingly automatable by generative AI systems. LLMs can now draft communications, analyze performance metrics, and generate standardized management reports with high accuracy.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "New Accounts Clerks",
+    "exposure": 7,
+    "rationale": "New Accounts Clerks perform highly routinized information gathering and processing tasks that generative AI can increasingly automate through conversational interfaces, document preparation, and customer interaction scripting. LLMs can efficiently handle initial customer inquiries, application screening, and standardized documentation workflows.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Office Machine Operators, Except Computer",
+    "exposure": 5,
+    "rationale": "Office machine operators handle routine mechanical tasks that are increasingly digitized, with generative AI potentially automating documentation, machine maintenance logs, and workflow tracking. Philippine enterprises are gradually adopting digital transformation which will incrementally reduce manual machine operation roles.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Barangay health workers",
+    "exposure": 3,
+    "rationale": "Barangay health workers rely heavily on personal trust, community relationships, and contextual understanding that generative AI cannot easily replicate. While AI might assist with documentation and basic health information, the interpersonal and culturally nuanced aspects of their work remain human-centric.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Hairdressers and beauty workers",
+    "exposure": 2,
+    "rationale": "Hairdressing and beauty services require high-touch, personalized physical interaction that generative AI cannot replicate. While AI might assist with marketing and booking, core styling and beauty treatment tasks remain fundamentally manual and tactile.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Kasambahay (domestic workers)",
+    "exposure": 1,
+    "rationale": "Domestic workers perform highly physical, contextually adaptive tasks requiring human touch, emotional intelligence, and localized cultural understanding that generative AI cannot replicate. Physical presence and trust-based relationships are core to kasambahay work.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Tricycle / jeepney drivers",
+    "exposure": 2,
+    "rationale": "Tricycle and jeepney drivers perform physical navigation and local route management that requires real-time spatial judgment and human interaction. Generative AI has minimal direct impact on core driving tasks, though ride-matching platforms may incrementally introduce algorithmic optimization.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Baristas",
+    "exposure": 4,
+    "rationale": "Baristas require physical beverage preparation and customer interaction that generative AI cannot directly replace. However, AI may assist with inventory management, customer service scripts, and training documentation.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Bartenders",
+    "exposure": 2,
+    "rationale": "Bartending requires significant physical interaction, real-time social skills, and manual craft that generative AI cannot replicate. While AI might assist with recipe suggestions or inventory management, the core service involves human judgment, mixology creativity, and interpersonal engagement.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Chefs and Head Cooks",
+    "exposure": 3,
+    "rationale": "Culinary work requires significant physical skill, creativity, and sensory judgment that current generative AI cannot replicate. While AI might assist with menu planning and recipe ideation, actual cooking execution remains highly human-dependent.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Cooks, All Other",
+    "exposure": 2,
+    "rationale": "Physical cooking tasks require manual dexterity and real-time sensory judgment that current generative AI cannot replicate. While recipe generation and menu planning might be AI-assisted, actual food preparation remains human-dependent.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Cooks, Fast Food",
+    "exposure": 3,
+    "rationale": "Fast food cooking involves physical preparation and equipment operation that generative AI cannot directly replace. However, AI may assist in recipe optimization, inventory management, and standardizing cooking procedures in Philippine fast food chains.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Cooks, Institution and Cafeteria",
+    "exposure": 3,
+    "rationale": "Institutional cooking requires complex physical skills, ingredient handling, and contextual judgment that current generative AI cannot replicate. While recipe generation and menu planning might be AI-assisted, actual food preparation remains highly manual and requires sensory human skills.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Cooks, Private Household",
+    "exposure": 2,
+    "rationale": "Private household cooks require physical cooking skills, ingredient handling, and personalized culinary judgment that current generative AI cannot replicate. While recipe generation and menu planning might be AI-assisted, actual meal preparation remains human-dependent.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Cooks, Restaurant",
+    "exposure": 3,
+    "rationale": "Restaurant cooking requires physical skill, real-time sensory judgment, and creative plating that current generative AI cannot replicate. While AI might assist with recipe generation and menu planning, core cooking tasks remain human-dependent.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Cooks, Short Order",
+    "exposure": 3,
+    "rationale": "Short order cooks rely heavily on physical skills, real-time sensory judgment, and manual cooking techniques that generative AI cannot replicate. While recipe generation and menu planning might be AI-assisted, actual food preparation requires human dexterity and culinary intuition.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Fast Food and Counter Workers",
+    "exposure": 3,
+    "rationale": "Fast food counter workers involve physical interaction and real-time customer service that generative AI cannot directly replace. However, AI might impact order-taking interfaces, menu optimization, and basic customer interaction scripts.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "First-Line Supervisors of Food Preparation and Serving Workers",
+    "exposure": 4,
+    "rationale": "Food service supervisors involve significant human interaction and contextual judgment that current LLMs struggle to fully replicate. While AI can assist with scheduling, inventory tracking, and basic workflow documentation, the nuanced management of kitchen dynamics requires human supervision.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "First-Line Supervisors of Housekeeping and Janitorial Workers",
+    "exposure": 3,
+    "rationale": "First-line supervisors in housekeeping require physical oversight, site-specific workflow management, and interpersonal coordination that generative AI cannot easily replicate. While AI might assist with scheduling and reporting, core supervisory tasks remain human-dependent.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "First-Line Supervisors of Landscaping, Lawn Service, and Groundskeeping Workers",
+    "exposure": 3,
+    "rationale": "Landscaping supervision involves significant physical coordination and on-site judgment that limits generative AI's direct substitution. While AI could assist with contract review and cost estimation, the core supervisory and operational tasks require direct human interaction and spatial awareness.",
+    "primary_risk_vector": "analysis_automation"
+  },
+  {
+    "title": "Food Preparation Workers",
+    "exposure": 2,
+    "rationale": "Food preparation workers perform physical tasks requiring manual dexterity and real-time spatial judgment that current generative AI cannot replicate. While kitchen management software might assist, actual food preparation remains highly tactile and context-dependent.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Food Preparation and Serving Related Workers, All Other",
+    "exposure": 2,
+    "rationale": "Physical food preparation tasks require manual dexterity and real-time spatial coordination that current generative AI cannot replicate. While menu planning and recipe generation might be AI-assisted, actual cooking and serving remain human-dependent.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Food Servers, Nonrestaurant",
+    "exposure": 2,
+    "rationale": "Food servers in non-restaurant settings perform physical tasks requiring direct human interaction and contextual judgment about service quality, meal preferences, and individual needs. Generative AI has minimal direct substitution potential for this hands-on service work.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Grounds Maintenance Workers, All Other",
+    "exposure": 2,
+    "rationale": "Grounds maintenance involves physical labor and site-specific spatial reasoning that current generative AI cannot replicate. While AI might assist in scheduling or reporting, the core work requires direct physical interaction with landscaping environments.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Janitors and Cleaners, Except Maids and Housekeeping Cleaners",
+    "exposure": 1,
+    "rationale": "Physical cleaning tasks require direct manual labor and spatial reasoning that current generative AI cannot replicate. Janitors perform complex physical tasks involving movement, tool usage, and environmental assessment that are not automatable by language models.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Maids and Housekeeping Cleaners",
+    "exposure": 1,
+    "rationale": "Physical cleaning tasks require direct manual labor and spatial reasoning that current generative AI cannot replicate. While smart home technologies might evolve, housekeeping remains fundamentally a hands-on, context-dependent service requiring physical presence and adaptability.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Waiters and Waitresses",
+    "exposure": 2,
+    "rationale": "Philippine food service relies heavily on personal interaction and local cultural nuances that generative AI cannot easily replicate. Physical service tasks like carrying plates, reading customer body language, and handling complex customer requests remain human-centric.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Fisherfolk",
+    "exposure": 2,
+    "rationale": "Fisherfolk perform highly physical, location-specific work with minimal digital interaction. While AI could assist with route planning and marine data analysis, core fishing activities require direct human labor and contextual decision-making in unpredictable maritime environments.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Agricultural Equipment Operators",
+    "exposure": 2,
+    "rationale": "Agricultural equipment operators perform primarily physical tasks requiring direct machine operation and spatial judgment, which current generative AI cannot replicate. While AI might assist in route planning or maintenance scheduling, core operational tasks remain human-driven.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Agricultural Inspectors",
+    "exposure": 4,
+    "rationale": "Agricultural inspectors require physical site visits and nuanced domain expertise that current LLMs struggle to fully replicate. While AI can assist with documentation, reporting, and regulatory cross-referencing, the core inspection work demands human sensory judgment and contextual understanding.",
+    "primary_risk_vector": "analysis_automation"
+  },
+  {
+    "title": "Agricultural Workers, All Other",
+    "exposure": 2,
+    "rationale": "Philippine agricultural workers perform complex physical tasks requiring direct environmental interaction and manual skill, which generative AI cannot easily replicate. While AI might assist in planning or documentation, core agricultural labor remains human-dependent.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Animal Breeders",
+    "exposure": 3,
+    "rationale": "Animal breeding requires significant physical interaction, tactile expertise, and localized agricultural knowledge that generative AI cannot easily replicate. While AI might assist with record-keeping and genetic tracking, core breeding decisions remain human-dependent.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Fallers",
+    "exposure": 2,
+    "rationale": "Physical forestry work requires precise spatial judgment and physical skill that current generative AI cannot replicate. While AI might assist in logging planning or safety documentation, the core tree-felling task remains highly manual and requires direct physical interaction.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Farmworkers and Laborers, Crop, Nursery, and Greenhouse",
+    "exposure": 1,
+    "rationale": "Agricultural manual labor involves physical tasks and site-specific knowledge that generative AI cannot directly replace. Low digital infrastructure and high physical interaction with crops limit AI substitution potential.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Farmworkers, Farm, Ranch, and Aquacultural Animals",
+    "exposure": 1,
+    "rationale": "Farmworkers perform highly physical, context-dependent tasks requiring direct animal interaction and manual skills that generative AI cannot replicate. Philippine agricultural work remains predominantly manual and localized, with low digital infrastructure.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "First-Line Supervisors of Farming, Fishing, and Forestry Workers",
+    "exposure": 2,
+    "rationale": "First-line supervisors in agriculture require significant physical presence, direct observation of work conditions, and contextual decision-making that generative AI cannot easily replicate. The high informal economy share and localized nature of agricultural supervision further reduces AI displacement potential.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Fishing and Hunting Workers",
+    "exposure": 1,
+    "rationale": "Fishing and hunting workers perform highly physical, location-specific tasks requiring direct environmental interaction and manual skills that generative AI cannot replicate. The work involves real-time spatial judgment, physical equipment manipulation, and direct environmental sensing beyond current AI capabilities.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Forest and Conservation Workers",
+    "exposure": 2,
+    "rationale": "Forest and conservation workers perform highly physical, site-specific tasks requiring direct environmental interaction and manual labor that generative AI cannot easily replicate. While AI might assist in planning or documentation, the core work remains hands-on and location-dependent.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Graders and Sorters, Agricultural Products",
+    "exposure": 3,
+    "rationale": "Agricultural product grading requires physical inspection and tactile assessment that current generative AI cannot replicate. While computer vision might assist sorting, the hands-on nature of agricultural product evaluation limits immediate AI displacement.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Log Graders and Scalers",
+    "exposure": 3,
+    "rationale": "Log grading involves physical inspection and tactile assessment of wood quality that requires on-site domain expertise. While AI could assist in volume calculations and initial classification, the nuanced physical evaluation remains challenging for generative AI systems.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Logging Workers, All Other",
+    "exposure": 2,
+    "rationale": "Logging workers perform physical tasks in forest environments with significant manual labor and site-specific spatial reasoning that current generative AI cannot replicate. While documentation and reporting might be AI-assisted, core logging operations require direct physical intervention and complex environmental navigation.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Carpenters",
+    "exposure": 2,
+    "rationale": "Carpenters perform physical, skill-based tasks requiring spatial reasoning, material manipulation, and on-site judgment that current generative AI cannot replicate. While design software and AI-assisted planning might emerge, core construction work remains heavily manual and context-dependent.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Construction Laborers",
+    "exposure": 2,
+    "rationale": "Construction laborers perform primarily physical tasks requiring direct manual intervention and site-specific spatial reasoning that current generative AI cannot replicate. While AI might assist in planning or documentation, core construction labor remains deeply embodied and context-dependent.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Electricians",
+    "exposure": 3,
+    "rationale": "Electricians require significant physical on-site technical skills and spatial reasoning that generative AI cannot easily replicate. While AI might assist with documentation, wiring diagrams, and code compliance references, the core work involves hands-on electrical installation and troubleshooting that demands direct manual intervention.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Computer, Automated Teller, and Office Machine Repairers",
+    "exposure": 5,
+    "rationale": "Machine repair requires physical diagnostics and specialized technical knowledge, but generative AI can assist in troubleshooting, generating repair manuals, and providing diagnostic guidance. LLMs will augment rather than fully replace these technical workers.",
+    "primary_risk_vector": "analysis_automation"
+  },
+  {
+    "title": "Control and Valve Installers and Repairers, Except Mechanical Door",
+    "exposure": 3,
+    "rationale": "Physical installation and repair work requires hands-on technical skills and spatial reasoning that current generative AI cannot replicate. While AI might assist with documentation and troubleshooting guides, core valve and control system installation remains human-dependent.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "First-Line Supervisors of Construction Trades and Extraction Workers",
+    "exposure": 3,
+    "rationale": "Construction supervisors rely heavily on physical site assessment, real-time problem solving, and contextual understanding that current generative AI struggles to replicate. While AI can assist with documentation, planning, and reporting, the core supervisory work requires human judgment and on-site presence.",
+    "primary_risk_vector": "analysis_automation"
+  },
+  {
+    "title": "First-Line Supervisors of Mechanics, Installers, and Repairers",
+    "exposure": 4,
+    "rationale": "First-line supervisors blend physical oversight with technical coordination, which limits full AI replacement. Generative AI can assist with documentation, scheduling, and reporting, but cannot replace direct field supervision and complex problem-solving.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Helpers--Carpenters",
+    "exposure": 2,
+    "rationale": "Carpentry helpers perform primarily physical tasks requiring manual dexterity and on-site coordination that generative AI cannot replace. While AI might assist with material planning or workflow documentation, the core work remains hands-on and context-dependent.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Helpers--Electricians",
+    "exposure": 2,
+    "rationale": "Electrician helpers perform physical, hands-on tasks that require direct manual interaction with tools, materials, and work environments. While AI might assist with documentation or training materials, the core work involves physical coordination and site-specific problem-solving that generative AI cannot replace.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Helpers--Installation, Maintenance, and Repair Workers",
+    "exposure": 2,
+    "rationale": "Helpers in installation and repair work involve significant physical tasks and contextual problem-solving that current generative AI cannot easily replicate. While AI might assist with documentation or procedural guidance, the core work requires manual dexterity and real-time spatial reasoning.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Helpers--Pipelayers, Plumbers, Pipefitters, and Steamfitters",
+    "exposure": 2,
+    "rationale": "Physical trade with high manual dexterity requirements and site-specific spatial reasoning. Generative AI has minimal direct application in hands-on construction helper tasks that require direct physical manipulation and real-time problem solving.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Installation, Maintenance, and Repair Workers, All Other",
+    "exposure": 2,
+    "rationale": "Physical repair and installation work requires hands-on technical skills and spatial reasoning that current generative AI cannot replicate. While AI might assist with diagnostic documentation or repair manual generation, core mechanical tasks remain human-dependent.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Maintenance and Repair Workers, General",
+    "exposure": 2,
+    "rationale": "Maintenance and repair work requires physical skills, spatial reasoning, and context-specific problem solving that current generative AI cannot easily replicate. While AI might assist with diagnostic documentation or repair manual generation, the hands-on technical work remains human-dependent.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Mechanical Door Repairers",
+    "exposure": 2,
+    "rationale": "Mechanical door repair requires physical manipulation, precise spatial reasoning, and hands-on diagnostic skills that current generative AI cannot replicate. While AI might assist in documentation or troubleshooting guides, the core repair work remains deeply physical and context-dependent.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Operating Engineers and Other Construction Equipment Operators",
+    "exposure": 2,
+    "rationale": "Construction equipment operation requires physical machine control and situational spatial awareness that current generative AI cannot replicate. While AI might assist in maintenance logging or equipment scheduling, core operational tasks remain human-dependent.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Pile Driver Operators",
+    "exposure": 1,
+    "rationale": "Pile driver operators perform highly physical, site-specific mechanical tasks requiring direct spatial manipulation and real-time equipment control that cannot be easily replicated by generative AI. The work involves complex physical coordination and direct interaction with heavy machinery in variable terrain conditions.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Plumbers, Pipefitters, and Steamfitters",
+    "exposure": 2,
+    "rationale": "Plumbing work requires physical manipulation of pipes, precise spatial reasoning, and on-site problem-solving that generative AI cannot currently replicate. While AI might assist with design documentation or technical specifications, core installation and repair tasks remain highly manual and context-dependent.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Rail-Track Laying and Maintenance Equipment Operators",
+    "exposure": 2,
+    "rationale": "Rail-track laying and maintenance involves highly physical, site-specific tasks requiring precise mechanical skills and spatial reasoning that current generative AI cannot replicate. While AI might assist in maintenance scheduling or documentation, core operational tasks remain deeply manual and context-dependent.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Delivery riders",
+    "exposure": 2,
+    "rationale": "Delivery riders perform primarily physical, location-based work that generative AI cannot directly execute. LLM tools may assist customer messaging or simple documentation, but the core delivery task remains human and field-based in the Philippine context.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Seafarers / merchant marine",
+    "exposure": 4,
+    "rationale": "Maritime operations involve complex physical navigation and situational judgment that current generative AI cannot fully replicate. However, administrative tasks like route planning, documentation, and communication logs are increasingly susceptible to LLM automation, particularly in vessel management systems.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Airline Pilots, Copilots, and Flight Engineers",
+    "exposure": 4,
+    "rationale": "Airline pilots require complex situational judgment and safety-critical decision-making that current generative AI cannot fully replicate. However, AI will increasingly assist in flight planning, navigation optimization, and routine documentation tasks.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Ambulance Drivers and Attendants, Except Emergency Medical Technicians",
+    "exposure": 2,
+    "rationale": "Ambulance drivers require physical skills, direct patient interaction, and situational judgment that generative AI cannot replicate. The role involves complex spatial navigation, emergency response, and physical assistance that remains highly human-dependent.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Bus Drivers, School",
+    "exposure": 2,
+    "rationale": "School bus driving requires physical navigation, real-time safety judgment, and direct student interaction that generative AI cannot replace. Physical driving skills and immediate situational awareness remain human-critical tasks.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Bus Drivers, Transit and Intercity",
+    "exposure": 2,
+    "rationale": "Bus drivers perform real-time, physical driving and safety-critical decision-making that generative AI cannot directly replace. LLMs may support peripheral tasks like incident documentation or passenger communication, but core operations remain human-dependent in Philippine transit systems.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Computer Numerically Controlled Tool Operators",
+    "exposure": 5,
+    "rationale": "CNC tool operators remain tied to physical machine setup and on-site process control, which limits direct generative AI displacement. LLMs can assist with programming notes, troubleshooting references, and setup documentation, but core machine operation and quality assurance remain human-led.",
+    "primary_risk_vector": "code_generation"
+  },
+  {
+    "title": "Computer Numerically Controlled Tool Programmers",
+    "exposure": 6,
+    "rationale": "CNC programmers work extensively with digital instructions and precise technical specifications, which generative AI can increasingly synthesize and optimize. Advanced language models are becoming proficient at generating complex machine programming code and translating engineering requirements into executable instructions.",
+    "primary_risk_vector": "code_generation"
+  },
+  {
+    "title": "Driver/Sales Workers",
+    "exposure": 3,
+    "rationale": "Driver/sales workers involve physical transportation and direct customer interaction, which limits generative AI's immediate impact. However, route optimization, order tracking, and basic documentation could be partially automated by AI systems.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "First-Line Supervisors of Helpers, Laborers, and Material Movers, Hand",
+    "exposure": 2,
+    "rationale": "First-line supervisors in manual labor contexts require physical presence, real-time coordination, and contextual judgment that current generative AI cannot replicate. While documentation and scheduling might be AI-assisted, core supervisory tasks remain human-dependent.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "First-Line Supervisors of Material-Moving Machine and Vehicle Operators",
+    "exposure": 4,
+    "rationale": "First-line supervisors have mixed routine and judgment tasks involving coordination, performance tracking, and operational oversight. LLMs can assist with documentation and reporting, but cannot fully replace human supervision of physical machine operations and team management.",
+    "primary_risk_vector": "knowledge_work_routinization"
+  },
+  {
+    "title": "Food Cooking Machine Operators and Tenders",
+    "exposure": 2,
+    "rationale": "Food cooking machine operators perform physical tasks requiring precise temperature control, ingredient handling, and real-time sensory judgment that current generative AI cannot replicate. Automation risk is low due to the embodied, tactile nature of cooking machine operation.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Food and Tobacco Roasting, Baking, and Drying Machine Operators and Tenders",
+    "exposure": 2,
+    "rationale": "Physical machine operation with tactile monitoring requires direct human intervention. Generative AI has minimal applicability to direct machine control and sensory quality assessment in food and tobacco processing.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Heavy and Tractor-Trailer Truck Drivers",
+    "exposure": 3,
+    "rationale": "Truck driving involves complex physical navigation and real-world spatial reasoning that current generative AI cannot replace. While route planning and logistics documentation might be AI-assisted, actual driving requires physical vehicle operation and situational judgment.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Rail Yard Engineers, Dinkey Operators, and Hostlers",
+    "exposure": 3,
+    "rationale": "Rail yard operations involve complex spatial reasoning and physical machine interaction that current generative AI cannot easily replicate. While AI might assist in route planning and documentation, the core locomotive operation requires direct human machine control and situational judgment.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Stationary Engineers and Boiler Operators",
+    "exposure": 3,
+    "rationale": "Stationary engineers require physical equipment monitoring and hands-on mechanical intervention that generative AI cannot directly replace. While AI might assist in predictive maintenance documentation and operational logging, core operational tasks remain human-dependent.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Welding, Soldering, and Brazing Machine Setters, Operators, and Tenders",
+    "exposure": 2,
+    "rationale": "Welding and machine operation require precise physical skills and spatial reasoning that current generative AI cannot replicate. While AI might assist in process documentation or maintenance scheduling, core machine operation remains highly manual and skill-dependent.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Agricultural farm laborers",
+    "exposure": 2,
+    "rationale": "Agricultural farm laborers perform physical tasks with high manual variability and localized knowledge that resists generative AI substitution. While AI can provide advisory services, direct labor replacement remains low due to small landholdings and complex physical interactions.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "OFW caregivers",
+    "exposure": 2,
+    "rationale": "Caregiving requires high-touch human interaction, emotional intelligence, and physical tasks that generative AI cannot easily replicate. While AI might assist with scheduling or documentation, core caregiving work remains deeply human-dependent.",
+    "primary_risk_vector": "minimal"
+  },
+  {
+    "title": "Street vendors / market sellers",
+    "exposure": 1,
+    "rationale": "Street vendors rely on physical presence, personal negotiation, and direct relationship-based transactions that generative AI cannot easily replicate. The highly informal, cash-based nature of their work and low digital infrastructure create significant barriers to AI displacement.",
+    "primary_risk_vector": "minimal"
+  }
+]

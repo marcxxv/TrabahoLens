@@ -1,0 +1,1008 @@
+{
+  "profile_schema": "trabaholens-audit-profile/1",
+  "repository_commit": "84e91c0bb7496d985f5c0ab9254f29d0ff4b0baf",
+  "generated_by": "src/trabaholens/v2/audit_baseline.py",
+  "inputs": {
+    "data/legacy/v1/README.md": {
+      "bytes": 1466,
+      "sha256": "502a261183765d64b1d5f3bedea688bddda5da0a971d7961e837e489de325742"
+    },
+    "data/legacy/v1/index_v1.html": {
+      "bytes": 105769,
+      "sha256": "b7c335a464b6619d39cbc065e19b39cc0e03ec016dbf489a9d05bb6aa414094d"
+    },
+    "data/legacy/v1/occupations_ph.csv": {
+      "bytes": 63522,
+      "sha256": "f5fff5e8819df1701186542141ce20c0b398b93a5e13af3828bfdb3c7d177be5"
+    },
+    "data/legacy/v1/occupations_seed.json": {
+      "bytes": 30812,
+      "sha256": "7508af5d17f82ae0bc8fa0f2b44e178116c9dec0a4f4ab361ebf8a213415228f"
+    },
+    "data/legacy/v1/scores_ai_only.json": {
+      "bytes": 77379,
+      "sha256": "ec74bd2e0422e380b408480e837448cfb19c122a657e4b8e176e021dc26406a8"
+    },
+    "data/legacy/v1/site_data.json": {
+      "bytes": 130664,
+      "sha256": "160967b56595bbbe98824f1f36d5e7c8be0c0aac28d250aa9e61d9fe06e1cfed"
+    }
+  },
+  "record_counts": {
+    "data/legacy/v1/occupations_seed.json": 44,
+    "data/legacy/v1/occupations_ph.csv": 173,
+    "data/legacy/v1/scores_ai_only.json": 173,
+    "data/legacy/v1/site_data.json": 173
+  },
+  "published_dataset": {
+    "records": 173,
+    "fields_present": [
+      "category",
+      "education",
+      "exposure",
+      "exposure_rationale",
+      "informal_share",
+      "jobs",
+      "ofw_share",
+      "outlook",
+      "outlook_desc",
+      "pay",
+      "primary_risk_vector",
+      "psoc_label",
+      "psoc_major",
+      "source",
+      "title"
+    ],
+    "numeric_field_profiles": {
+      "pay": {
+        "count": 173,
+        "non_null": 173,
+        "null": 0,
+        "distinct": 11,
+        "min": 12000.0,
+        "max": 55000.0,
+        "median": 20000.0,
+        "mean": 23780.67052,
+        "zero_or_negative": 0,
+        "most_common": [
+          {
+            "value": 28000.0,
+            "n": 50,
+            "share_of_rows": 0.289
+          },
+          {
+            "value": 20000.0,
+            "n": 28,
+            "share_of_rows": 0.1618
+          },
+          {
+            "value": 19000.0,
+            "n": 19,
+            "share_of_rows": 0.1098
+          },
+          {
+            "value": 17000.0,
+            "n": 17,
+            "share_of_rows": 0.0983
+          },
+          {
+            "value": 12000.0,
+            "n": 15,
+            "share_of_rows": 0.0867
+          }
+        ],
+        "max_repeat_share": 0.289,
+        "v1_code_path": "pipeline_utils.wage_for_occupation (constant per category)",
+        "is_universal_constant": false
+      },
+      "jobs": {
+        "count": 173,
+        "non_null": 173,
+        "null": 0,
+        "distinct": 43,
+        "min": 23451.0,
+        "max": 4200000.0,
+        "median": 146303.0,
+        "mean": 283236.99422,
+        "zero_or_negative": 0,
+        "most_common": [
+          {
+            "value": 100851.0,
+            "n": 39,
+            "share_of_rows": 0.2254
+          },
+          {
+            "value": 173913.0,
+            "n": 16,
+            "share_of_rows": 0.0925
+          },
+          {
+            "value": 45842.0,
+            "n": 13,
+            "share_of_rows": 0.0751
+          },
+          {
+            "value": 227642.0,
+            "n": 11,
+            "share_of_rows": 0.0636
+          },
+          {
+            "value": 93023.0,
+            "n": 9,
+            "share_of_rows": 0.052
+          }
+        ],
+        "max_repeat_share": 0.2254,
+        "v1_code_path": "assign_ph_stats.allocate_group_employment (GROUP_TOTALS split by TITLE_SIZE_MULTIPLIERS)",
+        "is_universal_constant": false
+      },
+      "outlook": {
+        "count": 173,
+        "non_null": 173,
+        "null": 0,
+        "distinct": 1,
+        "min": 50.0,
+        "max": 50.0,
+        "median": 50.0,
+        "mean": 50.0,
+        "zero_or_negative": 0,
+        "most_common": [
+          {
+            "value": 50.0,
+            "n": 173,
+            "share_of_rows": 1.0
+          }
+        ],
+        "max_repeat_share": 1.0,
+        "v1_code_path": "assign_ph_stats.build_stats (literal 50)",
+        "is_universal_constant": true
+      },
+      "education": {
+        "count": 173,
+        "non_null": 173,
+        "null": 0,
+        "distinct": 5,
+        "min": 1.0,
+        "max": 5.0,
+        "median": 3.0,
+        "mean": 3.156069,
+        "zero_or_negative": 0,
+        "most_common": [
+          {
+            "value": 2.0,
+            "n": 64,
+            "share_of_rows": 0.3699
+          },
+          {
+            "value": 3.0,
+            "n": 40,
+            "share_of_rows": 0.2312
+          },
+          {
+            "value": 5.0,
+            "n": 37,
+            "share_of_rows": 0.2139
+          },
+          {
+            "value": 4.0,
+            "n": 27,
+            "share_of_rows": 0.1561
+          },
+          {
+            "value": 1.0,
+            "n": 5,
+            "share_of_rows": 0.0289
+          }
+        ],
+        "max_repeat_share": 0.3699,
+        "v1_code_path": "fetch_onet.parse_job_zones (US O*NET Job Zone)",
+        "is_universal_constant": false
+      },
+      "exposure": {
+        "count": 173,
+        "non_null": 173,
+        "null": 0,
+        "distinct": 8,
+        "min": 1.0,
+        "max": 8.0,
+        "median": 4.0,
+        "mean": 3.919075,
+        "zero_or_negative": 0,
+        "most_common": [
+          {
+            "value": 2.0,
+            "n": 48,
+            "share_of_rows": 0.2775
+          },
+          {
+            "value": 5.0,
+            "n": 39,
+            "share_of_rows": 0.2254
+          },
+          {
+            "value": 3.0,
+            "n": 26,
+            "share_of_rows": 0.1503
+          },
+          {
+            "value": 6.0,
+            "n": 22,
+            "share_of_rows": 0.1272
+          },
+          {
+            "value": 4.0,
+            "n": 15,
+            "share_of_rows": 0.0867
+          }
+        ],
+        "max_repeat_share": 0.2775,
+        "v1_code_path": "score_ai_only.score_occupation (single LLM run)",
+        "is_universal_constant": false
+      },
+      "ofw_share": {
+        "count": 173,
+        "non_null": 173,
+        "null": 0,
+        "distinct": 7,
+        "min": 0.01,
+        "max": 0.44,
+        "median": 0.06,
+        "mean": 0.082948,
+        "zero_or_negative": 0,
+        "most_common": [
+          {
+            "value": 0.06,
+            "n": 55,
+            "share_of_rows": 0.3179
+          },
+          {
+            "value": 0.15,
+            "n": 35,
+            "share_of_rows": 0.2023
+          },
+          {
+            "value": 0.02,
+            "n": 26,
+            "share_of_rows": 0.1503
+          },
+          {
+            "value": 0.13,
+            "n": 24,
+            "share_of_rows": 0.1387
+          },
+          {
+            "value": 0.04,
+            "n": 18,
+            "share_of_rows": 0.104
+          }
+        ],
+        "max_repeat_share": 0.3179,
+        "v1_code_path": "pipeline_utils.PSOC_OFW_SHARE (constant per PSOC major group)",
+        "is_universal_constant": false
+      },
+      "informal_share": {
+        "count": 173,
+        "non_null": 173,
+        "null": 0,
+        "distinct": 10,
+        "min": 0.05,
+        "max": 0.85,
+        "median": 0.35,
+        "mean": 0.316763,
+        "zero_or_negative": 0,
+        "most_common": [
+          {
+            "value": 0.1,
+            "n": 57,
+            "share_of_rows": 0.3295
+          },
+          {
+            "value": 0.05,
+            "n": 23,
+            "share_of_rows": 0.1329
+          },
+          {
+            "value": 0.5,
+            "n": 20,
+            "share_of_rows": 0.1156
+          },
+          {
+            "value": 0.55,
+            "n": 20,
+            "share_of_rows": 0.1156
+          },
+          {
+            "value": 0.35,
+            "n": 17,
+            "share_of_rows": 0.0983
+          }
+        ],
+        "max_repeat_share": 0.3295,
+        "v1_code_path": "pipeline_utils.INFORMAL_SHARE_BY_CATEGORY (constant per category)",
+        "is_universal_constant": false
+      }
+    },
+    "duplicate_titles": [],
+    "title_normalisation_collisions": [],
+    "by_psoc_major": {
+      "1": {
+        "label": "Managers",
+        "occupations": 12,
+        "employment_sum": 1200000,
+        "distinct_wages": 1,
+        "distinct_ofw_shares": 1,
+        "distinct_informal_shares": 1
+      },
+      "2": {
+        "label": "Professionals",
+        "occupations": 55,
+        "employment_sum": 5500000,
+        "distinct_wages": 2,
+        "distinct_ofw_shares": 1,
+        "distinct_informal_shares": 2
+      },
+      "3": {
+        "label": "Technicians and Associate Professionals",
+        "occupations": 18,
+        "employment_sum": 3200000,
+        "distinct_wages": 2,
+        "distinct_ofw_shares": 1,
+        "distinct_informal_shares": 4
+      },
+      "4": {
+        "label": "Clerical Support Workers",
+        "occupations": 12,
+        "employment_sum": 2800000,
+        "distinct_wages": 1,
+        "distinct_ofw_shares": 1,
+        "distinct_informal_shares": 1
+      },
+      "5": {
+        "label": "Service and Sales Workers",
+        "occupations": 24,
+        "employment_sum": 11000000,
+        "distinct_wages": 5,
+        "distinct_ofw_shares": 1,
+        "distinct_informal_shares": 5
+      },
+      "6": {
+        "label": "Skilled Agricultural, Forestry and Fishery Workers",
+        "occupations": 14,
+        "employment_sum": 8500000,
+        "distinct_wages": 1,
+        "distinct_ofw_shares": 1,
+        "distinct_informal_shares": 1
+      },
+      "7": {
+        "label": "Craft and Related Trades Workers",
+        "occupations": 18,
+        "employment_sum": 4200000,
+        "distinct_wages": 2,
+        "distinct_ofw_shares": 1,
+        "distinct_informal_shares": 1
+      },
+      "8": {
+        "label": "Plant and Machine Operators and Assemblers",
+        "occupations": 17,
+        "employment_sum": 3800000,
+        "distinct_wages": 2,
+        "distinct_ofw_shares": 1,
+        "distinct_informal_shares": 2
+      },
+      "9": {
+        "label": "Elementary Occupations",
+        "occupations": 3,
+        "employment_sum": 8800000,
+        "distinct_wages": 3,
+        "distinct_ofw_shares": 1,
+        "distinct_informal_shares": 3
+      }
+    },
+    "psoc_majors_present": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9"
+    ],
+    "derived_headlines": {
+      "total_employment_published": 49000000,
+      "implied_monthly_payroll_php": 896389633960,
+      "note": "Both headline aggregates are products of synthetic inputs: employment is a hard-coded group total split by title keyword multipliers, and pay is a constant per category."
+    },
+    "source_field_counts": {
+      "onet": 163,
+      "ph_native": 10
+    }
+  },
+  "group_total_reconciliation": {
+    "hard_coded_total_all_groups": 50700000,
+    "published_total_all_groups": 49000000,
+    "per_group": [
+      {
+        "psoc_major": 1,
+        "hard_coded_group_total": 1200000,
+        "published_sum": 1200000,
+        "difference": 0,
+        "reconciles": true
+      },
+      {
+        "psoc_major": 2,
+        "hard_coded_group_total": 5500000,
+        "published_sum": 5500000,
+        "difference": 0,
+        "reconciles": true
+      },
+      {
+        "psoc_major": 3,
+        "hard_coded_group_total": 3200000,
+        "published_sum": 3200000,
+        "difference": 0,
+        "reconciles": true
+      },
+      {
+        "psoc_major": 4,
+        "hard_coded_group_total": 2800000,
+        "published_sum": 2800000,
+        "difference": 0,
+        "reconciles": true
+      },
+      {
+        "psoc_major": 5,
+        "hard_coded_group_total": 11000000,
+        "published_sum": 11000000,
+        "difference": 0,
+        "reconciles": true
+      },
+      {
+        "psoc_major": 6,
+        "hard_coded_group_total": 8500000,
+        "published_sum": 8500000,
+        "difference": 0,
+        "reconciles": true
+      },
+      {
+        "psoc_major": 7,
+        "hard_coded_group_total": 4200000,
+        "published_sum": 4200000,
+        "difference": 0,
+        "reconciles": true
+      },
+      {
+        "psoc_major": 8,
+        "hard_coded_group_total": 3800000,
+        "published_sum": 3800000,
+        "difference": 0,
+        "reconciles": true
+      },
+      {
+        "psoc_major": 9,
+        "hard_coded_group_total": 10500000,
+        "published_sum": 8800000,
+        "difference": -1700000,
+        "reconciles": false
+      }
+    ],
+    "groups_that_do_not_reconcile": [
+      9
+    ]
+  },
+  "exposure_scores": {
+    "records": 173,
+    "fields_present": [
+      "exposure",
+      "primary_risk_vector",
+      "rationale",
+      "title"
+    ],
+    "exposure_distribution": {
+      "count": 173,
+      "non_null": 173,
+      "null": 0,
+      "distinct": 8,
+      "min": 1.0,
+      "max": 8.0,
+      "median": 4.0,
+      "mean": 3.919075,
+      "zero_or_negative": 0,
+      "most_common": [
+        {
+          "value": 2.0,
+          "n": 48,
+          "share_of_rows": 0.2775
+        },
+        {
+          "value": 5.0,
+          "n": 39,
+          "share_of_rows": 0.2254
+        },
+        {
+          "value": 3.0,
+          "n": 26,
+          "share_of_rows": 0.1503
+        },
+        {
+          "value": 6.0,
+          "n": 22,
+          "share_of_rows": 0.1272
+        },
+        {
+          "value": 4.0,
+          "n": 15,
+          "share_of_rows": 0.0867
+        }
+      ],
+      "max_repeat_share": 0.2775
+    },
+    "primary_risk_vector_counts": {
+      "knowledge_work_routinization": 72,
+      "writing_automation": 3,
+      "analysis_automation": 15,
+      "code_generation": 7,
+      "minimal": 76
+    },
+    "provenance_fields_missing": [
+      "rubric_version",
+      "prompt_version",
+      "model_provider",
+      "model_id",
+      "scoring_date",
+      "temperature",
+      "run_count",
+      "aggregation_method",
+      "uncertainty_or_stability",
+      "human_review_status",
+      "raw_response_reference"
+    ],
+    "has_any_model_provenance": false,
+    "duplicate_titles": []
+  },
+  "crosswalk": {
+    "crosswalk_table_exists": false,
+    "mapping_mechanism": "pipeline_utils.SOC_TO_PSOC_MAJOR (US SOC 2-digit major -> PSOC major group)",
+    "match_type_recorded": false,
+    "match_quality_recorded": false,
+    "mapping_basis_recorded": false,
+    "review_status_recorded": false,
+    "distinct_soc_majors_mapped": 22,
+    "many_to_one_targets": {
+      "2": [
+        "13",
+        "15",
+        "17",
+        "19",
+        "21",
+        "23",
+        "25",
+        "27",
+        "29"
+      ],
+      "3": [
+        "31",
+        "33",
+        "39",
+        "41"
+      ],
+      "5": [
+        "35",
+        "37"
+      ],
+      "7": [
+        "47",
+        "49"
+      ],
+      "8": [
+        "51",
+        "53"
+      ]
+    },
+    "psoc_majors_reachable_from_soc": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "psoc_majors_unreachable_from_soc": [
+      9
+    ],
+    "soc_majors_present_in_published_rows": {
+      "11": 12,
+      "15": 4,
+      "17": 2,
+      "25": 40,
+      "29": 9,
+      "31": 3,
+      "33": 5,
+      "35": 15,
+      "37": 5,
+      "39": 4,
+      "41": 6,
+      "43": 12,
+      "45": 13,
+      "47": 11,
+      "49": 7,
+      "51": 6,
+      "53": 9
+    }
+  },
+  "aggregate_component_overlap": {
+    "ph_native_records": 10,
+    "onet_records": 163,
+    "ph_records_with_overlapping_onet_titles": 9,
+    "overlap_detail": [
+      {
+        "ph_record": "Barangay health workers",
+        "ph_employment": 330000,
+        "overlapping_onet_titles": [
+          "Health Specialties Teachers, Postsecondary"
+        ],
+        "overlapping_onet_employment": 100851
+      },
+      {
+        "ph_record": "Kasambahay (domestic workers)",
+        "ph_employment": 1600000,
+        "overlapping_onet_titles": [
+          "First-Line Supervisors of Housekeeping and Janitorial Workers",
+          "Janitors and Cleaners, Except Maids and Housekeeping Cleaners",
+          "Maids and Housekeeping Cleaners"
+        ],
+        "overlapping_onet_employment": 1146022
+      },
+      {
+        "ph_record": "Tricycle / jeepney drivers",
+        "ph_employment": 950000,
+        "overlapping_onet_titles": [
+          "Ambulance Drivers and Attendants, Except Emergency Medical Technicians",
+          "Bus Drivers, School",
+          "Bus Drivers, Transit and Intercity",
+          "Business Teachers, Postsecondary",
+          "Driver/Sales Workers",
+          "Heavy and Tractor-Trailer Truck Drivers",
+          "Pile Driver Operators"
+        ],
+        "overlapping_onet_employment": 1459788
+      },
+      {
+        "ph_record": "Fisherfolk",
+        "ph_employment": 870000,
+        "overlapping_onet_titles": [
+          "First-Line Supervisors of Farming, Fishing, and Forestry Workers",
+          "Fishing and Hunting Workers"
+        ],
+        "overlapping_onet_employment": 1419534
+      },
+      {
+        "ph_record": "Delivery riders",
+        "ph_employment": 620000,
+        "overlapping_onet_titles": [
+          "Ambulance Drivers and Attendants, Except Emergency Medical Technicians",
+          "Bus Drivers, School",
+          "Bus Drivers, Transit and Intercity",
+          "Driver/Sales Workers",
+          "Heavy and Tractor-Trailer Truck Drivers",
+          "Pile Driver Operators"
+        ],
+        "overlapping_onet_employment": 1358937
+      },
+      {
+        "ph_record": "Seafarers / merchant marine",
+        "ph_employment": 410000,
+        "overlapping_onet_titles": [
+          "Atmospheric, Earth, Marine, and Space Sciences Teachers, Postsecondary"
+        ],
+        "overlapping_onet_employment": 100851
+      },
+      {
+        "ph_record": "Agricultural farm laborers",
+        "ph_employment": 4200000,
+        "overlapping_onet_titles": [
+          "Agricultural Equipment Operators",
+          "Agricultural Inspectors",
+          "Agricultural Sciences Teachers, Postsecondary",
+          "Agricultural Workers, All Other",
+          "Farmers, Ranchers, and Other Agricultural Managers",
+          "Farmworkers and Laborers, Crop, Nursery, and Greenhouse",
+          "Farmworkers, Farm, Ranch, and Aquacultural Animals",
+          "First-Line Supervisors of Farming, Fishing, and Forestry Workers",
+          "Graders and Sorters, Agricultural Products"
+        ],
+        "overlapping_onet_employment": 4942593
+      },
+      {
+        "ph_record": "OFW caregivers",
+        "ph_employment": 1600000,
+        "overlapping_onet_titles": [
+          "Acute Care Nurses",
+          "Career/Technical Education Teachers, Middle School",
+          "Career/Technical Education Teachers, Postsecondary",
+          "Career/Technical Education Teachers, Secondary School",
+          "Critical Care Nurses",
+          "Middle School Teachers, Except Special and Career/Technical Education",
+          "Secondary School Teachers, Except Special and Career/Technical Education"
+        ],
+        "overlapping_onet_employment": 595953
+      },
+      {
+        "ph_record": "Street vendors / market sellers",
+        "ph_employment": 3000000,
+        "overlapping_onet_titles": [
+          "Advertising Sales Agents",
+          "Cashiers",
+          "Driver/Sales Workers",
+          "First-Line Supervisors of Non-Retail Sales Workers",
+          "First-Line Supervisors of Retail Sales Workers",
+          "Sales Engineers",
+          "Sales Managers"
+        ],
+        "overlapping_onet_employment": 1295499
+      }
+    ],
+    "note": "Both sets share a single employment budget per PSOC major group, so the published per-occupation employment for overlapping concepts is neither independent nor additive."
+  },
+  "ofw_share_denominator_test": {
+    "constant_per_psoc_major": true,
+    "value_by_psoc_major": {
+      "1": 0.01,
+      "2": 0.06,
+      "3": 0.04,
+      "4": 0.02,
+      "5": 0.13,
+      "6": 0.02,
+      "7": 0.15,
+      "8": 0.15,
+      "9": 0.44
+    },
+    "sum_of_group_constants": 1.02,
+    "sums_to_one_within_tolerance": true,
+    "interpretation": "The nine group constants sum to ~1.0, which is the signature of a distribution of OFWs across occupation groups, P(occupation | OFW). v1 displays it as the share of an occupation's workers who are OFWs, P(OFW | occupation). These are different quantities and the published label is wrong."
+  },
+  "repeated_value_clusters": {
+    "distinct_repeated_values": 20,
+    "rows_sharing_a_repeated_employment_value": 150,
+    "share_of_published_rows": 0.8671,
+    "clusters": [
+      {
+        "employment_value": 100851,
+        "occupations": 39,
+        "example_titles": [
+          "Agricultural Sciences Teachers, Postsecondary",
+          "Anthropology and Archeology Teachers, Postsecondary",
+          "Architecture Teachers, Postsecondary",
+          "Area, Ethnic, and Cultural Studies Teachers, Postsecondary",
+          "Art, Drama, and Music Teachers, Postsecondary"
+        ]
+      },
+      {
+        "employment_value": 173913,
+        "occupations": 16,
+        "example_titles": [
+          "Advertising Sales Agents",
+          "Counter and Rental Clerks",
+          "Crematory Operators",
+          "First-Line Supervisors of Correctional Officers",
+          "First-Line Supervisors of Entertainment and Recreation Workers, Except Gambling Services"
+        ]
+      },
+      {
+        "employment_value": 45842,
+        "occupations": 13,
+        "example_titles": [
+          "Acute Care Nurses",
+          "Advanced Practice Psychiatric Nurses",
+          "Clinical Nurse Specialists",
+          "Computer Hardware Engineers",
+          "Computer Network Architects"
+        ]
+      },
+      {
+        "employment_value": 227642,
+        "occupations": 11,
+        "example_titles": [
+          "Bill and Account Collectors",
+          "Billing and Posting Clerks",
+          "Bookkeeping, Accounting, and Auditing Clerks",
+          "Brokerage Clerks",
+          "Correspondence Clerks"
+        ]
+      },
+      {
+        "employment_value": 93023,
+        "occupations": 9,
+        "example_titles": [
+          "Administrative Services Managers",
+          "Advertising and Promotions Managers",
+          "Architectural and Engineering Managers",
+          "Biofuels Production Managers",
+          "Biofuels/Biodiesel Technology and Product Development Managers"
+        ]
+      },
+      {
+        "employment_value": 445675,
+        "occupations": 8,
+        "example_titles": [
+          "Chefs and Head Cooks",
+          "Cooks, All Other",
+          "Cooks, Fast Food",
+          "Cooks, Institution and Cafeteria",
+          "Cooks, Private Household"
+        ]
+      },
+      {
+        "employment_value": 709767,
+        "occupations": 7,
+        "example_titles": [
+          "Agricultural Equipment Operators",
+          "Agricultural Inspectors",
+          "Agricultural Workers, All Other",
+          "Farmworkers and Laborers, Crop, Nursery, and Greenhouse",
+          "First-Line Supervisors of Farming, Fishing, and Forestry Workers"
+        ]
+      },
+      {
+        "employment_value": 23451,
+        "occupations": 7,
+        "example_titles": [
+          "Computer, Automated Teller, and Office Machine Repairers",
+          "Control and Valve Installers and Repairers, Except Mechanical Door",
+          "First-Line Supervisors of Mechanics, Installers, and Repairers",
+          "Helpers--Installation, Maintenance, and Repair Workers",
+          "Installation, Maintenance, and Repair Workers, All Other"
+        ]
+      },
+      {
+        "employment_value": 318340,
+        "occupations": 5,
+        "example_titles": [
+          "Fast Food and Counter Workers",
+          "First-Line Supervisors of Food Preparation and Serving Workers",
+          "First-Line Supervisors of Housekeeping and Janitorial Workers",
+          "Food Preparation Workers",
+          "Food Preparation and Serving Related Workers, All Other"
+        ]
+      },
+      {
+        "employment_value": 443605,
+        "occupations": 5,
+        "example_titles": [
+          "Animal Breeders",
+          "Fallers",
+          "Farmworkers, Farm, Ranch, and Aquacultural Animals",
+          "Forest and Conservation Workers",
+          "Log Graders and Scalers"
+        ]
+      },
+      {
+        "employment_value": 146303,
+        "occupations": 5,
+        "example_titles": [
+          "Airline Pilots, Copilots, and Flight Engineers",
+          "Computer Numerically Controlled Tool Operators",
+          "First-Line Supervisors of Material-Moving Machine and Vehicle Operators",
+          "Rail Yard Engineers, Dinkey Operators, and Hostlers",
+          "Stationary Engineers and Boiler Operators"
+        ]
+      },
+      {
+        "employment_value": 263345,
+        "occupations": 5,
+        "example_titles": [
+          "Ambulance Drivers and Attendants, Except Emergency Medical Technicians",
+          "Bus Drivers, School",
+          "Bus Drivers, Transit and Intercity",
+          "Driver/Sales Workers",
+          "Heavy and Tractor-Trailer Truck Drivers"
+        ]
+      },
+      {
+        "employment_value": 227385,
+        "occupations": 4,
+        "example_titles": [
+          "Baristas",
+          "Bartenders",
+          "First-Line Supervisors of Landscaping, Lawn Service, and Groundskeeping Workers",
+          "Grounds Maintenance Workers, All Other"
+        ]
+      },
+      {
+        "employment_value": 56283,
+        "occupations": 4,
+        "example_titles": [
+          "Helpers--Carpenters",
+          "Helpers--Electricians",
+          "Helpers--Pipelayers, Plumbers, Pipefitters, and Steamfitters",
+          "Plumbers, Pipefitters, and Steamfitters"
+        ]
+      },
+      {
+        "employment_value": 1600000,
+        "occupations": 2,
+        "example_titles": [
+          "Kasambahay (domestic workers)",
+          "OFW caregivers"
+        ]
+      }
+    ]
+  },
+  "us_specific_concentration": {
+    "postsecondary_teacher_specialisations": {
+      "occupations": 33,
+      "employment_assigned": 3328083,
+      "share_of_published_employment": 0.0679,
+      "distinct_employment_values": 1
+    },
+    "us_style_first_line_supervisors": {
+      "occupations": 19,
+      "employment_assigned": 3845415,
+      "share_of_published_employment": 0.0785,
+      "distinct_employment_values": 9
+    }
+  },
+  "determinism": {
+    "committed_intermediates": {
+      "data/derived/onet_occupations.json": false,
+      "data/derived/ph_occupations_v2.json": false,
+      "data/derived/ph_occupations_v2_with_stats.json": false
+    },
+    "all_intermediates_present": false,
+    "rebuild_requires_network": true,
+    "rebuild_blockers": [
+      "fetch_onet downloads https://www.onetcenter.org/dl_files/database/db_30_2_text.zip",
+      "the three intermediates above are .gitignored, so a clean checkout cannot reproduce data/derived/occupations_ph.csv without network access",
+      "score_ai_only requires OPENROUTER_API_KEY and a live model endpoint"
+    ],
+    "llm_scoring_is_reproducible": false,
+    "llm_scoring_notes": "temperature=0.2, single run, no seed, no raw responses retained"
+  },
+  "seed_vs_published": {
+    "seed_records": 44,
+    "published_records": 173,
+    "seed_titles_retained_in_published": 8,
+    "seed_titles_dropped": [
+      "accountants",
+      "administrative clerks",
+      "automotive mechanics",
+      "bookkeeping clerks",
+      "bpo and call center agents",
+      "bus and truck drivers",
+      "civil engineers",
+      "computer support specialists",
+      "construction project managers",
+      "data encoding clerks",
+      "electrical engineering technicians",
+      "factory machine operators",
+      "fishers and aquaculture workers",
+      "food service workers",
+      "garbage collectors and sanitation workers",
+      "general and operations managers",
+      "hairdressers and beauty service workers",
+      "hotel and restaurant managers",
+      "janitors and cleaners",
+      "jeepney drivers",
+      "livestock and poultry raisers",
+      "masons and tile setters",
+      "medical laboratory technicians",
+      "payroll clerks",
+      "physicians and medical doctors",
+      "porters and freight handlers",
+      "public school teachers",
+      "retail salespersons",
+      "rice and corn farmers",
+      "seafarers and merchant marine ratings",
+      "security guards",
+      "street vendors and market sellers",
+      "surveying and mapping technicians",
+      "tricycle drivers",
+      "vegetable and fruit growers",
+      "welders and flame cutters"
+    ],
+    "published_titles_not_in_seed": 165
+  }
+}
