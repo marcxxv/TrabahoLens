@@ -1,0 +1,363 @@
+# TrabahoLens v2 source registry
+#
+# One entry per source the project uses or intends to use. A source may be
+# listed here and still have no data: `retrieval.status` says which.
+#
+# Nothing may be published from a source that is not in this file. Validators
+# reject any metric observation whose `source_id` is absent here.
+
+registry_version: "1.0.0"
+schema: trabaholens-source-registry/1
+
+# Hierarchy positions, highest authority first. Recorded so that a reviewer can
+# see at a glance whether a value came from where it should have.
+hierarchy:
+  1: Philippine Statistics Authority
+  2: Other Philippine government agencies
+  3: Official international occupational databases
+  4: Documented industry administrative data
+  5: Transparent third-party datasets
+  6: Model-generated or manually curated inputs
+
+sources:
+
+  - source_id: psa_psoc
+    tier: 1
+    organization: Philippine Statistics Authority
+    dataset: Philippine Standard Occupational Classification (PSOC) 2012
+    purpose: Canonical occupational classification and code list.
+    authoritative_url: https://psa.gov.ph/classification/psoc
+    api_or_download: Published volume (PDF/XLS) on the PSA classification page.
+    download_url: https://psa.gov.ph/classification/psoc
+    classification_version: PSOC 2012
+    survey_universe: n/a - a classification, not a survey.
+    exclusions: n/a
+    reference_period: n/a
+    redistribution: Not redistributed. Acquisition instruction only.
+    license: >-
+      Philippine government work. PSA classification volumes are published for
+      public use; the PSA does not attach an open-data licence identifier to
+      them. Reuse should carry PSA attribution. Confirm terms with PSA before
+      redistributing the volume itself.
+    attribution: "Philippine Statistics Authority, Philippine Standard Occupational Classification (PSOC) 2012."
+    retrieval:
+      status: not_retrieved
+      blocked_reason: >-
+        psa.gov.ph is unreachable from the build environment (HTTP 403 at the
+        egress proxy). See docs/limitations.md.
+      manual_instruction: >-
+        Download the PSOC 2012 volume from the PSA classification page, place it
+        at data/raw/psa/psoc2012/, then run `make validate-raw` to record its
+        hash in the retrieval manifest.
+    used_for:
+      - classifications.csv (major and sub-major group codes and titles)
+    notes: >-
+      The code list currently in data/canonical/classifications.csv was entered
+      from ISCO-08-aligned classification documentation, not from this file, and
+      every row is marked verification_status=unverified_pending_source until
+      this source is retrieved and diffed against it.
+
+  - source_id: psa_lfs
+    tier: 1
+    organization: Philippine Statistics Authority
+    dataset: Labor Force Survey (LFS)
+    purpose: Employed persons by occupation.
+    authoritative_url: https://openstat.psa.gov.ph/PXWeb/pxweb/en/DB/DB__1B__LFS/
+    api_or_download: PSA OpenSTAT PXWeb API (json-stat2), table id to be confirmed on retrieval.
+    download_url: https://openstat.psa.gov.ph/PXWeb/api/v1/en/DB/DB__1B__LFS/
+    classification_version: To be read from the table metadata on retrieval. Do not assume.
+    survey_universe: >-
+      Household-based sample survey of the population 15 years and over, all
+      regions. The exact universe and any reference-week rules must be quoted
+      from the release notes of the round used, not assumed.
+    exclusions: >-
+      Institutional population. Overseas Filipino workers are outside the
+      domestic employed population; check the round's treatment explicitly.
+    reference_period: Quarterly rounds and annual averages. Round must be recorded per observation.
+    redistribution: >-
+      Not redistributed in this repository. Acquired by script into data/raw/,
+      which is gitignored; the hash and retrieval date are committed.
+    license: >-
+      PSA statistical tables are public official statistics. Reuse requires PSA
+      attribution. Not covered by this repository's MIT licence.
+    attribution: "Philippine Statistics Authority, Labor Force Survey."
+    retrieval:
+      status: blocked
+      blocked_reason: >-
+        openstat.psa.gov.ph is unreachable from the build environment (HTTP 403
+        at the egress proxy).
+      manual_instruction: >-
+        Run `make fetch-data` from a network that can reach openstat.psa.gov.ph.
+        The fetcher records URL, retrieval timestamp and SHA-256 of every
+        response into data/sources/retrieval-manifest.json.
+    granularity_available: >-
+      UNVERIFIED. PSA OpenSTAT publishes LFS employment by major occupation
+      group. Whether any finer occupational breakdown is publicly available, and
+      whether public-use microdata with survey weights can be obtained, must be
+      established on retrieval before any finer figure is published.
+    used_for:
+      - metric employment_count
+    notes: >-
+      If only major-group tables prove available, employment is published at
+      major-group level and finer occupations are marked unavailable. Splitting
+      a group total across detailed occupations is prohibited.
+
+  - source_id: psa_ows
+    tier: 1
+    organization: Philippine Statistics Authority
+    dataset: Occupational Wages Survey (OWS)
+    purpose: Wages by occupation in covered establishments.
+    authoritative_url: https://psa.gov.ph/statistics/occupational-wages-survey
+    api_or_download: Published statistical tables; some series mirrored in OpenSTAT.
+    download_url: https://openstat.psa.gov.ph/PXWeb/api/v1/en/DB/DB__1B__OWS/
+    classification_version: To be read from the release. Do not assume.
+    survey_universe: >-
+      Establishment-based. Covers non-agricultural establishments at or above an
+      employment threshold. The threshold and the covered industries must be
+      quoted from the round used.
+    exclusions: >-
+      Agriculture, establishments below the employment threshold, informal-sector
+      workers, own-account and self-employed workers, unpaid family workers.
+      These exclusions are large in the Philippine context.
+    reference_period: Biennial rounds. Round must be recorded per observation.
+    redistribution: Not redistributed. Acquired by script; hash committed.
+    license: >-
+      PSA official statistics. Attribution required. Not covered by this
+      repository's MIT licence.
+    attribution: "Philippine Statistics Authority, Occupational Wages Survey."
+    retrieval:
+      status: blocked
+      blocked_reason: psa.gov.ph and openstat.psa.gov.ph unreachable from the build environment (HTTP 403).
+      manual_instruction: Run `make fetch-data` from a permitted network.
+    granularity_available: >-
+      UNVERIFIED. OWS publishes wages for a selected list of occupations, not
+      for every PSOC group. The wage concept published (basic pay versus total
+      earnings, average versus median) must be read off the table and recorded
+      in the metric definition before publication.
+    used_for:
+      - metric wage_basic_pay
+    notes: >-
+      v1 targeted table 0031B3E1030.px, which is wages by INDUSTRY and cannot
+      yield an occupational wage. Any replacement must be an occupation table.
+      An OWS wage must never be described as the average earnings of all
+      Filipino workers in that occupation.
+
+  - source_id: psa_sof
+    tier: 1
+    organization: Philippine Statistics Authority
+    dataset: Survey on Overseas Filipinos (SOF)
+    purpose: Distribution of overseas Filipino workers by major occupation group.
+    authoritative_url: https://psa.gov.ph/statistics/survey/overseas-filipinos
+    api_or_download: Published statistical tables.
+    download_url: https://psa.gov.ph/statistics/survey/overseas-filipinos
+    classification_version: To be read from the release.
+    survey_universe: >-
+      Rider to the LFS October round. Covers overseas Filipinos who left within
+      a defined window and are members of sampled households. The OFW definition
+      used by the round must be quoted, not paraphrased.
+    exclusions: >-
+      Overseas Filipinos with no household member remaining in the Philippines
+      are structurally under-covered by a household-based survey.
+    reference_period: Annual, October round.
+    redistribution: Not redistributed.
+    license: PSA official statistics. Attribution required.
+    attribution: "Philippine Statistics Authority, Survey on Overseas Filipinos."
+    retrieval:
+      status: blocked
+      blocked_reason: psa.gov.ph unreachable from the build environment (HTTP 403).
+      manual_instruction: Run `make fetch-data` from a permitted network.
+    granularity_available: Major occupation group.
+    used_for:
+      - metric ofw_distribution_share
+    notes: >-
+      SOF supports P(occupation | OFW) — how OFWs are distributed across
+      occupation groups. It does NOT support P(OFW | occupation) without a
+      compatible domestic denominator for the same occupation and universe.
+      Only the distribution may be published, under that name.
+
+  - source_id: psa_informal
+    tier: 1
+    organization: Philippine Statistics Authority
+    dataset: Informal sector / informal employment statistics
+    purpose: Informality by occupation group.
+    authoritative_url: https://psa.gov.ph/statistics/labor-force-survey
+    api_or_download: Published tables; availability by occupation is unconfirmed.
+    classification_version: To be read from the release.
+    survey_universe: To be quoted from the release.
+    exclusions: To be quoted from the release.
+    reference_period: To be recorded per observation.
+    redistribution: Not redistributed.
+    license: PSA official statistics. Attribution required.
+    attribution: "Philippine Statistics Authority."
+    retrieval:
+      status: blocked
+      blocked_reason: psa.gov.ph unreachable from the build environment (HTTP 403).
+      manual_instruction: Confirm first that an occupation-level informality table exists at all.
+    granularity_available: UNVERIFIED, and possibly none by occupation.
+    used_for:
+      - metric informal_employment_share
+    notes: >-
+      "Informal sector" and "informal employment" are distinct concepts with
+      different counts. Whichever the release uses must be carried into the
+      metric name. If no occupational breakdown exists, the metric stays
+      unavailable.
+
+  - source_id: onet
+    tier: 3
+    organization: U.S. Department of Labor, O*NET Resource Center
+    dataset: O*NET Database
+    purpose: >-
+      US occupational descriptions, task statements, task importance and
+      frequency ratings, and Job Zones. Used as task evidence and as a
+      US-derived proxy, never as a Philippine observation.
+    authoritative_url: https://www.onetcenter.org/database.html
+    api_or_download: https://www.onetcenter.org/dl_files/database/db_30_2_text.zip
+    download_url: https://www.onetcenter.org/dl_files/database/db_30_2_text.zip
+    classification_version: O*NET-SOC 2019
+    survey_universe: US occupations; incumbent and analyst ratings.
+    exclusions: Not a Philippine source. No Philippine establishments or workers are sampled.
+    reference_period: Release 30.2
+    redistribution: >-
+      Redistribution is permitted under CC BY 4.0 with attribution, but this
+      repository does not vendor the archive; it is downloaded by script and
+      hashed.
+    license: >-
+      O*NET data are provided by the U.S. Department of Labor under the Creative
+      Commons Attribution 4.0 International licence (CC BY 4.0).
+    attribution: >-
+      "This product uses data from O*NET OnLine by the U.S. Department of Labor,
+      Employment and Training Administration (USDOL/ETA). O*NET is a trademark
+      of USDOL/ETA. Used under CC BY 4.0."
+    retrieval:
+      status: blocked
+      blocked_reason: www.onetcenter.org is unreachable from the build environment (HTTP 403 at the egress proxy).
+      manual_instruction: Run `make fetch-data` from a permitted network.
+    granularity_available: O*NET-SOC detailed occupation.
+    used_for:
+      - metric onet_job_zone
+      - task statements for the exposure layer
+    notes: >-
+      Every O*NET-derived value must be displayed as a US-derived proxy carrying
+      its crosswalk quality. Task profiles must not be transferred to a
+      Philippine occupation without a proxy label.
+
+  - source_id: philjobnet
+    tier: 2
+    organization: Department of Labor and Employment / PhilJobNet
+    dataset: PhilJobNet job postings
+    purpose: Would support a job-posting demand signal.
+    authoritative_url: https://www.philjobnet.gov.ph/
+    api_or_download: No documented public bulk download or API identified.
+    classification_version: Unknown; postings are not reliably occupation-coded.
+    survey_universe: >-
+      Employers who choose to post on one government platform. Not a sample of
+      Philippine labour demand.
+    exclusions: All hiring that does not appear on this platform.
+    reference_period: n/a
+    redistribution: Not redistributed.
+    license: Not established. No terms reviewed because no data is used.
+    attribution: Not applicable while unused.
+    retrieval:
+      status: not_used
+      blocked_reason: >-
+        No documented public download or API. Scraping is not appropriate where
+        no official downloadable table or API exists, and platform-selection
+        bias would make the result unrepresentative regardless.
+      manual_instruction: >-
+        Before any use: establish access method, collection dates, deduplication
+        of employer and posting duplicates, occupation coding scheme, regional
+        coverage, expiry handling and normalisation.
+    granularity_available: n/a
+    used_for: []
+    notes: >-
+      v1 cited PhilJobNet to justify a hiring-intensity field that was the
+      literal constant 50. The field and the citation are both removed. If
+      posting data is ever collected it must be labelled a posting or platform
+      demand signal, never total hiring demand.
+
+  - source_id: ibpap
+    tier: 4
+    organization: IT and Business Process Association of the Philippines (IBPAP)
+    dataset: Industry roadmaps and headcount projections
+    purpose: Would support IT-BPM industry context.
+    authoritative_url: https://www.ibpap.org/
+    api_or_download: Industry publications; no machine-readable occupational series identified.
+    classification_version: n/a - industry-level, not occupational.
+    survey_universe: IT-BPM industry members.
+    exclusions: All non-member and non-IT-BPM employment.
+    reference_period: n/a
+    redistribution: Not redistributed.
+    license: Not established. No terms reviewed because no data is used.
+    attribution: Not applicable while unused.
+    retrieval:
+      status: not_used
+      blocked_reason: No occupational dataset identified; v1 used none.
+      manual_instruction: >-
+        If used, keep industry projections labelled as industry-level. Assigning
+        an industry forecast to an occupation requires a documented mapping and
+        an explicit caveat.
+    granularity_available: Industry aggregate only.
+    used_for: []
+    notes: An industry projection is not an occupational statistic.
+
+  - source_id: dmw
+    tier: 2
+    organization: Department of Migrant Workers (DMW), formerly POEA
+    dataset: Overseas employment administrative statistics
+    purpose: Would support deployment counts by occupation.
+    authoritative_url: https://dmw.gov.ph/
+    api_or_download: Published statistical tables; specific dataset not yet identified.
+    classification_version: Unknown.
+    survey_universe: >-
+      Administrative records of processed contracts — a flow of deployments, not
+      a stock of workers. Not comparable with an LFS employment stock.
+    exclusions: Undocumented migration; workers not processed through the agency.
+    reference_period: n/a
+    redistribution: Not redistributed.
+    license: Not established. No terms reviewed because no data is used.
+    attribution: Not applicable while unused.
+    retrieval:
+      status: not_used
+      blocked_reason: v1 cited "POEA" generically with no dataset attached.
+      manual_instruction: >-
+        Identify the exact historical or current table before citing. POEA's
+        functions were absorbed into the DMW in 2022, so current data are
+        attributed to DMW; historical series should keep their POEA attribution
+        and date.
+    granularity_available: n/a
+    used_for: []
+    notes: Generic attribution removed from the interface. Not re-added without a named dataset.
+
+  - source_id: llm_scoring
+    tier: 6
+    organization: Model provider, recorded per run
+    dataset: TrabahoLens generative-AI task exposure scoring runs
+    purpose: Experimental task-exposure scores.
+    authoritative_url: https://openrouter.ai/api/v1
+    api_or_download: Chat completions API.
+    classification_version: n/a
+    survey_universe: n/a - model output, not a survey.
+    exclusions: n/a
+    reference_period: Scoring date, recorded per run.
+    redistribution: >-
+      Raw model responses are stored under data/exposure/runs/<run_id>/ so a
+      published score can be traced to the response that produced it.
+    license: >-
+      Model outputs are generated by this project. Provider terms govern the
+      API call itself; check your provider agreement before redistributing raw
+      responses.
+    attribution: "TrabahoLens experimental scoring; model and prompt version recorded per score."
+    retrieval:
+      status: blocked
+      blocked_reason: >-
+        openrouter.ai is unreachable from the build environment (HTTP 403 at the
+        egress proxy) and OPENROUTER_API_KEY is unset.
+      manual_instruction: >-
+        Set OPENROUTER_API_KEY and run `make score-exposure` from a permitted
+        network. Reruns write a new run directory; history is never overwritten.
+    granularity_available: Whatever granularity the task evidence supports.
+    used_for:
+      - metric gen_ai_task_exposure
+    notes: >-
+      Scores are experimental and have not undergone independent
+      labour-economist validation. A model's rationale is not validation.

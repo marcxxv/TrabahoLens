@@ -1,0 +1,51 @@
+{
+  "schema": "trabaholens-retrieval-manifest/1",
+  "description": "Every attempt to retrieve a registered source, successful or not. Failures are recorded so that an empty dataset is explained rather than merely empty.",
+  "retrievals": [
+    {
+      "source_id": "psa_psoc",
+      "url": "https://psa.gov.ph/classification/psoc",
+      "destination": "data/raw/psa_psoc/psoc",
+      "attempted_at": "2026-09-14T17:16:46Z",
+      "status": "failed",
+      "error": "ProxyError: HTTPSConnectionPool(host='psa.gov.ph', port=443): Max retries exceeded with url: /classification/psoc (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+      "sha256": null
+    },
+    {
+      "source_id": "psa_lfs",
+      "url": "https://openstat.psa.gov.ph/PXWeb/api/v1/en/DB/DB__1B__LFS/",
+      "destination": "data/raw/psa_lfs/DB__1B__LFS",
+      "attempted_at": "2026-09-14T17:16:46Z",
+      "status": "failed",
+      "error": "ProxyError: HTTPSConnectionPool(host='openstat.psa.gov.ph', port=443): Max retries exceeded with url: /PXWeb/api/v1/en/DB/DB__1B__LFS/ (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+      "sha256": null
+    },
+    {
+      "source_id": "psa_ows",
+      "url": "https://openstat.psa.gov.ph/PXWeb/api/v1/en/DB/DB__1B__OWS/",
+      "destination": "data/raw/psa_ows/DB__1B__OWS",
+      "attempted_at": "2026-09-14T17:16:46Z",
+      "status": "failed",
+      "error": "ProxyError: HTTPSConnectionPool(host='openstat.psa.gov.ph', port=443): Max retries exceeded with url: /PXWeb/api/v1/en/DB/DB__1B__OWS/ (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+      "sha256": null
+    },
+    {
+      "source_id": "psa_sof",
+      "url": "https://psa.gov.ph/statistics/survey/overseas-filipinos",
+      "destination": "data/raw/psa_sof/overseas-filipinos",
+      "attempted_at": "2026-09-14T17:16:47Z",
+      "status": "failed",
+      "error": "ProxyError: HTTPSConnectionPool(host='psa.gov.ph', port=443): Max retries exceeded with url: /statistics/survey/overseas-filipinos (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+      "sha256": null
+    },
+    {
+      "source_id": "onet",
+      "url": "https://www.onetcenter.org/dl_files/database/db_30_2_text.zip",
+      "destination": "data/raw/onet/db_30_2_text.zip",
+      "attempted_at": "2026-09-14T17:16:47Z",
+      "status": "failed",
+      "error": "ProxyError: HTTPSConnectionPool(host='www.onetcenter.org', port=443): Max retries exceeded with url: /dl_files/database/db_30_2_text.zip (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
+      "sha256": null
+    }
+  ]
+}
