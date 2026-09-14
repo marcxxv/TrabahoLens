@@ -1,6 +1,6 @@
 {
   "profile_schema": "trabaholens-audit-profile/1",
-  "repository_commit": "bd80047d578dbb9360e28a70f871b5f9be73921c",
+  "repository_commit": "84d2a9373a07fc95cf3f882dabb030c812ca1d73",
   "generated_by": "src/trabaholens/v2/audit_baseline.py",
   "inputs": {
     "data/legacy/v1/README.md": {

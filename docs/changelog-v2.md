@@ -112,8 +112,8 @@ Interface rebuilt around evidence:
 
 ### Validation and pipeline
 
-`v2/validate.py` with 14 check families; `Makefile`; GitHub Actions CI that
-fails on stale artifacts and non-deterministic builds; 67 tests.
+`v2/validate.py`; `Makefile`; GitHub Actions CI that fails on stale artifacts
+and non-deterministic builds; a test suite.
 
 Every validator is tested against a fixture that **violates** it. The released
 dataset is empty, so validating it alone would prove nothing.

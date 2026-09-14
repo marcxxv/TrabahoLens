@@ -39,7 +39,7 @@ What follows is component by component, then the direct answers.
 | Scoring harness | **Ready with caveats** | Guards and aggregation tested against a stub. Never run against a real model. |
 | Exposure scores | **Blocked by unavailable evidence** | None exist. v1's are not a fallback. |
 | Sensitivity and stability report | **Ready with caveats** | Generator works; reports honestly that no run exists. |
-| Validation suite | **Ready** | 14 check families, each tested against a violating fixture. |
+| Validation suite | **Ready** | Every check tested against a fixture that violates it. |
 | Pipeline and CI | **Ready** | Deterministic build proven; CI fails on stale artifacts. |
 | Interface | **Ready with caveats** | Evidence-first, disclaimer fixed, counts derived, no hazard framing. Untested with real users, and unexercised against populated data. |
 | Documentation | **Ready** | Methodology, dictionary, limitations, licensing, protocol, migration, changelog. |

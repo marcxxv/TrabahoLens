@@ -137,6 +137,29 @@ One row per (occupation unit, metric, reference period).
 | `suppression_status` | See above. |
 | `notes` | Including, for a blocked row, why it is blocked and the reading to avoid. |
 
+## Metric ids
+
+| `metric_id` | Name | Unit | Source | Published at |
+| --- | --- | --- | --- | --- |
+| `employment_count` | Employed persons | persons | PSA LFS | PSOC major group |
+| `wage_basic_pay` | Average monthly basic pay, OWS establishments | PHP/month | PSA OWS | occupation |
+| `ofw_distribution_share` | Distribution of OFWs by major occupation group | share of all OFWs | PSA SOF | PSOC major group |
+| `informal_employment_share` | Informal employment share | share of employed persons | PSA | PSOC major group |
+| `onet_job_zone` | O\*NET Job Zone (US) | ordinal 1–5 | O\*NET | occupation |
+| `gen_ai_task_exposure` | Generative-AI technical task exposure | 0–5 rubric score | LLM scoring | occupation |
+
+`gen_ai_task_exposure` is the only metric that is not an observation. It is an
+`experimental_model_score` produced under a versioned rubric and prompt, and it
+is stored in `model_scores.csv` across four separate dimensions (A–D) rather
+than as a single value. **It is not automation probability, replacement
+probability, displacement, job loss, or any forecast of employment change.**
+
+The full definition of each metric — including its denominator and the reading
+it is most often confused with — lives in `v2/schema.py` and is carried into the
+site payload under `metrics`.
+
+---
+
 ## `data/canonical/crosswalk_psoc_isco_soc.csv`
 
 | Column | Description |

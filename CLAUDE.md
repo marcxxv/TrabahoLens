@@ -31,7 +31,7 @@ cites them line by line.
 | `v2/build_release.py` | Release manifest and provenance-first site payload |
 | `v2/score_exposure.py` | Replicated task-exposure scoring harness |
 | `v2/exposure_analysis.py` | Stability and sensitivity report |
-| `v2/validate.py` | Release validation, 14 check families |
+| `v2/validate.py` | Release validation |
 | `v2/audit_baseline.py` | Profiles the archived v1 data |
 
 ## Non-negotiable rules

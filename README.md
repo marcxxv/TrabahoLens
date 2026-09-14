@@ -84,7 +84,7 @@ make build-metrics     # rebuild the canonical PSOC tables
 make score-exposure MODEL=<provider/model-id>
 make sensitivity       # stability and sensitivity report
 make build-site        # release manifest + site payload, then validate
-make test              # 67 tests
+make test              # validators, scoring harness, reproducibility
 make determinism       # prove two builds are byte-identical
 ```
 
