@@ -186,7 +186,7 @@ def print_group_summary(records: list[dict]) -> None:
         )
 
 
-def main() -> None:
+def _v1_main() -> None:
     records = load_source_records()
     current_map = load_current_occupations_map()
     ph_specific_map = ph_specific_sources(records)
@@ -222,5 +222,14 @@ def main() -> None:
     print_group_summary(stats_records)
 
 
-if __name__ == "__main__":
-    main()
+_RETIRED = (
+    "{name} is a TrabahoLens v1 module, retired by the credibility rebuild.\n"
+    "It is kept readable because docs/audit/baseline-audit.md cites it line by\n"
+    "line, but it must not run: it would regenerate values the audit found to be\n"
+    "synthetic, constant-by-category or placeholder.\n"
+    "See docs/migration-notes.md. Use the v2 pipeline: `make help`."
+)
+
+
+def main(*_args, **_kwargs):  # noqa: D401 - retired entry point
+    raise SystemExit(_RETIRED.format(name=__name__))

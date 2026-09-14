@@ -190,6 +190,10 @@ METRIC_OBSERVATIONS_COLUMNS = [
     "notes",
 ]
 
+# Cardinality flag semantics, shared by the builder and the validator:
+#   is_one_to_many - this psoc_code maps to more than one source_code
+#   is_many_to_one - this source_code is mapped to by more than one psoc_code
+# Both are derived from the table, never hand-set.
 CROSSWALK_COLUMNS = [
     "crosswalk_id",
     "psoc_code",

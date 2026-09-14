@@ -206,8 +206,6 @@ def build_crosswalk(classifications: list[dict[str, Any]]) -> list[dict[str, Any
                 "match_quality": "high",
                 "mapping_basis": "structural_derivation",
                 "review_status": "machine_proposed",
-                "is_one_to_many": "false",
-                "is_many_to_one": "false",
                 "notes": (
                     "PSOC 2012 is built on ISCO-08; major and sub-major skeletons "
                     "correspond by construction. Confirm against the PSA volume, "
@@ -239,8 +237,6 @@ def build_crosswalk(classifications: list[dict[str, Any]]) -> list[dict[str, Any
                 "match_quality": "low",
                 "mapping_basis": "undocumented_heuristic",
                 "review_status": "rejected",
-                "is_one_to_many": "false",
-                "is_many_to_one": "true" if many_to_one else "false",
                 "notes": (
                     "Inherited from v1 pipeline_utils.SOC_TO_PSOC_MAJOR. Recorded for "
                     "audit only. No match type, quality, basis or review was ever "
@@ -250,6 +246,33 @@ def build_crosswalk(classifications: list[dict[str, Any]]) -> list[dict[str, Any
             }
         )
 
+    return _annotate_cardinality(rows)
+
+
+def _annotate_cardinality(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Derive the cardinality flags from the table instead of asserting them.
+
+    Semantics, fixed here and enforced identically in ``v2/validate.py``:
+
+    * ``is_one_to_many`` - this PSOC code maps to more than one source code.
+    * ``is_many_to_one`` - this source code is mapped to by more than one PSOC
+      code.
+
+    Computing rather than hand-setting these means the flags cannot drift away
+    from what the table actually contains, which is the only reason they are
+    worth having.
+    """
+    forward: dict[tuple[str, str], set[str]] = {}
+    reverse: dict[tuple[str, str], set[str]] = {}
+    for row in rows:
+        forward.setdefault((row["psoc_code"], row["source_classification"]), set()).add(row["source_code"])
+        reverse.setdefault((row["source_code"], row["source_classification"]), set()).add(row["psoc_code"])
+
+    for row in rows:
+        one_to_many = len(forward[(row["psoc_code"], row["source_classification"])]) > 1
+        many_to_one = len(reverse[(row["source_code"], row["source_classification"])]) > 1
+        row["is_one_to_many"] = "true" if one_to_many else "false"
+        row["is_many_to_one"] = "true" if many_to_one else "false"
     return rows
 
 

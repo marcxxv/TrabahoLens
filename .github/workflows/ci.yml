@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Sync dependencies
+        run: uv sync --all-groups --frozen
+
+      # The audit must stay reproducible from the archived v1 data: it is the
+      # evidence base for every removal this rebuild made.
+      - name: Regenerate the baseline audit profile
+        run: make audit
+
+      - name: Rebuild canonical tables
+        run: make build-metrics
+
+      - name: Rebuild release
+        run: make build-release
+
+      # A dirty tree here means a committed artifact no longer matches its
+      # inputs — the staleness that v1 had no way to detect.
+      - name: Fail on stale generated artifacts
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "Generated artifacts are stale. Run 'make all' and commit the result."
+            git --no-pager diff --stat
+            exit 1
+          fi
+
+      - name: Validate release
+        run: make validate-release
+
+      - name: Determinism
+        run: make determinism
+
+      - name: Tests
+        run: make test

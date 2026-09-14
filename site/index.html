@@ -5,3141 +5,626 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="TrabahoLens is a minimalist Philippine job market treemap visualizer."
+      content="TrabahoLens is a Philippine labour-market research tool organised around the Philippine Standard Occupational Classification. Every figure shows what kind of evidence it is and where it came from."
     />
-    <meta name="theme-color" content="#0a0a0f" />
-    <meta property="og:title" content="TrabahoLens — Philippine Job Market Visualizer" />
-    <meta property="og:description" content="Interactive treemap of 173 Philippine occupations showing AI exposure, wages, education, and more." />
+    <meta name="theme-color" content="#0f1115" />
+    <meta property="og:title" content="TrabahoLens — Philippine occupational evidence ledger" />
+    <meta
+      property="og:description"
+      content="A PSOC-first view of Philippine occupations. Each metric states its evidence type, its source and its reference period — or says plainly that no value is available."
+    />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
-    <title>TrabahoLens — Philippine Job Market Visualizer</title>
+    <title>TrabahoLens — Philippine occupational evidence ledger</title>
     <style>
       *,
       *::before,
-      *::after {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
+      *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
       :root {
-        --bg: #0a0a0f;
-        --bg2: #12121a;
-        --fg: #e0e0e8;
-        --fg2: #888894;
-        --accent: #f2c98f;
+        --bg: #0f1115;
+        --bg2: #171a21;
+        --bg3: #1e222b;
+        --fg: #e6e8ee;
+        --fg2: #9aa0ae;
+        --fg3: #6b7280;
+        --line: #272c36;
+        --accent: #7aa2f7;
+
+        /* Evidence-class colours.
+           Deliberately NOT a green-to-red hazard ramp: these encode what kind
+           of evidence a number is, not how alarming it is. Hue distinguishes
+           class; nothing here reads as danger. */
+        --ev-official: #4ea1d3;
+        --ev-calculated: #63b3a6;
+        --ev-estimate: #b8a878;
+        --ev-proxy: #9a8fb8;
+        --ev-model: #c08a6e;
+        --ev-none: #5a6170;
       }
 
-      ::selection {
-        background: rgba(242, 201, 143, 0.22);
-        color: var(--fg);
+      @media (prefers-color-scheme: light) {
+        :root:not([data-theme="dark"]) {
+          --bg: #fbfcfd; --bg2: #ffffff; --bg3: #f2f4f7;
+          --fg: #1a1d23; --fg2: #545b68; --fg3: #79818f;
+          --line: #dfe3ea; --accent: #2f5fb8;
+          --ev-official: #1f6f9e; --ev-calculated: #2f7f71;
+          --ev-estimate: #8a7429; --ev-proxy: #6a5a91; --ev-model: #96542f;
+          --ev-none: #7a8292;
+        }
       }
+
+      html { color-scheme: dark light; }
 
       body {
         background: var(--bg);
         color: var(--fg);
-        font-family:
-          -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
-        min-height: 100vh;
-        line-height: 1.5;
-        -webkit-text-size-adjust: 100%;
-        scrollbar-width: thin;
-        scrollbar-color: rgba(140, 140, 150, 0.4) transparent;
+        font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+        -webkit-font-smoothing: antialiased;
       }
 
-      ::-webkit-scrollbar {
-        width: 6px;
-      }
-
-      ::-webkit-scrollbar-track {
-        background: transparent;
-      }
-
-      ::-webkit-scrollbar-thumb {
-        background: rgba(140, 140, 150, 0.4);
-        border-radius: 3px;
-      }
-
-      ::-webkit-scrollbar-thumb:hover {
-        background: rgba(140, 140, 150, 0.7);
-      }
-
-      /* Loading skeleton pulse */
-      @keyframes skeletonPulse {
-        0%, 100% { opacity: 0.4; }
-        50% { opacity: 0.8; }
-      }
-
-      .skeleton {
-        background: rgba(255, 255, 255, 0.06);
-        border-radius: 4px;
-        animation: skeletonPulse 1.6s ease-in-out infinite;
-        display: inline-block;
-      }
-
-      .skeleton-stat {
-        width: 60px;
-        height: 32px;
-      }
-
-      .skeleton-block {
-        width: 100%;
-        height: 60px;
-      }
-
-      /* Animated number counter */
-      @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(6px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-
-      .stat-animated {
-        animation: fadeInUp 0.35s ease-out;
-      }
-
-      /* Canvas fade for layer switch */
-      canvas#canvas {
-        transition: opacity 0.18s ease;
-      }
-
-      canvas#canvas.switching {
-        opacity: 0.4;
-      }
-
-      /* Layer description text */
-      .layer-desc {
-        font-size: 11px;
-        color: var(--fg2);
-        margin-top: 4px;
-        line-height: 1.35;
-        min-height: 15px;
-        transition: opacity 0.2s ease;
-      }
-
-      /* Keyboard hints */
-      .kbd-hint {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        font-size: 10px;
-        color: rgba(255, 255, 255, 0.3);
-        margin-top: 6px;
-      }
-
-      .kbd-hint kbd {
-        background: rgba(255, 255, 255, 0.06);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 3px;
-        padding: 1px 5px;
-        font-family: inherit;
-        font-size: 10px;
-        color: rgba(255, 255, 255, 0.4);
-      }
-
-      /* Tooltip enhancements */
-      #tooltip .tt-category {
-        display: inline-block;
-        font-size: 10px;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: var(--fg2);
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 3px;
-        padding: 1px 6px;
-        margin-bottom: 4px;
-      }
-
-      #tooltip .tt-percentile {
-        font-size: 11px;
-        color: rgba(255, 255, 255, 0.5);
-        margin-top: 2px;
-      }
-
-      #tooltip .tt-click-hint {
-        font-size: 10px;
-        color: rgba(255, 255, 255, 0.28);
-        margin-top: 6px;
-        text-align: center;
-        border-top: 1px solid rgba(255, 255, 255, 0.06);
-        padding-top: 6px;
-      }
-
-      #tooltip .tt-stats .mini-bar {
-        display: inline-block;
-        height: 3px;
-        border-radius: 1.5px;
-        background: rgba(255, 255, 255, 0.08);
-        width: 40px;
-        margin-left: 6px;
-        vertical-align: middle;
-        position: relative;
-        overflow: hidden;
-      }
-
-      #tooltip .tt-stats .mini-bar-fill {
-        position: absolute;
-        left: 0;
-        top: 0;
-        height: 100%;
-        border-radius: 1.5px;
-      }
-
-      #tooltip .tt-stats .value {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        gap: 4px;
-      }
-
-      /* Risk panel gauge */
-      .risk-gauge {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-top: 2px;
-      }
-
-      .risk-gauge-bar {
-        flex: 1;
-        height: 6px;
-        background: rgba(255, 255, 255, 0.06);
-        border-radius: 3px;
-        overflow: hidden;
-      }
-
-      .risk-gauge-fill {
-        height: 100%;
-        border-radius: 3px;
-        transition: width 0.4s ease;
-      }
-
-      .risk-gauge-label {
-        font-size: 20px;
-        font-weight: 700;
-        letter-spacing: -0.02em;
-        min-width: 40px;
-        text-align: right;
-      }
-
-      .risk-comparative {
-        font-size: 11px;
-        color: var(--fg2);
-        margin-top: 4px;
-      }
-
-      .risk-related {
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-      }
-
-      .risk-related-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 12px;
-        padding: 5px 8px;
-        background: rgba(255, 255, 255, 0.02);
-        border-radius: 4px;
-        border: 1px solid rgba(255, 255, 255, 0.04);
-      }
-
-      .risk-related-item .related-title {
-        color: var(--fg);
-        flex: 1;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .risk-related-item .related-score {
-        color: var(--fg2);
-        font-size: 11px;
-        flex-shrink: 0;
-        margin-left: 8px;
-      }
-
-      .risk-impact-row {
-        display: flex;
-        gap: 12px;
-        margin-top: 4px;
-      }
-
-      .risk-impact-item {
-        flex: 1;
-        text-align: center;
-      }
-
-      .risk-impact-item .impact-val {
-        font-size: 16px;
-        font-weight: 600;
-        color: var(--fg);
-      }
-
-      .risk-impact-item .impact-label {
-        font-size: 10px;
-        color: var(--fg2);
-        margin-top: 2px;
-      }
-
-      /* Selected tile pulse */
-      @keyframes selectedPulse {
-        0%, 100% { box-shadow: 0 0 0 0 rgba(242, 201, 143, 0.3); }
-        50% { box-shadow: 0 0 12px 2px rgba(242, 201, 143, 0.15); }
-      }
-
-      #wrapper {
-        max-width: 1400px;
-        width: 100%;
-        margin: 0 auto;
-        padding-bottom: 28px;
-      }
-
-      #header {
-        padding: 20px 28px 16px;
-      }
-
-      .intro {
-        margin-bottom: 18px;
-      }
-
-      .intro h1 {
-        font-size: 26px;
-        font-weight: 700;
-        letter-spacing: -0.02em;
-        margin-bottom: 12px;
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        flex-wrap: wrap;
-      }
-
-      .intro h1 a {
-        font-size: 13px;
-        font-weight: 400;
-        color: var(--fg2);
-        text-decoration: none;
-      }
-
-      .intro h1 a:hover {
-        text-decoration: underline;
-      }
-
-      .intro h1 a,
-      .intro summary,
-      .intro a,
-      #footer a {
-        transition: color 0.15s ease;
-      }
-
-      .intro h1 a:hover,
-      .intro summary:hover,
-      .intro a:hover,
-      #footer a:hover {
-        color: var(--accent);
-      }
-
-      .intro p {
-        font-size: 15px;
-        line-height: 1.6;
-        color: var(--fg2);
-        margin-bottom: 8px;
-      }
-
-      .intro a {
-        color: var(--fg2);
-      }
-
-      .intro strong,
-      .intro b {
-        color: var(--fg);
-        font-weight: 600;
-      }
-
-      .intro details {
-        margin: 10px 0;
-      }
-
-      .intro summary {
-        font-size: 14px;
-        color: var(--fg2);
-        cursor: pointer;
-        user-select: none;
-      }
-
-      .intro .prompt-box {
-        margin-top: 8px;
-        background: rgba(0, 0, 0, 0.3);
-        border: 1px solid rgba(255, 255, 255, 0.06);
-        border-radius: 6px;
-        padding: 12px 16px;
-        font-family: "SF Mono", "Menlo", "Consolas", monospace;
-        font-size: 11px;
-        line-height: 1.5;
-        color: var(--fg2);
-        max-height: 300px;
-        overflow-y: auto;
-        white-space: pre-wrap;
-        word-break: break-word;
-      }
-
-      .stats-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 20px 28px;
-        align-items: flex-start;
-        margin-bottom: 12px;
-      }
-
-      .stat-section {
-        min-width: 0;
-      }
-
-      #footer {
-        padding: 18px 28px 0;
-        font-size: 12px;
-        color: var(--fg2);
-        text-align: center;
-        letter-spacing: 0.01em;
-      }
-
-      #footer a,
-      #footer a:visited {
-        color: var(--fg2);
-        text-decoration: none;
-      }
-
-      #footer a:hover,
-      #footer a:focus-visible {
-        color: var(--fg);
-      }
-
-      .stat-section {
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-      }
-
-      .stat-section h3 {
-        font-size: 11px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--fg2);
-      }
-
-      .stat-big {
-        font-size: 32px;
-        font-weight: 700;
-        letter-spacing: -0.03em;
-        line-height: 1;
-      }
-
-      .stat-label {
-        font-size: 11px;
-        color: var(--fg2);
-      }
-
-      .tier-bar {
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-      }
-
-      .tier-row {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 12px;
-      }
-
-      .tier-color {
-        width: 10px;
-        height: 10px;
-        border-radius: 2px;
-        flex-shrink: 0;
-      }
-
-      .tier-name {
-        flex: 1;
-        color: var(--fg2);
-        white-space: nowrap;
-      }
-
-      .tier-jobs {
-        text-align: right;
-        white-space: nowrap;
-      }
-
-      .tier-pct {
-        text-align: right;
-        width: 30px;
-        color: var(--fg2);
-        font-size: 11px;
-      }
-
-      .histogram {
-        display: flex;
-        align-items: flex-end;
-        gap: 2px;
-        height: 54px;
-      }
-
-      .histogram .bar {
-        flex: 1;
-        border-radius: 1px 1px 0 0;
-        min-height: 1px;
-      }
-
-      .hist-labels {
-        display: flex;
-        justify-content: space-between;
-        font-size: 10px;
-        color: var(--fg2);
-        margin-top: 2px;
-      }
-
-      .hbar-chart {
-        display: flex;
-        flex-direction: column;
-        gap: 3px;
-      }
-
-      .hbar-row {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 12px;
-      }
-
-      .hbar-label {
-        width: 72px;
-        flex-shrink: 0;
-        color: var(--fg2);
-        font-size: 11px;
-        text-align: right;
-      }
-
-      .hbar-track {
-        flex: 1;
-        height: 12px;
-        background: rgba(255, 255, 255, 0.04);
-        border-radius: 2px;
-        overflow: hidden;
-        min-width: 36px;
-      }
-
-      .hbar-fill {
-        height: 100%;
-        border-radius: 2px;
-      }
-
-      .hbar-val {
-        width: 30px;
-        flex-shrink: 0;
-        font-size: 11px;
-        color: var(--fg);
-        text-align: right;
-      }
-
-      .controls-row {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        flex-wrap: wrap;
-        margin-bottom: 14px;
-      }
-
-      .color-toggle {
-        display: flex;
-        gap: 4px;
-      }
-
-      .industry-filter {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-        min-width: 230px;
-      }
-
-      .industry-filter select {
-        appearance: none;
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid rgba(255, 255, 255, 0.14);
-        border-radius: 6px;
-        color: var(--fg);
-        font-size: 12px;
-        font-weight: 500;
-        padding: 9px 10px;
-        min-height: 36px;
-      }
-
-      .industry-filter select:focus-visible {
-        outline: 2px solid rgba(242, 201, 143, 0.65);
-        outline-offset: 1px;
-      }
-
-      .industry-filter .filter-note {
-        font-size: 11px;
-        color: var(--fg2);
-      }
-
-      .color-toggle button {
-        padding: 8px 14px;
-        font-size: 12px;
-        font-weight: 500;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 4px;
-        background: transparent;
-        color: var(--fg2);
-        cursor: pointer;
-        transition: all 0.15s;
-      }
-
-      .color-toggle button.active {
-        background: rgba(255, 255, 255, 0.08);
-        color: var(--fg);
-        border-color: rgba(255, 255, 255, 0.2);
-      }
-
-      .color-toggle button:hover:not(.active) {
-        background: rgba(255, 255, 255, 0.04);
-      }
-
-      .gradient-legend {
-        display: flex;
-        align-items: flex-end;
-        gap: 6px;
-        font-size: 11px;
-        color: var(--fg2);
-        height: 16px;
-      }
-
-      .gradient-legend span {
-        line-height: 1;
-        display: flex;
-        align-items: flex-end;
-      }
-
-      .gradient-legend canvas {
-        border-radius: 2px;
-        display: block;
-      }
-
-      canvas#canvas {
-        display: block;
-        cursor: default;
-        touch-action: none;
-      }
-
-      #tooltip {
-        position: fixed;
-        pointer-events: none;
-        background: var(--bg2);
-        border: 1px solid rgba(255, 255, 255, 0.12);
-        border-radius: 8px;
-        padding: 12px 16px;
-        font-size: 13px;
-        line-height: 1.5;
-        max-width: 440px;
-        max-height: min(44vh, 360px);
-        overflow: auto;
-        opacity: 0;
-        transition: opacity 0.12s;
-        z-index: 20;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-      }
-
-      #tooltip.compact {
-        left: 12px !important;
-        right: 12px;
-        top: auto !important;
-        bottom: 12px;
-        width: auto;
-        max-width: none;
-        max-height: min(46vh, 420px);
-      }
-
-      #tooltip.visible {
-        opacity: 1;
-      }
-
-      #tooltip .tt-title {
-        font-weight: 600;
-        font-size: 14px;
-        margin-bottom: 6px;
-        color: var(--accent);
-        overflow-wrap: anywhere;
-      }
-
-      #tooltip .tt-exposure {
-        font-size: 12px;
-        margin-bottom: 8px;
-      }
-
-      #tooltip .tt-stats {
-        display: grid;
-        grid-template-columns: auto auto;
-        gap: 2px 12px;
-        font-size: 12px;
-      }
-
-      #tooltip .tt-stats .label {
-        color: var(--fg2);
-      }
-
-      #tooltip .tt-stats .value {
-        color: var(--fg);
-        text-align: right;
-        overflow-wrap: anywhere;
-      }
-
-      #tooltip .tt-rationale {
-        font-size: 11px;
-        color: var(--fg2);
-        margin-top: 8px;
-        line-height: 1.4;
-        border-top: 1px solid rgba(255, 255, 255, 0.06);
-        padding-top: 8px;
-      }
+      #wrapper { max-width: 1180px; margin: 0 auto; padding: 28px 20px 64px; }
 
-      .risk-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(3, 3, 8, 0.6);
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.15s ease;
-        z-index: 24;
-      }
+      header { border-bottom: 1px solid var(--line); padding-bottom: 24px; margin-bottom: 28px; }
 
-      .risk-overlay.visible {
-        opacity: 1;
-        pointer-events: auto;
-      }
+      h1 { font-size: 24px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 4px; }
+      .subtitle { color: var(--fg2); font-size: 14px; margin-bottom: 18px; }
 
-      .risk-panel {
-        position: fixed;
-        top: 0;
-        right: 0;
-        height: 100vh;
-        width: min(420px, 92vw);
-        background: var(--bg2);
-        border-left: 1px solid rgba(255, 255, 255, 0.12);
-        box-shadow: -16px 0 36px rgba(0, 0, 0, 0.5);
-        transform: translateX(100%);
-        transition: transform 0.2s ease;
-        z-index: 25;
-        display: flex;
-        flex-direction: column;
-      }
+      .lede { max-width: 72ch; color: var(--fg2); font-size: 14px; }
+      .lede p + p { margin-top: 10px; }
+      .lede strong { color: var(--fg); font-weight: 600; }
 
-      .risk-panel.visible {
-        transform: translateX(0);
-      }
+      a { color: var(--accent); text-decoration: none; }
+      a:hover { text-decoration: underline; }
 
-      .risk-head {
-        display: flex;
-        justify-content: space-between;
-        gap: 12px;
+      /* ── Standing disclaimer ─────────────────────────────────────────── */
+      /* Fixed beside the exposure layer, not tucked inside a methodology
+         accordion. It is always rendered, never collapsed. */
+      .disclaimer {
+        margin: 18px 0 0;
         padding: 14px 16px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      }
-
-      .risk-title {
-        font-size: 15px;
-        font-weight: 600;
-        color: var(--accent);
-        line-height: 1.35;
-      }
-
-      .risk-meta {
-        margin-top: 6px;
-        font-size: 12px;
-        color: var(--fg2);
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-      }
-
-      .risk-close {
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        background: transparent;
-        color: var(--fg2);
+        border: 1px solid var(--line);
+        border-left: 3px solid var(--ev-model);
         border-radius: 6px;
-        font-size: 12px;
-        min-width: 34px;
-        height: 34px;
-        cursor: pointer;
+        background: var(--bg2);
+        font-size: 13.5px;
+        line-height: 1.55;
+        max-width: 78ch;
+      }
+      .disclaimer .disclaimer-head {
+        font-weight: 600; color: var(--fg); display: block; margin-bottom: 4px; font-size: 13px;
+        text-transform: uppercase; letter-spacing: 0.04em;
+      }
+      .disclaimer p { color: var(--fg2); }
+      .disclaimer p + p { margin-top: 8px; }
+
+      .notice {
+        margin: 18px 0 0; padding: 14px 16px;
+        border: 1px solid var(--line); border-left: 3px solid var(--ev-none);
+        border-radius: 6px; background: var(--bg2);
+        font-size: 13.5px; color: var(--fg2); max-width: 78ch;
+      }
+      .notice strong { color: var(--fg); }
+
+      /* ── Summary strip ───────────────────────────────────────────────── */
+      .summary { display: flex; flex-wrap: wrap; gap: 10px; margin: 22px 0 0; }
+      .summary-cell {
+        flex: 1 1 150px; background: var(--bg2); border: 1px solid var(--line);
+        border-radius: 6px; padding: 12px 14px;
+      }
+      .summary-cell .k {
+        font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;
+        color: var(--fg3); margin-bottom: 5px;
+      }
+      .summary-cell .v { font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
+      .summary-cell .n { font-size: 12px; color: var(--fg3); margin-top: 3px; }
+
+      /* ── Evidence legend ─────────────────────────────────────────────── */
+      section { margin-top: 36px; }
+      h2 { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+      .section-note { color: var(--fg2); font-size: 13.5px; max-width: 72ch; margin-bottom: 14px; }
+
+      .legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; }
+      .legend-item {
+        background: var(--bg2); border: 1px solid var(--line);
+        border-radius: 6px; padding: 12px 14px;
+      }
+      .legend-item .badge { margin-bottom: 7px; }
+      .legend-item p { font-size: 12.5px; color: var(--fg2); line-height: 1.5; }
+
+      .badge {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 11px; font-weight: 600; letter-spacing: 0.03em;
+        padding: 3px 9px; border-radius: 999px;
+        border: 1px solid currentColor; white-space: nowrap;
+        cursor: help;
+      }
+      .badge::before {
+        content: ""; width: 6px; height: 6px; border-radius: 50%;
+        background: currentColor; flex: none;
+      }
+      .badge.official_statistic { color: var(--ev-official); }
+      .badge.calculated_statistic { color: var(--ev-calculated); }
+      .badge.estimate { color: var(--ev-estimate); }
+      .badge.proxy { color: var(--ev-proxy); }
+      .badge.experimental_model_score { color: var(--ev-model); }
+      .badge.none { color: var(--ev-none); }
+
+      /* ── Metric ledger ───────────────────────────────────────────────── */
+      .ledger { display: grid; gap: 12px; }
+      .metric-card {
+        background: var(--bg2); border: 1px solid var(--line);
+        border-radius: 7px; padding: 16px 18px;
+      }
+      .metric-head {
+        display: flex; flex-wrap: wrap; align-items: baseline;
+        gap: 10px; margin-bottom: 8px;
+      }
+      .metric-name { font-weight: 600; font-size: 14.5px; }
+      .metric-unit { color: var(--fg3); font-size: 12.5px; }
+      .metric-status {
+        margin-left: auto; font-size: 11.5px; font-weight: 600;
+        letter-spacing: 0.03em; text-transform: uppercase; color: var(--ev-none);
+      }
+      .metric-status.is-published { color: var(--ev-official); }
+      .metric-def { font-size: 13px; color: var(--fg2); max-width: 74ch; }
+      .metric-meta {
+        margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line);
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 8px 18px;
+        font-size: 12.5px;
+      }
+      .metric-meta dt { color: var(--fg3); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
+      .metric-meta dd { color: var(--fg2); margin-top: 1px; overflow-wrap: anywhere; }
+      .misread {
+        margin-top: 10px; font-size: 12.5px; color: var(--fg2);
+        border-left: 2px solid var(--line); padding-left: 10px;
+      }
+      .misread b { color: var(--fg); font-weight: 600; }
+
+      /* ── Classification tree ─────────────────────────────────────────── */
+      .group { border: 1px solid var(--line); border-radius: 7px; background: var(--bg2); margin-bottom: 10px; }
+      .group > summary {
+        cursor: pointer; list-style: none; padding: 13px 16px;
+        display: flex; align-items: center; gap: 12px; font-size: 14px;
+      }
+      .group > summary::-webkit-details-marker { display: none; }
+      .group > summary::before {
+        content: "▸"; color: var(--fg3); font-size: 11px; transition: transform 0.15s;
+      }
+      .group[open] > summary::before { transform: rotate(90deg); }
+      .group-code {
+        font-variant-numeric: tabular-nums; font-weight: 600;
+        background: var(--bg3); border-radius: 4px; padding: 2px 8px;
+        font-size: 12.5px; color: var(--fg2);
+      }
+      .group-title { font-weight: 500; }
+      .group-count { margin-left: auto; color: var(--fg3); font-size: 12.5px; }
+      .sub-list { padding: 0 16px 14px 44px; }
+      .sub-row {
+        display: flex; align-items: baseline; gap: 12px;
+        padding: 7px 0; border-top: 1px solid var(--line); font-size: 13.5px;
+      }
+      .sub-code {
+        font-variant-numeric: tabular-nums; color: var(--fg3);
+        font-size: 12.5px; min-width: 2.5em;
+      }
+      .sub-title { color: var(--fg2); }
+      .sub-state { margin-left: auto; font-size: 11.5px; color: var(--ev-none); white-space: nowrap; }
+
+      .verify-flag {
+        font-size: 11px; color: var(--ev-estimate);
+        border: 1px solid currentColor; border-radius: 4px; padding: 1px 6px;
       }
 
-      .risk-close:hover {
-        color: var(--fg);
-        border-color: rgba(255, 255, 255, 0.28);
+      /* ── Tooltip ─────────────────────────────────────────────────────── */
+      #tooltip {
+        position: fixed; z-index: 50; max-width: 320px; pointer-events: none;
+        background: var(--bg3); color: var(--fg); border: 1px solid var(--line);
+        border-radius: 6px; padding: 10px 12px; font-size: 12.5px; line-height: 1.5;
+        box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4); opacity: 0;
+        transition: opacity 0.12s; visibility: hidden;
       }
+      #tooltip.visible { opacity: 1; visibility: visible; }
+      #tooltip .tt-title { font-weight: 600; margin-bottom: 4px; }
+      #tooltip .tt-body { color: var(--fg2); }
 
-      .risk-body {
-        padding: 14px 16px 18px;
-        overflow: auto;
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
+      table.provenance { width: 100%; border-collapse: collapse; font-size: 13px; }
+      table.provenance th, table.provenance td {
+        text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line);
+        vertical-align: top;
       }
+      table.provenance th { color: var(--fg3); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+      table.provenance td { color: var(--fg2); }
+      table.provenance td.status-blocked { color: var(--ev-estimate); }
+      table.provenance td.status-unused { color: var(--fg3); }
 
-      .risk-card {
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 8px;
-        padding: 10px 12px;
+      footer {
+        margin-top: 44px; padding-top: 20px; border-top: 1px solid var(--line);
+        color: var(--fg3); font-size: 12.5px; max-width: 78ch;
       }
+      footer p + p { margin-top: 8px; }
 
-      .risk-card h4 {
-        font-size: 12px;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: var(--fg2);
-        margin-bottom: 6px;
-      }
-
-      .risk-card p {
-        font-size: 13px;
-        color: var(--fg);
-        line-height: 1.45;
-      }
-
-      .risk-card ul {
-        list-style: disc;
-        margin-left: 16px;
-      }
-
-      .risk-card li {
-        font-size: 13px;
-        color: var(--fg);
-        line-height: 1.45;
-        margin-bottom: 4px;
-      }
-
-      @media (max-width: 900px) {
-        #wrapper {
-          padding-bottom: 140px;
-        }
-
-        #header {
-          padding: 16px 18px 12px;
-        }
-
-        .intro h1 {
-          font-size: 22px;
-          gap: 10px;
-        }
-
-        .intro p {
-          font-size: 14px;
-        }
-
-        .controls-row {
-          align-items: stretch;
-          gap: 12px;
-        }
-
-        .industry-filter {
-          min-width: 200px;
-        }
-
-        .color-toggle {
-          flex-wrap: wrap;
-        }
-
-        .color-toggle button {
-          flex: 1 1 140px;
-        }
-
-        .gradient-legend {
-          width: 100%;
-          justify-content: space-between;
-        }
-
-        .stats-row {
-          gap: 16px 20px;
-        }
-
-        #footer {
-          padding: 14px 18px 0;
-        }
+      code {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 0.92em; background: var(--bg3); border-radius: 3px; padding: 1px 5px;
       }
 
       @media (max-width: 640px) {
-        #wrapper {
-          padding-bottom: 96px;
-        }
-
-        #header {
-          padding: 12px 12px 10px;
-        }
-
-        .intro h1 {
-          font-size: clamp(18px, 5vw, 21px);
-          line-height: 1.12;
-        }
-
-        .intro p {
-          font-size: 13px;
-        }
-
-        .intro p:nth-of-type(n + 3) {
-          display: none;
-        }
-
-        .controls-row {
-          display: grid;
-          grid-template-columns: 1fr;
-          gap: 10px;
-        }
-
-        .industry-filter {
-          min-width: 0;
-        }
-
-        .industry-filter select {
-          width: 100%;
-          min-height: 42px;
-          border-radius: 8px;
-        }
-
-        .risk-panel {
-          top: auto;
-          right: 0;
-          left: 0;
-          bottom: 0;
-          width: 100%;
-          height: min(72vh, 560px);
-          border-left: 0;
-          border-top: 1px solid rgba(255, 255, 255, 0.12);
-          border-top-left-radius: 12px;
-          border-top-right-radius: 12px;
-          transform: translateY(100%);
-        }
-
-        .risk-panel.visible {
-          transform: translateY(0);
-        }
-
-        .color-toggle {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 6px;
-        }
-
-        .color-toggle button {
-          width: 100%;
-          min-height: 42px;
-          padding: 10px 12px;
-          font-size: 11px;
-          border-radius: 8px;
-        }
-
-        .gradient-legend {
-          gap: 8px;
-          height: auto;
-          font-size: 10px;
-        }
-
-        .stats-row {
-          display: grid;
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-          gap: 10px;
-        }
-
-        .stat-section {
-          background: rgba(255, 255, 255, 0.03);
-          border: 1px solid rgba(255, 255, 255, 0.06);
-          border-radius: 12px;
-          padding: 12px;
-          overflow: hidden;
-        }
-
-        .stat-big {
-          font-size: 26px;
-        }
-
-        .hbar-label {
-          width: 64px;
-        }
-
-        #footer {
-          padding: 12px 12px 0;
-        }
+        #wrapper { padding: 20px 16px 48px; }
+        h1 { font-size: 20px; }
+        .metric-status { margin-left: 0; width: 100%; }
+        .sub-list { padding-left: 20px; }
+        .sub-state { margin-left: 0; width: 100%; }
       }
     </style>
   </head>
   <body>
     <div id="wrapper">
-      <header id="header">
-        <div class="intro">
-          <h1>TrabahoLens — Philippine Job Market Visualizer</h1>
+      <header>
+        <h1>TrabahoLens</h1>
+        <p class="subtitle">
+          Philippine occupational evidence ledger · organised by the Philippine
+          Standard Occupational Classification
+        </p>
+
+        <div class="lede">
           <p>
-            This is a research tool that visualizes Philippine occupations using
-            curated labor-market fields and PSA-aligned categories. Each
-            rectangle's <b>area</b> is proportional to total employment.
-            <b>Color</b>
-            shows the selected metric — toggle between AI exposure, avg. wage,
-            education, hiring intensity, OFW share, and informal share.
+            TrabahoLens shows what is actually known about Philippine
+            occupations, and what is not. Every figure carries the kind of
+            evidence it is, the source it came from, the period it refers to,
+            and the level at which that source published it. Where no evidence
+            exists, the metric says so instead of showing a number.
           </p>
           <p>
-            <b>LLM-powered coloring:</b> This adaptation of
-            <a href="https://karpathy.ai/jobs/">karpathy.ai/jobs</a> includes a
-            pipeline for writing custom prompts to score and color occupations.
-            The AI exposure layer is one example and can be replaced with any
-            rubric you want.
+            <strong>This release publishes no metric values.</strong> The
+            structure, the source registry, the validation rules and the
+            interface are complete; the data behind them is not, because none
+            of the required sources could be retrieved in the build
+            environment. The reasons are recorded per source below and in
+            <a href="https://github.com/marcxxv/TrabahoLens/blob/main/docs/limitations.md">docs/limitations.md</a>.
           </p>
           <p>
-            <b>Caveat:</b> AI Exposure measures generative AI and LLM-driven
-            task reshaping risk. It does NOT include machinery automation (AVs,
-            robots) or platform algorithms (dispatch, routing). These are real
-            disruption sources but are distinct from LLM exposure.
-          </p>
-          <p>
-            Data: PSA LFS & OWS 2024 · PSA Survey on Overseas Filipinos 2024 ·
-            O*NET 30.2 (US DOL, CC BY 4.0) · PhilJobNet · IBPAP · POEA
+            The previous version of this tool displayed employment, wage,
+            informality, overseas-worker and hiring figures that were not
+            measurements. They have been withdrawn rather than relabelled. See
+            <a href="https://github.com/marcxxv/TrabahoLens/blob/main/docs/audit/baseline-audit.md">the baseline audit</a>
+            for what each one actually was.
           </p>
         </div>
 
-        <div class="controls-row">
-          <div class="stat-section">
-            <h3>Layer</h3>
-            <div class="color-toggle" id="colorToggle">
-              <button data-mode="exposure" class="active">AI Exposure</button>
-              <button data-mode="pay">Avg. Wage (PHP)</button>
-              <button data-mode="education">Education</button>
-              <button data-mode="outlook">Hiring Intensity</button>
-              <button data-mode="ofw">OFW Share</button>
-              <button data-mode="informal">Informal %</button>
-            </div>
-            <div class="layer-desc" id="layerDesc">Generative AI and LLM-driven task reshaping risk (0–10 scale)</div>
-          </div>
-          <div class="stat-section industry-filter">
-            <h3>Filter by Industry</h3>
-            <select
-              id="industryFilter"
-              aria-label="Filter occupations by industry"
-            >
-              <option value="all">All Industries</option>
-            </select>
-            <div class="filter-note" id="industryFilterNote">
-              Showing all occupations
-            </div>
-            <div class="kbd-hint" id="filterHint"><kbd>Esc</kbd> to reset zoom · <kbd>Ctrl</kbd>+scroll to zoom</div>
-          </div>
-          <div class="gradient-legend">
-            <span id="legendLow">Low exposure</span>
-            <canvas id="gradientLegend" width="80" height="8"></canvas>
-            <span id="legendHigh">High exposure</span>
-          </div>
+        <!-- Standing disclaimer. Always rendered next to the exposure layer;
+             never inside a collapsed methodology section. -->
+        <div class="disclaimer" id="exposureDisclaimer">
+          <span class="disclaimer-head">Generative-AI task exposure</span>
+          <p id="disclaimerText"></p>
+          <p>
+            Employment outcomes also depend on adoption, costs, regulation,
+            demand, productivity, how work gets reorganised, worker adaptation,
+            institutional capacity, and the creation of new work. None of those
+            is measured here.
+          </p>
         </div>
 
-        <div class="stats-row" id="statsRow">
-          <div class="stat-section">
-            <h3>Total jobs</h3>
-            <div class="stat-big" id="statTotalJobs"><span class="skeleton skeleton-stat"></span></div>
-            <div class="stat-label" id="statTotalLabel">loading data…</div>
-          </div>
-          <div class="stat-section" id="block2"><div class="skeleton skeleton-block"></div></div>
-          <div class="stat-section" id="block3"><div class="skeleton skeleton-block"></div></div>
-          <div class="stat-section" id="block4"><div class="skeleton skeleton-block"></div></div>
-          <div class="stat-section" id="block5"><div class="skeleton skeleton-block"></div></div>
-          <div class="stat-section" id="block6"><div class="skeleton skeleton-block"></div></div>
-          <div class="stat-section" id="block7"><div class="skeleton skeleton-block"></div></div>
-          <div class="stat-section" id="block8"><div class="skeleton skeleton-block"></div></div>
-        </div>
+        <div class="notice" id="classificationNotice"></div>
+
+        <div class="summary" id="summary"></div>
       </header>
 
-      <canvas id="canvas"></canvas>
+      <section>
+        <h2>What the evidence labels mean</h2>
+        <p class="section-note">
+          Every metric in this tool is one of these five. Hover or focus a badge
+          for the plain-language explanation.
+        </p>
+        <div class="legend" id="legend"></div>
+      </section>
 
-      <footer id="footer">
-        Inspired by
-        <a href="https://karpathy.ai/jobs/">karpathy.ai/jobs</a>
+      <section>
+        <h2>Metric ledger</h2>
+        <p class="section-note">
+          Each metric this project intends to publish, defined before it has a
+          value — including the source that would satisfy it, the level that
+          source publishes at, the denominator, and the reading it is most often
+          confused with.
+        </p>
+        <div class="ledger" id="ledger"></div>
+      </section>
+
+      <section>
+        <h2>Occupational structure</h2>
+        <p class="section-note" id="structureNote"></p>
+        <div id="tree"></div>
+      </section>
+
+      <section>
+        <h2>Sources</h2>
+        <p class="section-note">
+          Every source the project uses or intends to use, and the current state
+          of each. A source listed here with no data is a source we have
+          specified and not yet obtained — not a source we are quietly citing.
+        </p>
+        <table class="provenance">
+          <thead>
+            <tr>
+              <th>Source</th>
+              <th>Organisation</th>
+              <th>State</th>
+              <th>Why</th>
+            </tr>
+          </thead>
+          <tbody id="sourceRows"></tbody>
+        </table>
+      </section>
+
+      <footer>
+        <p id="footerCounts"></p>
+        <p>
+          O*NET is a US Department of Labor product, used under CC BY 4.0 where
+          it is used at all, and is a US-derived proxy for any Philippine
+          occupation. PSA statistics are official Philippine statistics and are
+          not covered by this repository's MIT licence, which applies to the
+          code only. Licensing is documented per source in
+          <a href="https://github.com/marcxxv/TrabahoLens/blob/main/docs/data-licenses.md">docs/data-licenses.md</a>.
+        </p>
+        <p>
+          Visualisation approach inspired by
+          <a href="https://karpathy.ai/jobs/">karpathy.ai/jobs</a>. No data is
+          drawn from it.
+        </p>
       </footer>
     </div>
 
-    <div id="tooltip">
-      <div class="tt-category"></div>
+    <div id="tooltip" role="tooltip">
       <div class="tt-title"></div>
-      <div class="tt-percentile"></div>
-      <div class="tt-exposure"></div>
-      <div class="tt-stats"></div>
-      <div class="tt-rationale"></div>
-      <div class="tt-click-hint">Click for detailed breakdown</div>
+      <div class="tt-body"></div>
     </div>
 
-    <div class="risk-overlay" id="riskOverlay"></div>
-    <aside class="risk-panel" id="riskPanel" aria-hidden="true">
-      <div class="risk-head">
-        <div>
-          <div class="risk-title" id="riskTitle">Risk Vector Explainer</div>
-          <div class="risk-meta" id="riskMeta"></div>
-          <div class="risk-gauge" id="riskGauge"></div>
-          <div class="risk-comparative" id="riskComparative"></div>
-        </div>
-        <button
-          class="risk-close"
-          id="riskClose"
-          aria-label="Close risk explainer"
-        >
-          ×
-        </button>
-      </div>
-      <div class="risk-body">
-        <div class="risk-card">
-          <h4>What this means</h4>
-          <p id="riskMeaning"></p>
-        </div>
-        <div class="risk-card">
-          <h4>What might change</h4>
-          <ul id="riskChanges"></ul>
-        </div>
-        <div class="risk-card">
-          <h4>What remains human</h4>
-          <ul id="riskHuman"></ul>
-        </div>
-        <div class="risk-card">
-          <h4>Occupation context</h4>
-          <p id="riskOccupationContext"></p>
-        </div>
-        <div class="risk-card">
-          <h4>Economic footprint</h4>
-          <div class="risk-impact-row" id="riskImpact"></div>
-        </div>
-        <div class="risk-card">
-          <h4>Similar occupations</h4>
-          <div class="risk-related" id="riskRelated"></div>
-        </div>
-      </div>
-    </aside>
-
     <script>
-      // ── Color scales ────────────────────────────────────────────────────────
+      // Nothing in this file hard-codes a count, a label set, or a metric name.
+      // All of it comes from data.json, which is built from the canonical
+      // tables. A stale claim in the interface is therefore not possible.
 
-      // Load saved layer preference from localStorage, default to "exposure"
-      let colorMode =
-        localStorage.getItem("trabaholens_colorMode") || "exposure";
-      let industryFilter =
-        localStorage.getItem("trabaholens_industryFilter") || "all";
+      const tooltip = document.getElementById("tooltip");
 
-      const RISK_VECTOR_LABELS = {
-        code_generation: "Code Generation",
-        writing_automation: "Writing Automation",
-        knowledge_work_routinization: "Knowledge Work Routinization",
-        analysis_automation: "Analysis Automation",
-        generative_ai: "Generative AI",
-        minimal: "Minimal Direct LLM Exposure",
-      };
-
-      const RISK_VECTOR_INFO = {
-        code_generation: {
-          meaning:
-            "LLMs can draft, test, and refactor code quickly, so routine software implementation work becomes faster and more standardized.",
-          changes: [
-            "Junior developers spend less time writing boilerplate and more time validating output.",
-            "Code review, testing, and security checks become a larger share of daily work.",
-            "Entry-level task pricing may tighten as productivity per developer increases.",
-          ],
-          human: [
-            "System architecture decisions and tradeoff judgment.",
-            "Problem framing, stakeholder alignment, and delivery prioritization.",
-            "Accountability for production reliability and governance.",
-          ],
-        },
-        writing_automation: {
-          meaning:
-            "LLMs can generate drafts of reports, emails, scripts, and content, reducing time on repetitive writing workflows.",
-          changes: [
-            "First drafts are produced faster for sales, admin, and content roles.",
-            "Editing and fact-checking become core quality-control tasks.",
-            "Organizations may expect faster turnaround for document-heavy work.",
-          ],
-          human: [
-            "Voice, persuasion strategy, and audience nuance.",
-            "Sensitive messaging and reputation-risk judgment.",
-            "Final accountability for correctness and compliance.",
-          ],
-        },
-        knowledge_work_routinization: {
-          meaning:
-            "Routine information tasks can be standardized with LLM assistance, especially where workflows follow repeatable templates.",
-          changes: [
-            "Research summaries and standard documentation are completed faster.",
-            "Staff focus shifts from preparation to validation and exception handling.",
-            "Workflows become more process-driven across teams.",
-          ],
-          human: [
-            "Contextual judgment in ambiguous or high-stakes cases.",
-            "Relationship management and cross-team coordination.",
-            "Final decisions where policy, ethics, or local context matter.",
-          ],
-        },
-        analysis_automation: {
-          meaning:
-            "LLMs help synthesize data and produce structured insights, reducing manual analysis effort for recurring business questions.",
-          changes: [
-            "Dashboards and narrative summaries are produced with less manual effort.",
-            "Analysts spend more time on outlier detection and decision support.",
-            "Basic forecasting and reporting cycles can accelerate.",
-          ],
-          human: [
-            "Choosing correct assumptions and interpreting weak signals.",
-            "Deciding actions under uncertainty and business constraints.",
-            "Owning data quality and model-risk governance.",
-          ],
-        },
-        generative_ai: {
-          meaning:
-            "The role can be reshaped by broad LLM use cases beyond one narrow workflow, including synthesis, drafting, and assisted decision support.",
-          changes: [
-            "Teams adopt AI copilots for daily drafting and planning tasks.",
-            "Output expectations increase because baseline work becomes faster.",
-            "Cross-functional workers rely more on AI-assisted self-service.",
-          ],
-          human: [
-            "Setting objectives, ethics boundaries, and final sign-off.",
-            "Handling novel edge cases and high-context exceptions.",
-            "Building trust with clients, citizens, or patients.",
-          ],
-        },
-        minimal: {
-          meaning:
-            "Core work is mostly physical, field-based, or high-touch service where LLMs have limited direct automation pathways today.",
-          changes: [
-            "Documentation, messaging, or scheduling may still get small AI support.",
-            "Some OFW channels may feel faster change if destination employers automate back-office tasks.",
-            "Task reshaping is usually incremental, not immediate replacement.",
-          ],
-          human: [
-            "Physical execution, safety judgment, and situational awareness.",
-            "On-site problem solving and direct human interaction.",
-            "Community and customer trust in real-world service delivery.",
-          ],
-        },
-      };
-
-      const LAYER_DESCRIPTIONS = {
-        exposure: 'Generative AI and LLM-driven task reshaping risk (0\u201310 scale)',
-        pay: 'Average monthly wage in Philippine pesos (PSA OWS 2024)',
-        education: 'Typical education level required for entry (O*NET Job Zones)',
-        outlook: 'Hiring intensity based on PhilJobNet and IBPAP postings (0\u2013100)',
-        ofw: 'Share of PSOC group working overseas (PSA SOF 2024)',
-        informal: 'Estimated share working in the informal sector',
-      };
-
-      function updateLayerDesc() {
-        const el = document.getElementById('layerDesc');
-        if (el) el.textContent = LAYER_DESCRIPTIONS[colorMode] || '';
+      function showTooltip(event, title, body) {
+        tooltip.querySelector(".tt-title").textContent = title;
+        tooltip.querySelector(".tt-body").textContent = body;
+        tooltip.classList.add("visible");
+        positionTooltip(event);
       }
 
-      /** Returns a percentile string like "Higher than 73% of occupations" */
-      function getPercentileRank(occupation, field) {
-        if (occupation[field] == null) return '';
-        const val = occupation[field];
-        let below = 0, total = 0;
-        for (const d of allData) {
-          if (d[field] != null) {
-            total++;
-            if (d[field] < val) below++;
-          }
-        }
-        if (total === 0) return '';
-        const pct = Math.round((below / total) * 100);
-        return `Higher than ${pct}% of occupations`;
+      function positionTooltip(event) {
+        const pad = 14;
+        const rect = tooltip.getBoundingClientRect();
+        let x = event.clientX + pad;
+        let y = event.clientY + pad;
+        if (x + rect.width > window.innerWidth - 8) x = event.clientX - rect.width - pad;
+        if (y + rect.height > window.innerHeight - 8) y = event.clientY - rect.height - pad;
+        tooltip.style.left = Math.max(8, x) + "px";
+        tooltip.style.top = Math.max(8, y) + "px";
       }
 
-      function computePercentileText(d) {
-        if (colorMode === 'exposure') return getPercentileRank(d, 'exposure');
-        if (colorMode === 'pay') return getPercentileRank(d, 'pay');
-        if (colorMode === 'outlook') return getPercentileRank(d, 'outlook');
-        if (colorMode === 'ofw') return getPercentileRank(d, 'ofw_share');
-        if (colorMode === 'informal') return getPercentileRank(d, 'informal_share');
-        if (colorMode === 'education') {
-          const edu = d.education || 0;
-          if (edu <= 0) return '';
-          let below = 0, total = 0;
-          for (const o of allData) {
-            if (o.education != null && o.education > 0) {
-              total++;
-              if (o.education < edu) below++;
-            }
-          }
-          if (total === 0) return '';
-          return `Higher than ${Math.round((below / total) * 100)}% of occupations`;
-        }
-        return '';
-      }
-
-      /** Render an inline mini bar for the tooltip stats */
-      function miniBar(fraction, color) {
-        const pct = Math.max(0, Math.min(100, fraction * 100));
-        return `<span class="mini-bar"><span class="mini-bar-fill" style="width:${pct}%;background:${color}"></span></span>`;
-      }
-
-      /** Find 3 occupations with similar exposure score */
-      function findRelatedOccupations(occupation, count) {
-        if (!occupation || occupation.exposure == null) return [];
-        const target = occupation.exposure;
-        return allData
-          .filter(d => d.title !== occupation.title && d.exposure != null)
-          .sort((a, b) => Math.abs(a.exposure - target) - Math.abs(b.exposure - target))
-          .slice(0, count);
-      }
-
-      function boostContrast(t) {
-        const c = (t - 0.5) * 2;
-        const b = Math.sign(c) * Math.pow(Math.abs(c), 0.55);
-        return b / 2 + 0.5;
-      }
-
-      function greenRedCSS(t, alpha) {
-        t = boostContrast(Math.max(0, Math.min(1, t)));
-        let r, g, b;
-        if (t < 0.5) {
-          const s = t / 0.5;
-          r = Math.round(30 + s * 200);
-          g = Math.round(180 - s * 20);
-          b = Math.round(40 - s * 20);
-        } else {
-          const s = (t - 0.5) / 0.5;
-          r = Math.round(230 + s * 25);
-          g = Math.round(160 - s * 130);
-          b = Math.round(20 - s * 5);
-        }
-        return `rgba(${r},${g},${b},${alpha})`;
-      }
-
-      const EDU_LEVELS = {
-        1: "No formal schooling",
-        2: "High school diploma",
-        3: "Postsecondary vocational",
-        4: "Bachelor's degree",
-        5: "Doctoral degree",
-      };
-
-      function educationLabel(code) {
-        return EDU_LEVELS[code] || "\u2014";
-      }
-
-      function isCompactLayout() {
-        return (
-          window.matchMedia("(max-width: 820px)").matches ||
-          window.matchMedia("(pointer: coarse)").matches
-        );
-      }
-
-      function clamp01(v) {
-        return Math.max(0, Math.min(1, v));
-      }
-
-      function rgb(r, g, b, a) {
-        return `rgba(${Math.round(r)},${Math.round(g)},${Math.round(b)},${a})`;
-      }
-
-      function lerpColor(start, end, t, a) {
-        return rgb(
-          start[0] + (end[0] - start[0]) * t,
-          start[1] + (end[1] - start[1]) * t,
-          start[2] + (end[2] - start[2]) * t,
-          a,
-        );
-      }
-
-      function exposureColor(v, a) {
-        if (v == null) return `rgba(128,128,128,${a})`;
-        const t = clamp01(v / 10);
-        if (t < 0.5)
-          return lerpColor([37, 185, 110], [244, 176, 72], t / 0.5, a);
-        return lerpColor([244, 176, 72], [220, 53, 69], (t - 0.5) / 0.5, a);
-      }
-      function outlookColor(v, a) {
-        if (v == null) return `rgba(128,128,128,${a})`;
-        return lerpColor([122, 127, 138], [46, 204, 113], clamp01(v / 100), a);
-      }
-      function ofwColor(v, a) {
-        if (v == null) return `rgba(128,128,128,${a})`;
-        return lerpColor([248, 214, 173], [217, 119, 6], clamp01(v), a);
-      }
-      function payColor(v, a) {
-        if (v == null) return `rgba(128,128,128,${a})`;
-        const t =
-          1 -
-          (Math.log(Math.max(6000, Math.min(100000, v))) - Math.log(6000)) /
-            (Math.log(100000) - Math.log(6000));
-        return lerpColor([12, 30, 62], [65, 147, 255], clamp01(t), a);
-      }
-      function eduColor(idx, a) {
-        if (idx < 0) return `rgba(128,128,128,${a})`;
-        return greenRedCSS(1 - idx / 4, a);
-      }
-      function informalColor(v, a) {
-        if (v == null) return `rgba(128,128,128,${a})`;
-        return lerpColor([249, 201, 201], [220, 38, 38], clamp01(v), a);
-      }
-
-      function tileColorCSS(d, alpha) {
-        if (colorMode === "exposure") return exposureColor(d.exposure, alpha);
-        if (colorMode === "outlook") return outlookColor(d.outlook, alpha);
-        if (colorMode === "ofw") return ofwColor(d.ofw_share, alpha);
-        if (colorMode === "pay") return payColor(d.pay, alpha);
-        if (colorMode === "education") {
-          return eduColor((d.education || 0) - 1, alpha);
-        }
-        if (colorMode === "informal") {
-          return informalColor(d.informal_share, alpha);
-        }
-        return `rgba(128,128,128,${alpha})`;
-      }
-
-      function tileSubInfo(r) {
-        if (colorMode === "exposure") {
-          return (
-            (r.exposure != null ? r.exposure + "/10" : "") +
-            (r.jobs ? " \u00b7 " + formatNumber(r.jobs) + " jobs" : "")
-          );
-        }
-        if (colorMode === "outlook") {
-          return (
-            `Hiring intensity: ${r.outlook != null ? Math.round(r.outlook) + "/100" : "\u2014"}` +
-            (r.jobs ? " \u00b7 " + formatNumber(r.jobs) + " jobs" : "")
-          );
-        }
-        if (colorMode === "ofw") {
-          return (
-            `OFW share: ${r.ofw_share != null ? Math.round(r.ofw_share * 100) + "%" : "\u2014"}` +
-            (r.jobs ? " \u00b7 " + formatNumber(r.jobs) + " jobs" : "")
-          );
-        }
-        if (colorMode === "pay") {
-          return (
-            (r.pay != null ? formatPay(r.pay) : "") +
-            (r.jobs ? " \u00b7 " + formatNumber(r.jobs) + " jobs" : "")
-          );
-        }
-        if (colorMode === "education") {
-          const short =
-            {
-              1: "No formal",
-              2: "HS diploma",
-              3: "Postsecondary",
-              4: "Bachelor's",
-              5: "Doctoral",
-            }[r.education] || "";
-          return (
-            short + (r.jobs ? " \u00b7 " + formatNumber(r.jobs) + " jobs" : "")
-          );
-        }
-        if (colorMode === "informal") {
-          const pct =
-            r.informal_share != null
-              ? Math.round(r.informal_share * 100) + "% informal"
-              : "";
-          return (
-            pct + (r.jobs ? " \u00b7 " + formatNumber(r.jobs) + " jobs" : "")
-          );
-        }
-        return "";
-      }
-
-      // ── Squarified treemap layout ──────────────────────────────────────────
-
-      function squarify(items, x, y, w, h) {
-        if (items.length === 0) return [];
-        if (items.length === 1)
-          return [{ ...items[0], rx: x, ry: y, rw: w, rh: h }];
-        const total = items.reduce((s, d) => s + d.value, 0);
-        if (total === 0) return [];
-        const results = [];
-        let remaining = [...items],
-          cx = x,
-          cy = y,
-          cw = w,
-          ch = h;
-        while (remaining.length > 0) {
-          const remTotal = remaining.reduce((s, d) => s + d.value, 0);
-          const vertical = cw >= ch;
-          const side = vertical ? ch : cw;
-          let row = [remaining[0]],
-            rowSum = remaining[0].value;
-          for (let i = 1; i < remaining.length; i++) {
-            const candidate = [...row, remaining[i]];
-            const candidateSum = rowSum + remaining[i].value;
-            if (
-              worstAspect(
-                candidate,
-                candidateSum,
-                side,
-                remTotal,
-                vertical ? cw : ch,
-              ) < worstAspect(row, rowSum, side, remTotal, vertical ? cw : ch)
-            ) {
-              row = candidate;
-              rowSum = candidateSum;
-            } else break;
-          }
-          const rowFraction = rowSum / remTotal;
-          const rowThickness = vertical ? cw * rowFraction : ch * rowFraction;
-          let offset = 0;
-          for (const item of row) {
-            const itemFraction = item.value / rowSum;
-            const itemLength = side * itemFraction;
-            if (vertical)
-              results.push({
-                ...item,
-                rx: cx,
-                ry: cy + offset,
-                rw: rowThickness,
-                rh: itemLength,
-              });
-            else
-              results.push({
-                ...item,
-                rx: cx + offset,
-                ry: cy,
-                rw: itemLength,
-                rh: rowThickness,
-              });
-            offset += itemLength;
-          }
-          if (vertical) {
-            cx += rowThickness;
-            cw -= rowThickness;
-          } else {
-            cy += rowThickness;
-            ch -= rowThickness;
-          }
-          remaining = remaining.slice(row.length);
-        }
-        return results;
-      }
-
-      function worstAspect(row, rowSum, side, totalArea, availableExtent) {
-        const rowExtent = availableExtent * (rowSum / totalArea);
-        if (rowExtent === 0) return Infinity;
-        let worst = 0;
-        for (const item of row) {
-          const itemLen = side * (item.value / rowSum);
-          if (itemLen === 0) continue;
-          const aspect = Math.max(rowExtent / itemLen, itemLen / rowExtent);
-          if (aspect > worst) worst = aspect;
-        }
-        return worst;
-      }
-
-      // ── Rendering ──────────────────────────────────────────────────────────
-
-      let allData = [];
-      let data = [];
-      let rects = [];
-      let hovered = null;
-      let pinnedTooltip = null;
-      let selectedOccupation = null;
-      let zoomEnabled = true;
-      let zoomScale = 1;
-      let zoomPanX = 0;
-      let zoomPanY = 0;
-      let viewportW = 0;
-      let viewportH = 0;
-      let isPanning = false;
-      let lastPanClient = null;
-      let zoomAnimationFrame = null;
-      let lastTapTime = 0;
-      let lastTapClient = null;
-      let pinchStartDistance = 0;
-      let pinchStartScale = 1;
-      let pinchAnchor = null;
-      let suppressNextClick = false;
-      let drawRequested = false;
-      const activePointers = new Map();
-      const textMeasureCache = new Map();
-      const ZOOM_MIN = 1;
-      const ZOOM_MAX = 6;
-      const canvas = document.getElementById("canvas");
-      const ctx = canvas.getContext("2d");
-      let dpr = window.devicePixelRatio || 1;
-      let MARGIN = 12,
-        GAP = 1.5,
-        compactLayout = isCompactLayout();
-
-      function zoomApplies() {
-        return zoomEnabled && zoomScale > 1;
-      }
-
-      function clampPan() {
-        if (!zoomApplies()) {
-          zoomPanX = 0;
-          zoomPanY = 0;
-          return;
-        }
-        const minX = viewportW * (1 - zoomScale);
-        const minY = viewportH * (1 - zoomScale);
-        zoomPanX = Math.max(minX, Math.min(0, zoomPanX));
-        zoomPanY = Math.max(minY, Math.min(0, zoomPanY));
-      }
-
-      function updateZoomUi() {
-        return;
-      }
-
-      function setZoomEnabled(enabled) {
-        zoomEnabled = enabled;
-        if (!zoomEnabled) {
-          zoomScale = 1;
-          zoomPanX = 0;
-          zoomPanY = 0;
-        }
-        updateZoomUi();
-      }
-
-      function animateToZoom(
-        targetScale,
-        targetPanX,
-        targetPanY,
-        duration = 520,
-      ) {
-        if (zoomAnimationFrame) cancelAnimationFrame(zoomAnimationFrame);
-        const startScale = zoomScale;
-        const startPanX = zoomPanX;
-        const startPanY = zoomPanY;
-        const endScale = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, targetScale));
-        const endPanX = targetPanX;
-        const endPanY = targetPanY;
-        const t0 = performance.now();
-
-        function frame(now) {
-          const raw = Math.min(1, (now - t0) / duration);
-          const ease = 1 - Math.pow(1 - raw, 3);
-          zoomScale = startScale + (endScale - startScale) * ease;
-          zoomPanX = startPanX + (endPanX - startPanX) * ease;
-          zoomPanY = startPanY + (endPanY - startPanY) * ease;
-          clampPan();
-          updateZoomUi();
-          draw();
-          if (raw < 1) {
-            zoomAnimationFrame = requestAnimationFrame(frame);
-          } else {
-            zoomAnimationFrame = null;
-          }
-        }
-        zoomAnimationFrame = requestAnimationFrame(frame);
-      }
-
-      function resetZoom(animated = true) {
-        if (animated && zoomScale !== 1) {
-          animateToZoom(1, 0, 0, 460);
-          return;
-        }
-        zoomScale = 1;
-        zoomPanX = 0;
-        zoomPanY = 0;
-        clampPan();
-        updateZoomUi();
-      }
-
-      function applyZoomAtCanvasPoint(
-        canvasX,
-        canvasY,
-        newScale,
-        animated = false,
-      ) {
-        if (!zoomEnabled) return;
-        const clamped = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, newScale));
-        const worldX = (canvasX - zoomPanX) / zoomScale;
-        const worldY = (canvasY - zoomPanY) / zoomScale;
-        const targetPanX = canvasX - worldX * clamped;
-        const targetPanY = canvasY - worldY * clamped;
-
-        if (animated) {
-          animateToZoom(clamped, targetPanX, targetPanY, 520);
-          return;
-        }
-
-        zoomScale = clamped;
-        zoomPanX = targetPanX;
-        zoomPanY = targetPanY;
-        clampPan();
-        updateZoomUi();
-        draw();
-      }
-
-      function zoomToRect(tile, animated = true) {
-        if (!tile || !zoomEnabled) return;
-        const tileW = Math.max(24, tile.rw);
-        const tileH = Math.max(24, tile.rh);
-        const fitScale = Math.min(
-          viewportW / (tileW * 1.5),
-          viewportH / (tileH * 1.5),
-        );
-        const targetScale = Math.max(1.4, Math.min(ZOOM_MAX, fitScale));
-        const cx = tile.rx + tile.rw / 2;
-        const cy = tile.ry + tile.rh / 2;
-        const targetPanX = viewportW / 2 - cx * targetScale;
-        const targetPanY = viewportH / 2 - cy * targetScale;
-        if (animated) {
-          animateToZoom(targetScale, targetPanX, targetPanY, 560);
-        } else {
-          zoomScale = targetScale;
-          zoomPanX = targetPanX;
-          zoomPanY = targetPanY;
-          clampPan();
-          updateZoomUi();
-          draw();
-        }
-      }
-
-      function getFilteredData() {
-        if (industryFilter === "all") return allData;
-        return allData.filter((d) => String(d.psoc_major) === industryFilter);
-      }
-
-      function updateIndustryFilterNote() {
-        const el = document.getElementById("industryFilterNote");
-        if (!el) return;
-        if (industryFilter === "all") {
-          el.textContent = `Showing all ${allData.length} occupations`;
-          return;
-        }
-        const filtered = getFilteredData();
-        const label = filtered.length > 0 ? filtered[0].psoc_label : "industry";
-        el.textContent = `Showing ${filtered.length} occupations in ${label}`;
-      }
-
-      function applyIndustryFilter() {
-        data = getFilteredData();
-        setZoomEnabled(industryFilter === "all");
-        resetZoom(false);
-        updateIndustryFilterNote();
-        updateStats();
-        drawGradientLegend();
-        resize();
-      }
-
-      function populateIndustryFilter() {
-        const select = document.getElementById("industryFilter");
-        if (!select) return;
-        const groups = Array.from(
-          new Map(
-            allData.map((d) => [String(d.psoc_major), d.psoc_label]),
-          ).entries(),
-        ).sort((a, b) => Number(a[0]) - Number(b[0]));
-
-        select.innerHTML = "";
-        const allOpt = document.createElement("option");
-        allOpt.value = "all";
-        allOpt.textContent = "All Industries";
-        select.appendChild(allOpt);
-
-        for (const [major, label] of groups) {
-          const opt = document.createElement("option");
-          opt.value = major;
-          opt.textContent = `${major} - ${label}`;
-          select.appendChild(opt);
-        }
-
-        if (
-          !Array.from(select.options).some((o) => o.value === industryFilter)
-        ) {
-          industryFilter = "all";
-        }
-        select.value = industryFilter;
-      }
-
-      function setListItems(targetId, items) {
-        const list = document.getElementById(targetId);
-        if (!list) return;
-        list.innerHTML = "";
-        for (const item of items) {
-          const li = document.createElement("li");
-          li.textContent = item;
-          list.appendChild(li);
-        }
-      }
-
-      function openRiskExplainer(occupation) {
-        if (!occupation) return;
-        selectedOccupation = occupation;
-        const key = occupation.primary_risk_vector || "minimal";
-        const info = RISK_VECTOR_INFO[key] || RISK_VECTOR_INFO.minimal;
-        const label = RISK_VECTOR_LABELS[key] || "Unknown";
-
-        document.getElementById("riskTitle").textContent = occupation.title;
-        document.getElementById("riskMeta").innerHTML =
-          `<span>Risk vector: <b>${label}</b></span>` +
-          `<span>${occupation.psoc_label ? occupation.psoc_label : ''}</span>`;
-
-        // Exposure gauge bar
-        const gaugeEl = document.getElementById("riskGauge");
-        if (occupation.exposure != null) {
-          const eColor = exposureColor(occupation.exposure, 1);
-          gaugeEl.innerHTML =
-            `<div class="risk-gauge-bar"><div class="risk-gauge-fill" style="width:${occupation.exposure * 10}%;background:${eColor}"></div></div>` +
-            `<div class="risk-gauge-label" style="color:${eColor}">${occupation.exposure}/10</div>`;
-        } else {
-          gaugeEl.innerHTML = '';
-        }
-
-        // Comparative percentile
-        const compEl = document.getElementById("riskComparative");
-        const pctText = getPercentileRank(occupation, 'exposure');
-        compEl.textContent = pctText ? `${pctText} in AI exposure` : '';
-
-        document.getElementById("riskMeaning").textContent = info.meaning;
-        setListItems("riskChanges", info.changes);
-        setListItems("riskHuman", info.human);
-        document.getElementById("riskOccupationContext").textContent =
-          occupation.exposure_rationale ||
-          "This occupation has limited rationale text available in the current dataset.";
-
-        // Economic footprint
-        const impactEl = document.getElementById("riskImpact");
-        const monthlyWages = (occupation.pay && occupation.jobs) ? occupation.pay * occupation.jobs : null;
-        impactEl.innerHTML = `
-          <div class="risk-impact-item">
-            <div class="impact-val">${occupation.jobs ? formatNumber(occupation.jobs) : '\u2014'}</div>
-            <div class="impact-label">total employment</div>
-          </div>
-          <div class="risk-impact-item">
-            <div class="impact-val">${formatPay(occupation.pay)}</div>
-            <div class="impact-label">avg monthly wage</div>
-          </div>
-          <div class="risk-impact-item">
-            <div class="impact-val">${monthlyWages ? formatLargePhpAmount(monthlyWages) : '\u2014'}</div>
-            <div class="impact-label">monthly payroll</div>
-          </div>`;
-
-        // Related occupations
-        const related = findRelatedOccupations(occupation, 3);
-        const relatedEl = document.getElementById("riskRelated");
-        relatedEl.innerHTML = related.map(r =>
-          `<div class="risk-related-item">
-            <span class="related-title">${r.title}</span>
-            <span class="related-score" style="color:${exposureColor(r.exposure, 1)}">${r.exposure}/10</span>
-          </div>`
-        ).join('');
-
-        document.getElementById("riskOverlay").classList.add("visible");
-        const panel = document.getElementById("riskPanel");
-        panel.classList.add("visible");
-        panel.setAttribute("aria-hidden", "false");
-        requestDraw();
-      }
-
-      function closeRiskExplainer() {
-        selectedOccupation = null;
-        document.getElementById("riskOverlay").classList.remove("visible");
-        const panel = document.getElementById("riskPanel");
-        panel.classList.remove("visible");
-        panel.setAttribute("aria-hidden", "true");
-        requestDraw();
-      }
-
-      function fitCanvasText(text, maxWidth, font) {
-        if (measureTextWidth(text, font) <= maxWidth) return text;
-        let end = text.length;
-        while (
-          end > 1 &&
-          measureTextWidth(text.slice(0, end) + "…", font) > maxWidth
-        ) {
-          end--;
-        }
-        return text.slice(0, end).trimEnd() + "…";
-      }
-
-      function measureTextWidth(text, font) {
-        const key = `${font}::${text}`;
-        const cached = textMeasureCache.get(key);
-        if (cached != null) return cached;
-        ctx.save();
-        ctx.font = font;
-        const width = ctx.measureText(text).width;
-        ctx.restore();
-        textMeasureCache.set(key, width);
-        return width;
-      }
-
-      function requestDraw() {
-        if (drawRequested) return;
-        drawRequested = true;
-        requestAnimationFrame(() => {
-          drawRequested = false;
-          draw();
-        });
-      }
-
-      function zoomTextScale() {
-        if (!zoomApplies()) return 1;
-        return Math.min(1.8, 1 + (zoomScale - 1) * 0.22);
-      }
-
-      function layout() {
-        const wrapper = document.getElementById("wrapper");
-        const headerH = document.getElementById("header").offsetHeight;
-        const w = wrapper.clientWidth;
-        compactLayout = isCompactLayout();
-        MARGIN = compactLayout ? 8 : 12;
-        GAP = compactLayout ? 1 : 1.5;
-        const h = compactLayout
-          ? Math.max(Math.round(w * 1.18), 480)
-          : Math.round((w * 3) / 4);
-        canvas.width = w * dpr;
-        canvas.height = h * dpr;
-        canvas.style.width = w + "px";
-        canvas.style.height = h + "px";
-        const prevW = viewportW || w;
-        const prevH = viewportH || h;
-        viewportW = w;
-        viewportH = h;
-        const tx = MARGIN,
-          ty = MARGIN,
-          tw = w - MARGIN * 2,
-          th = h - MARGIN * 2;
-        const byCategory = {};
-        for (const d of data) {
-          if (!byCategory[d.category]) byCategory[d.category] = [];
-          byCategory[d.category].push(d);
-        }
-        const categories = Object.keys(byCategory)
-          .map((cat) => ({
-            cat,
-            items: byCategory[cat].sort(
-              (a, b) => (b.jobs || 0) - (a.jobs || 0),
-            ),
-            value: byCategory[cat].reduce((s, d) => s + (d.jobs || 1), 0),
-          }))
-          .sort((a, b) => b.value - a.value);
-        const catRects = squarify(categories, tx, ty, tw, th);
-        rects = [];
-        for (const cr of catRects) {
-          const items = cr.items.map((d) => ({ ...d, value: d.jobs || 1 }));
-          const innerRects = squarify(
-            items,
-            cr.rx + GAP,
-            cr.ry + GAP,
-            cr.rw - GAP * 2,
-            cr.rh - GAP * 2,
-          );
-          for (const ir of innerRects) rects.push(ir);
-        }
-
-        if (zoomApplies()) {
-          zoomPanX *= viewportW / prevW;
-          zoomPanY *= viewportH / prevH;
-          clampPan();
-        }
-      }
-
-      function draw() {
-        drawRequested = false;
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        ctx.fillStyle = "#0a0a0f";
-        ctx.fillRect(0, 0, canvas.width / dpr, canvas.height / dpr);
-        const screenScale = zoomApplies() ? zoomScale : 1;
-        const textScale = zoomTextScale();
-        const screenPanX = zoomApplies() ? zoomPanX : 0;
-        const screenPanY = zoomApplies() ? zoomPanY : 0;
-
-        if (zoomApplies()) {
-          ctx.save();
-          ctx.translate(zoomPanX, zoomPanY);
-          ctx.scale(zoomScale, zoomScale);
-        }
-        for (const r of rects) {
-          const isHovered = r === hovered;
-          const isSelected = selectedOccupation && r.title === selectedOccupation.title;
-          const g = GAP / 2,
-            rx = r.rx + g,
-            ry = r.ry + g,
-            rw = r.rw - g * 2,
-            rh = r.rh - g * 2;
-          if (rw <= 0 || rh <= 0) continue;
-          ctx.fillStyle = tileColorCSS(r, isHovered ? 0.8 : isSelected ? 0.7 : 0.5);
-          ctx.fillRect(rx, ry, rw, rh);
-          if (isSelected) {
-            ctx.strokeStyle = "#f2c98f";
-            ctx.lineWidth = 2.5 / Math.max(1, zoomScale);
-            ctx.strokeRect(rx, ry, rw, rh);
-          } else if (isHovered) {
-            ctx.strokeStyle = "#f2c98f";
-            ctx.lineWidth = 1.5 / Math.max(1, zoomScale);
-            ctx.strokeRect(rx, ry, rw, rh);
-          }
-        }
-        if (zoomApplies()) {
-          ctx.restore();
-        }
-
-        for (const r of rects) {
-          const isHovered = r === hovered;
-          const g = GAP / 2,
-            rx = r.rx + g,
-            ry = r.ry + g,
-            rw = r.rw - g * 2,
-            rh = r.rh - g * 2;
-          if (rw <= 0 || rh <= 0) continue;
-
-          const screenRx = rx * screenScale + screenPanX;
-          const screenRy = ry * screenScale + screenPanY;
-          const screenRw = rw * screenScale;
-          const screenRh = rh * screenScale;
-          if (
-            screenRw < (compactLayout ? 42 : 50) ||
-            screenRh < (compactLayout ? 20 : 18)
-          ) {
-            continue;
-          }
-
-          const fontSize = Math.max(
-            compactLayout ? 10 : 11,
-            Math.min(
-              compactLayout ? 18 : 17,
-              Math.min(screenRh / 2.8, screenRw / 11) * textScale,
-            ),
-          );
-          const titleFont = `500 ${fontSize}px -apple-system, system-ui, sans-serif`;
-          const subFont = `400 ${Math.max(8, fontSize - 2)}px -apple-system, system-ui, sans-serif`;
-          const titleY = screenRy + 5;
-          const subY = screenRy + 7 + fontSize;
-          const innerWidth = Math.max(0, screenRw - 10);
-          const innerHeight = Math.max(0, screenRh - 4);
-          const titleFits = measureTextWidth(r.title, titleFont) <= innerWidth;
-          const canShowFullText =
-            zoomApplies() && zoomScale >= 1.15 && titleFits;
-
-          ctx.save();
-          if (!canShowFullText) {
-            ctx.beginPath();
-            ctx.rect(screenRx + 4, screenRy + 2, innerWidth, innerHeight);
-            ctx.clip();
-          }
-          ctx.font = titleFont;
-          ctx.fillStyle = isHovered ? "#f2c98f" : "rgba(255,255,255,0.84)";
-          ctx.textBaseline = "top";
-          const title = canShowFullText
-            ? r.title
-            : fitCanvasText(r.title, innerWidth, titleFont);
-          ctx.fillText(title, screenRx + 5, titleY);
-
-          if (
-            screenRh > (compactLayout ? 30 : 34) &&
-            screenRw > (compactLayout ? 52 : 60)
-          ) {
-            ctx.font = subFont;
-            ctx.fillStyle = "rgba(255,255,255,0.58)";
-            const subText = tileSubInfo(r);
-            const subFits = measureTextWidth(subText, subFont) <= innerWidth;
-            ctx.fillText(
-              subFits ? subText : fitCanvasText(subText, innerWidth, subFont),
-              screenRx + 5,
-              subY,
-            );
-
-            if (zoomApplies() && zoomScale >= 2 && screenRh > 56) {
-              const detailFont = `400 ${Math.max(8, fontSize - 3)}px -apple-system, system-ui, sans-serif`;
-              ctx.font = detailFont;
-              ctx.fillStyle = "rgba(255,255,255,0.46)";
-              const wageLine = `Wage: ${formatPay(r.pay)}`;
-              if (measureTextWidth(wageLine, detailFont) <= innerWidth) {
-                ctx.fillText(
-                  wageLine,
-                  screenRx + 5,
-                  subY + Math.max(13, fontSize - 1),
-                );
-              }
-            }
-          }
-          ctx.restore();
-        }
-      }
-
-      function hitTest(mx, my) {
-        const rect = canvas.getBoundingClientRect();
-        const cx = mx - rect.left,
-          cy = my - rect.top;
-        const wx = zoomApplies() ? (cx - zoomPanX) / zoomScale : cx;
-        const wy = zoomApplies() ? (cy - zoomPanY) / zoomScale : cy;
-        for (let i = rects.length - 1; i >= 0; i--) {
-          const r = rects[i];
-          if (wx >= r.rx && wx < r.rx + r.rw && wy >= r.ry && wy < r.ry + r.rh)
-            return r;
-        }
-        return null;
-      }
-
-      function formatNumber(n) {
-        if (n == null) return "\u2014";
-        if (n >= 1e6) return (n / 1e6).toFixed(1) + "M";
-        if (n >= 1e3) return Math.round(n / 1e3) + "K";
-        return n.toLocaleString();
-      }
-      function formatPay(n) {
-        return n == null ? "\u2014" : "\u20b1" + n.toLocaleString();
-      }
-
-      function compactDecimal(n) {
-        const decimals = n >= 100 ? 0 : n >= 10 ? 1 : 2;
-        return n
-          .toFixed(decimals)
-          .replace(/\.0+$/, "")
-          .replace(/(\.\d*[1-9])0+$/, "$1");
-      }
-
-      function formatLargePhpAmount(n) {
-        if (n == null || !Number.isFinite(n)) return "\u2014";
-        if (n >= 1e12) return `\u20b1${compactDecimal(n / 1e12)}T`;
-        return `\u20b1${compactDecimal(n / 1e9)}B`;
-      }
-
-      function tooltipHighlight(d) {
-        if (colorMode === "exposure") {
-          const v = d.exposure;
-          if (v == null) return "";
-          const color = exposureColor(v, 1);
-          return (
-            `<span style="color:${color};font-weight:600;">AI Exposure: ${v}/10</span>` +
-            `<div style="margin-top:3px;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;">` +
-            `<div style="height:100%;width:${v * 10}%;background:${color};border-radius:2px;"></div></div>`
-          );
-        } else if (colorMode === "outlook") {
-          const v = d.outlook;
-          if (v == null) return "";
-          const color = outlookColor(v, 1);
-          return (
-            `<span style="color:${color};font-weight:600;">Hiring intensity (0–100): ${Math.round(v)}</span>` +
-            `<div style="margin-top:3px;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;">` +
-            `<div style="height:100%;width:${Math.min(100, v)}%;background:${color};border-radius:2px;"></div></div>`
-          );
-        } else if (colorMode === "ofw") {
-          const v = d.ofw_share;
-          if (v == null) return "";
-          const color = ofwColor(v, 1);
-          return (
-            `<span style="color:${color};font-weight:600;">OFW share of PSOC group: ${(v * 100).toFixed(1)}%</span>` +
-            `<div style="margin-top:3px;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;">` +
-            `<div style="height:100%;width:${Math.min(100, v * 100)}%;background:${color};border-radius:2px;"></div></div>` +
-            `<div style="margin-top:6px;color:var(--fg2);font-size:11px;">Source: PSA Survey on Overseas Filipinos 2024</div>`
-          );
-        } else if (colorMode === "pay") {
-          const v = d.pay;
-          if (v == null) return "";
-          const color = payColor(v, 1);
-          return (
-            `<span style="color:${color};font-weight:600;">Avg monthly wage: ${formatPay(v)}</span>` +
-            `<div style="margin-top:3px;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;">` +
-            `<div style="height:100%;width:${Math.min(100, (v / 100000) * 100)}%;background:${color};border-radius:2px;"></div></div>`
-          );
-        } else if (colorMode === "education") {
-          const edu = educationLabel(d.education);
-          const idx = (d.education || 0) - 1;
-          const color = idx >= 0 ? eduColor(idx, 1) : "var(--fg)";
-          return `<span style="color:${color};font-weight:600;">Education: ${edu || "\u2014"}</span>`;
-        } else if (colorMode === "informal") {
-          const v = d.informal_share;
-          if (v == null) return "";
-          const color = informalColor(v, 1);
-          return (
-            `<span style="color:${color};font-weight:600;">Informal sector: ${(v * 100).toFixed(1)}%</span>` +
-            `<div style="margin-top:3px;height:4px;background:rgba(255,255,255,0.08);border-radius:2px;">` +
-            `<div style="height:100%;width:${Math.min(100, v * 100)}%;background:${color};border-radius:2px;"></div></div>`
-          );
-        }
-        return "";
-      }
-
-      function showTooltip(d, mx, my) {
-        const tt = document.getElementById("tooltip");
-        tt.classList.toggle("compact", compactLayout);
-        tt.querySelector(".tt-category").textContent = d.psoc_label || d.category || '';
-        tt.querySelector(".tt-title").textContent = d.title;
-        const pctText = computePercentileText(d);
-        tt.querySelector(".tt-percentile").textContent = pctText;
-        tt.querySelector(".tt-percentile").style.display = pctText ? 'block' : 'none';
-        tt.querySelector(".tt-exposure").innerHTML = tooltipHighlight(d);
-        tt.querySelector(".tt-stats").innerHTML = `
-    <span class="label">AI exposure</span><span class="value">${d.exposure != null ? d.exposure + "/10" : "\u2014"}${d.exposure != null ? miniBar(d.exposure / 10, exposureColor(d.exposure, 0.8)) : ''}</span>
-    <span class="label">Avg monthly wage (\u20b1)</span><span class="value">${formatPay(d.pay)}${d.pay != null ? miniBar(Math.min(1, (Math.log(Math.max(6000, d.pay)) - Math.log(6000)) / (Math.log(100000) - Math.log(6000))), payColor(d.pay, 0.8)) : ''}</span>
-    <span class="label">Hiring intensity (0\u2013100)</span><span class="value">${d.outlook != null ? Math.round(d.outlook) : "\u2014"}${d.outlook != null ? miniBar(d.outlook / 100, outlookColor(d.outlook, 0.8)) : ''}</span>
-    <span class="label">OFW share</span><span class="value">${d.ofw_share != null ? (d.ofw_share * 100).toFixed(1) + "%" : "\u2014"}${d.ofw_share != null ? miniBar(d.ofw_share, ofwColor(d.ofw_share, 0.8)) : ''}</span>
-    <span class="label">Informal sector</span><span class="value">${d.informal_share != null ? (d.informal_share * 100).toFixed(1) + "%" : "\u2014"}${d.informal_share != null ? miniBar(d.informal_share, informalColor(d.informal_share, 0.8)) : ''}</span>
-    <span class="label">Education</span><span class="value">${educationLabel(d.education)}</span>
-    <span class="label">Employment</span><span class="value">${d.jobs ? formatNumber(d.jobs) + ' jobs' : '\u2014'}</span>`;
-        tt.querySelector(".tt-rationale").textContent =
-          colorMode === "exposure" ? d.exposure_rationale || "" : "";
-        const hintEl = tt.querySelector('.tt-click-hint');
-        if (hintEl) hintEl.style.display = compactLayout ? 'none' : 'block';
-        if (compactLayout) {
-          tt.style.left = "";
-          tt.style.top = "";
-        } else {
-          let tx = mx + 16,
-            ty = my - 16;
-          if (tx + 340 > window.innerWidth) tx = mx - 356;
-          if (ty < 10) ty = my + 16;
-          if (ty + 200 > window.innerHeight) ty = my - 200;
-          tt.style.left = tx + "px";
-          tt.style.top = ty + "px";
-        }
-        tt.classList.add("visible");
-      }
       function hideTooltip() {
-        pinnedTooltip = null;
-        document.getElementById("tooltip").classList.remove("visible");
+        tooltip.classList.remove("visible");
       }
 
-      // ── Shared stat data ────────────────────────────────────────────────────
-
-      const PAY_BANDS = [
-        { label: "<\u20b112K", min: 0, max: 12000 },
-        { label: "\u20b112\u201320K", min: 12000, max: 20000 },
-        { label: "\u20b120\u201335K", min: 20000, max: 35000 },
-        { label: "\u20b135\u201360K", min: 35000, max: 60000 },
-        { label: "\u20b160K+", min: 60000, max: Infinity },
-      ];
-
-      const EDU_GROUPS = [
-        { label: "No formal/HS", match: [1, 2] },
-        { label: "Postsecondary", match: [3] },
-        { label: "Bachelor's", match: [4] },
-        { label: "Doctoral", match: [5] },
-      ];
-
-      const HIRING_TIERS = [
-        { label: "Very low (0\u201320)", min: 0, max: 20 },
-        { label: "Low (21\u201340)", min: 21, max: 40 },
-        { label: "Medium (41\u201360)", min: 41, max: 60 },
-        { label: "High (61\u201380)", min: 61, max: 80 },
-        { label: "Very high (81\u2013100)", min: 81, max: 100 },
-      ];
-
-      // Weighted avg of metric across a set of group filters
-      function weightedAvgByGroups(groups, filterFn, metricFn) {
-        return groups.map((g) => {
-          let wS = 0,
-            wC = 0;
-          for (const d of data) {
-            const v = metricFn(d);
-            if (v != null && d.jobs && filterFn(d, g)) {
-              wS += v * d.jobs;
-              wC += d.jobs;
-            }
-          }
-          return { ...g, avg: wC > 0 ? wS / wC : 0, jobs: wC };
+      function badge(estimateType, legend) {
+        const entry = legend[estimateType];
+        const el = document.createElement("span");
+        el.className = "badge " + (estimateType || "none");
+        el.textContent = entry ? entry.label : "Unlabelled";
+        el.tabIndex = 0;
+        const explanation = entry ? entry.explanation : "No evidence class recorded.";
+        el.addEventListener("mouseenter", (e) => showTooltip(e, entry ? entry.label : "Unlabelled", explanation));
+        el.addEventListener("mousemove", positionTooltip);
+        el.addEventListener("mouseleave", hideTooltip);
+        el.addEventListener("focus", () => {
+          const r = el.getBoundingClientRect();
+          showTooltip({ clientX: r.left, clientY: r.bottom }, entry ? entry.label : "Unlabelled", explanation);
         });
+        el.addEventListener("blur", hideTooltip);
+        return el;
       }
 
-      // Render helpers
-      function renderTiers(tiers, totalJobs) {
-        return tiers
-          .map(
-            (t) => `<div class="tier-row">
-    <div class="tier-color" style="background:${t.color}"></div>
-    <span class="tier-name">${t.label}</span>
-    <span class="tier-jobs">${formatNumber(t.jobs)}</span>
-    <span class="tier-pct">${totalJobs > 0 ? ((t.jobs / totalJobs) * 100).toFixed(0) : 0}%</span>
-  </div>`,
-          )
-          .join("");
+      function el(tag, className, text) {
+        const node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text != null) node.textContent = text;
+        return node;
       }
 
-      function renderHbars(items) {
-        return items
-          .map(
-            (it) => `<div class="hbar-row">
-    <span class="hbar-label">${it.label}</span>
-    <div class="hbar-track"><div class="hbar-fill" style="width:${it.pct}%;background:${it.color}"></div></div>
-    <span class="hbar-val">${it.val}</span>
-  </div>`,
-          )
-          .join("");
-      }
-
-      // ── Layer-specific stats ────────────────────────────────────────────────
-
-      function updateStats() {
-        const totalJobs = data.reduce((s, d) => s + (d.jobs || 0), 0);
-        const totalJobsEl = document.getElementById("statTotalJobs");
-        totalJobsEl.textContent = (totalJobs / 1e6).toFixed(0) + "M";
-        totalJobsEl.classList.remove('stat-animated');
-        void totalJobsEl.offsetWidth; // trigger reflow
-        totalJobsEl.classList.add('stat-animated');
-        const labelEl = document.getElementById("statTotalLabel");
-        if (labelEl) labelEl.textContent = `across ${data.length} occupations`;
-
-        if (colorMode === "outlook") updateOutlookStats(totalJobs);
-        else if (colorMode === "pay") updatePayStats(totalJobs);
-        else if (colorMode === "education") updateEducationStats(totalJobs);
-        else if (colorMode === "ofw") updateOfwStats(totalJobs);
-        else if (colorMode === "informal") updateInformalStats(totalJobs);
-        else updateExposureStats(totalJobs);
-      }
-
-      function updateOutlookStats(totalJobs) {
-        let wS = 0,
-          wC = 0;
-        for (const d of data) {
-          if (d.outlook != null && d.jobs) {
-            wS += d.outlook * d.jobs;
-            wC += d.jobs;
-          }
-        }
-        const avg = wC > 0 ? wS / wC : 0;
-        document.getElementById("block2").innerHTML =
-          `<h3>Avg. hiring intensity</h3>
-    <div class="stat-big"><span style="color:${outlookColor(avg, 1)}">${avg.toFixed(0)}</span></div>
-    <div class="stat-label">0–100, based on PhilJobNet postings</div>`;
-
-        const buckets = [0, 20, 40, 60, 80, 100.1];
-        const histJobs = [0, 0, 0, 0, 0];
-        for (const d of data) {
-          if (d.outlook != null && d.jobs) {
-            const idx = buckets.findIndex(
-              (b, i) => d.outlook >= b && d.outlook < buckets[i + 1],
-            );
-            if (idx >= 0) histJobs[idx] += d.jobs;
-          }
-        }
-        const maxH = Math.max(...histJobs);
-        document.getElementById("block3").innerHTML =
-          `<h3>Jobs by intensity</h3>
-    <div class="histogram">${histJobs.map((c, i) => `<div class="bar" style="height:${Math.max(2, maxH > 0 ? (c / maxH) * 100 : 0)}%;background:${outlookColor((i + 1) * 20, 0.7)}"></div>`).join("")}</div>
-    <div class="hist-labels"><span>Low</span><span>Mid</span><span>High</span></div>`;
-
-        const tiers = HIRING_TIERS.map((t) => {
-          let jobs = 0;
-          for (const d of data) {
-            if (
-              d.outlook != null &&
-              d.jobs &&
-              d.outlook >= t.min &&
-              d.outlook <= t.max
-            ) {
-              jobs += d.jobs;
-            }
-          }
-          return { ...t, jobs, color: outlookColor((t.min + t.max) / 2, 1) };
-        });
-        document.getElementById("block4").innerHTML =
-          `<h3>Intensity tiers</h3><div class="tier-bar">${renderTiers(tiers, totalJobs)}</div>`;
-
-        const byPay = weightedAvgByGroups(
-          PAY_BANDS,
-          (d, g) => d.pay != null && d.pay >= g.min && d.pay < g.max,
-          (d) => d.outlook,
-        );
-        document.getElementById("block5").innerHTML =
-          `<h3>Intensity by pay</h3><div class="hbar-chart">${renderHbars(
-            byPay.map((g) => ({
-              label: g.label,
-              val: Math.round(g.avg),
-              pct: g.avg,
-              color: outlookColor(g.avg, 0.8),
-            })),
-          )}</div>`;
-
-        const byEdu = weightedAvgByGroups(
-          EDU_GROUPS,
-          (d, g) => g.match.includes(d.education),
-          (d) => d.outlook,
-        );
-        document.getElementById("block6").innerHTML =
-          `<h3>Intensity by education</h3><div class="hbar-chart">${renderHbars(
-            byEdu.map((g) => ({
-              label: g.label,
-              val: Math.round(g.avg),
-              pct: g.avg,
-              color: outlookColor(g.avg, 0.8),
-            })),
-          )}</div>`;
-
-        let highIntensity = 0;
-        for (const d of data) {
-          if (d.jobs && d.outlook >= 80) highIntensity += d.jobs;
-        }
-        let lowIntensity = 0;
-        for (const d of data) {
-          if (d.jobs && d.outlook <= 20) lowIntensity += d.jobs;
-        }
-        document.getElementById("block7").innerHTML =
-          `<h3>High-intensity jobs</h3>
-    <div class="stat-big" style="color:${outlookColor(90, 1)}">${(highIntensity / 1e6).toFixed(1)}M</div>
-    <div class="stat-label">80+ intensity</div>`;
-
-        document.getElementById("block8").innerHTML =
-          `<h3>Low-intensity jobs</h3>
-    <div class="stat-big" style="color:${outlookColor(10, 1)}">${(lowIntensity / 1e6).toFixed(1)}M</div>
-    <div class="stat-label">20 or below</div>`;
-      }
-
-      function updatePayStats(totalJobs) {
-        let wS = 0,
-          wC = 0;
-        for (const d of data) {
-          if (d.pay != null && d.jobs) {
-            wS += d.pay * d.jobs;
-            wC += d.jobs;
-          }
-        }
-        const avg = wC > 0 ? wS / wC : 0;
-        document.getElementById("block2").innerHTML = `<h3>Avg. pay</h3>
-    <div class="stat-big"><span style="color:${payColor(avg, 1)}">\u20b1${Math.round(avg / 1000)}K</span></div>
-    <div class="stat-label">job-weighted</div>`;
-
-        // Histogram
-        const buckets = [
-          { lo: 0, hi: 12000, mid: 9000 },
-          { lo: 12000, hi: 18000, mid: 15000 },
-          { lo: 18000, hi: 26000, mid: 22000 },
-          { lo: 26000, hi: 40000, mid: 32000 },
-          { lo: 40000, hi: 60000, mid: 50000 },
-          { lo: 60000, hi: Infinity, mid: 90000 },
+      function renderSummary(data) {
+        const counts = data.counts;
+        const cells = [
+          {
+            k: "PSOC units",
+            v: counts.occupations,
+            n: `${counts.psoc_major_groups} major · ${counts.psoc_sub_major_groups} sub-major`,
+          },
+          { k: "Metrics defined", v: counts.metrics_defined, n: "each with a named source" },
+          {
+            k: "Values published",
+            v: counts.published_values,
+            n: counts.published_values === 0 ? "no source retrieved yet" : "with full provenance",
+          },
+          {
+            k: "Exposure scores",
+            v: counts.exposure_scores,
+            n: counts.exposure_scores === 0 ? "no scoring run has been executed" : "experimental",
+          },
         ];
-        const histJobs = buckets.map(() => 0);
-        for (const d of data) {
-          if (d.pay != null && d.jobs) {
-            const i = buckets.findIndex((b) => d.pay >= b.lo && d.pay < b.hi);
-            if (i >= 0) histJobs[i] += d.jobs;
-          }
+        const host = document.getElementById("summary");
+        for (const cell of cells) {
+          const node = el("div", "summary-cell");
+          node.appendChild(el("div", "k", cell.k));
+          node.appendChild(el("div", "v", String(cell.v)));
+          node.appendChild(el("div", "n", cell.n));
+          host.appendChild(node);
         }
-        const maxH = Math.max(...histJobs);
-        document.getElementById("block3").innerHTML = `<h3>Jobs by pay</h3>
-    <div class="histogram">${histJobs.map((c, i) => `<div class="bar" style="height:${Math.max(2, maxH > 0 ? (c / maxH) * 100 : 0)}%;background:${payColor(buckets[i].mid, 0.7)}"></div>`).join("")}</div>
-    <div class="hist-labels"><span>\u20b112K</span><span>\u20b132K</span><span>\u20b160K+</span></div>`;
-
-        // Tiers
-        const tiers = PAY_BANDS.map((t) => {
-          let jobs = 0;
-          for (const d of data) {
-            if (d.pay != null && d.jobs && d.pay >= t.min && d.pay < t.max)
-              jobs += d.jobs;
-          }
-          return {
-            ...t,
-            label: t.label,
-            jobs,
-            color: payColor(
-              t.max === Infinity ? 90000 : (t.min + t.max) / 2,
-              1,
-            ),
-          };
-        });
-        document.getElementById("block4").innerHTML =
-          `<h3>Pay tiers</h3><div class="tier-bar">${renderTiers(tiers, totalJobs)}</div>`;
-
-        // Cross: pay by education
-        const byEdu = weightedAvgByGroups(
-          EDU_GROUPS,
-          (d, g) => g.match.includes(d.education),
-          (d) => d.pay,
-        );
-        document.getElementById("block5").innerHTML =
-          `<h3>Pay by education</h3><div class="hbar-chart">${renderHbars(
-            byEdu.map((g) => ({
-              label: g.label,
-              val: "\u20b1" + Math.round(g.avg / 1000) + "K",
-              pct: Math.max(
-                0,
-                Math.min(
-                  100,
-                  ((Math.log(Math.max(6000, g.avg)) - Math.log(6000)) /
-                    (Math.log(100000) - Math.log(6000))) *
-                    100,
-                ),
-              ),
-              color: payColor(g.avg, 0.8),
-            })),
-          )}</div>`;
-
-        // Cross: pay by hiring intensity tier
-        const byOl = weightedAvgByGroups(
-          HIRING_TIERS,
-          (d, g) =>
-            d.outlook != null && d.outlook >= g.min && d.outlook <= g.max,
-          (d) => d.pay,
-        );
-        document.getElementById("block6").innerHTML =
-          `<h3>Pay by hiring intensity</h3><div class="hbar-chart">${renderHbars(
-            byOl.map((g) => ({
-              label: g.label,
-              val: "\u20b1" + Math.round(g.avg / 1000) + "K",
-              pct: Math.max(
-                0,
-                Math.min(
-                  100,
-                  ((Math.log(Math.max(6000, g.avg)) - Math.log(6000)) /
-                    (Math.log(100000) - Math.log(6000))) *
-                    100,
-                ),
-              ),
-              color: payColor(g.avg, 0.8),
-            })),
-          )}</div>`;
-
-        // Impact: total wages
-        let totalWages = 0;
-        for (const d of data) {
-          if (d.pay != null && d.jobs) totalWages += d.pay * d.jobs;
-        }
-        document.getElementById("block7").innerHTML = `<h3>Total wages</h3>
-    <div class="stat-big">${formatLargePhpAmount(totalWages)}</div>
-    <div class="stat-label">monthly payroll</div>`;
-        document.getElementById("block8").innerHTML = "";
       }
 
-      function updateEducationStats(totalJobs) {
-        // Headline: % Bachelor's+
-        let bsJobs = 0;
-        for (const d of data) {
-          if (d.jobs && [4, 5].includes(d.education)) bsJobs += d.jobs;
+      function renderLegend(data) {
+        const host = document.getElementById("legend");
+        for (const [key, entry] of Object.entries(data.estimate_type_legend)) {
+          const item = el("div", "legend-item");
+          item.appendChild(badge(key, data.estimate_type_legend));
+          item.appendChild(el("p", null, entry.explanation));
+          host.appendChild(item);
         }
-        document.getElementById("block2").innerHTML = `<h3>Bachelor's+</h3>
-    <div class="stat-big"><span style="color:${eduColor(5, 1)}">${((bsJobs / totalJobs) * 100).toFixed(0)}%</span></div>
-    <div class="stat-label">of all jobs</div>`;
-
-        // Histogram: jobs by education group
-        const groups = EDU_GROUPS.map((g, i) => {
-          let jobs = 0;
-          for (const d of data) {
-            if (d.jobs && g.match.includes(d.education)) jobs += d.jobs;
-          }
-          return { ...g, jobs, idx: i };
-        });
-        const maxH = Math.max(...groups.map((g) => g.jobs));
-        document.getElementById("block3").innerHTML =
-          `<h3>Jobs by education</h3>
-    <div class="histogram">${groups.map((g) => `<div class="bar" style="height:${Math.max(2, maxH > 0 ? (g.jobs / maxH) * 100 : 0)}%;background:${eduColor(g.idx * 2, 0.7)}"></div>`).join("")}</div>
-    <div class="hist-labels"><span>HS</span><span>BS</span><span>PhD</span></div>`;
-
-        // Tier breakdown (same groups with counts)
-        const tiers = groups.map((g, i) => ({
-          label: g.label,
-          jobs: g.jobs,
-          color: eduColor(i * 2, 1),
-        }));
-        document.getElementById("block4").innerHTML =
-          `<h3>Education tiers</h3><div class="tier-bar">${renderTiers(tiers, totalJobs)}</div>`;
-
-        // Cross: avg pay by education
-        const payByEdu = weightedAvgByGroups(
-          EDU_GROUPS,
-          (d, g) => g.match.includes(d.education),
-          (d) => d.pay,
-        );
-        document.getElementById("block5").innerHTML =
-          `<h3>Avg pay by education</h3><div class="hbar-chart">${renderHbars(
-            payByEdu.map((g) => ({
-              label: g.label,
-              val: "\u20b1" + Math.round(g.avg / 1000) + "K",
-              pct: Math.max(
-                0,
-                Math.min(
-                  100,
-                  ((Math.log(Math.max(6000, g.avg)) - Math.log(6000)) /
-                    (Math.log(100000) - Math.log(6000))) *
-                    100,
-                ),
-              ),
-              color: payColor(g.avg, 0.8),
-            })),
-          )}</div>`;
-
-        // Cross: avg hiring intensity by education
-        const olByEdu = weightedAvgByGroups(
-          EDU_GROUPS,
-          (d, g) => g.match.includes(d.education),
-          (d) => d.outlook,
-        );
-        document.getElementById("block6").innerHTML =
-          `<h3>Avg hiring intensity by education</h3><div class="hbar-chart">${renderHbars(
-            olByEdu.map((g) => ({
-              label: g.label,
-              val: Math.round(g.avg),
-              pct: Math.max(0, Math.min(100, g.avg)),
-              color: outlookColor(g.avg, 0.8),
-            })),
-          )}</div>`;
-
-        // Impact: jobs with no formal degree
-        let noDeg = 0;
-        for (const d of data) {
-          if (d.jobs && [1, 2].includes(d.education)) noDeg += d.jobs;
-        }
-        document.getElementById("block7").innerHTML = `<h3>No degree / HS</h3>
-    <div class="stat-big">${(noDeg / 1e6).toFixed(1)}M</div>
-    <div class="stat-label">jobs, no degree required</div>`;
-        document.getElementById("block8").innerHTML = "";
       }
 
-      function updateOfwStats(totalJobs) {
-        let wS = 0,
-          wC = 0;
-        for (const d of data) {
-          if (d.ofw_share != null && d.jobs) {
-            wS += d.ofw_share * d.jobs;
-            wC += d.jobs;
+      function renderLedger(data) {
+        const host = document.getElementById("ledger");
+        // One representative observation per metric supplies the live
+        // availability and source state; the definition supplies the rest.
+        const sample = {};
+        for (const occ of data.occupations) {
+          for (const [id, m] of Object.entries(occ.metrics)) {
+            if (!sample[id]) sample[id] = m;
           }
         }
-        const avg = wC > 0 ? wS / wC : 0;
-        document.getElementById("block2").innerHTML = `<h3>Avg. OFW share</h3>
-    <div class="stat-big"><span style="color:${ofwColor(avg, 1)}">${(avg * 100).toFixed(1)}%</span></div>
-    <div class="stat-label">PSOC-group weighted</div>`;
 
-        const buckets = [0, 0.05, 0.1, 0.2, 0.35, 1.01];
-        const histJobs = [0, 0, 0, 0, 0];
-        for (const d of data) {
-          if (d.ofw_share != null && d.jobs) {
-            const idx = buckets.findIndex(
-              (b, i) => d.ofw_share >= b && d.ofw_share < buckets[i + 1],
-            );
-            if (idx >= 0) histJobs[idx] += d.jobs;
-          }
-        }
-        const maxH = Math.max(...histJobs);
-        document.getElementById("block3").innerHTML =
-          `<h3>Jobs by OFW share</h3>
-    <div class="histogram">${histJobs.map((c, i) => `<div class="bar" style="height:${Math.max(2, maxH > 0 ? (c / maxH) * 100 : 0)}%;background:${ofwColor((i + 1) / 5, 0.7)}"></div>`).join("")}</div>
-    <div class="hist-labels"><span>Low</span><span>Mid</span><span>High</span></div>`;
+        for (const [id, def] of Object.entries(data.metrics)) {
+          const observed = sample[id];
+          const card = el("div", "metric-card");
 
-        const tiers = [
-          { label: "Very low (<2%)", min: 0, max: 0.02 },
-          { label: "Low (2–6%)", min: 0.02, max: 0.06 },
-          { label: "Moderate (6–13%)", min: 0.06, max: 0.13 },
-          { label: "High (13–20%)", min: 0.13, max: 0.2 },
-          { label: "Very high (20%+)", min: 0.2, max: 1.01 },
-        ].map((t) => {
-          let jobs = 0;
-          for (const d of data) {
-            if (
-              d.jobs &&
-              d.ofw_share != null &&
-              d.ofw_share >= t.min &&
-              d.ofw_share < t.max
-            ) {
-              jobs += d.jobs;
-            }
-          }
-          return { ...t, jobs, color: ofwColor((t.min + t.max) / 2, 1) };
-        });
-        document.getElementById("block4").innerHTML =
-          `<h3>OFW share tiers</h3><div class="tier-bar">${renderTiers(tiers, totalJobs)}</div>`;
+          const head = el("div", "metric-head");
+          head.appendChild(el("span", "metric-name", def.name));
+          head.appendChild(el("span", "metric-unit", def.unit));
+          head.appendChild(badge(def.expected_estimate_type, data.estimate_type_legend));
 
-        const byPay = weightedAvgByGroups(
-          PAY_BANDS,
-          (d, g) => d.pay != null && d.pay >= g.min && d.pay < g.max,
-          (d) => d.ofw_share * 100,
-        );
-        document.getElementById("block5").innerHTML =
-          `<h3>OFW share by pay</h3><div class="hbar-chart">${renderHbars(
-            byPay.map((g) => ({
-              label: g.label,
-              val: g.avg.toFixed(0) + "%",
-              pct: g.avg,
-              color: ofwColor(g.avg / 100, 0.8),
-            })),
-          )}</div>`;
+          const availability = observed ? observed.availability : "not_applicable";
+          const status = el("span", "metric-status");
+          status.textContent =
+            availability === "published"
+              ? "published"
+              : availability === "blocked_pending_source"
+                ? "no value — source not retrieved"
+                : "no value — not representable yet";
+          if (availability === "published") status.classList.add("is-published");
+          status.title = data.availability_legend[availability] || "";
+          head.appendChild(status);
+          card.appendChild(head);
 
-        const byEdu = weightedAvgByGroups(
-          EDU_GROUPS,
-          (d, g) => g.match.includes(d.education),
-          (d) => d.ofw_share * 100,
-        );
-        document.getElementById("block6").innerHTML =
-          `<h3>OFW share by education</h3><div class="hbar-chart">${renderHbars(
-            byEdu.map((g) => ({
-              label: g.label,
-              val: g.avg.toFixed(0) + "%",
-              pct: g.avg,
-              color: ofwColor(g.avg / 100, 0.8),
-            })),
-          )}</div>`;
+          card.appendChild(el("div", "metric-def", def.definition));
 
-        let ofwJobs = 0;
-        for (const d of data) {
-          if (d.jobs && d.ofw_share != null) ofwJobs += d.jobs * d.ofw_share;
-        }
-        const domesticJobs = Math.max(0, totalJobs - ofwJobs);
-        document.getElementById("block7").innerHTML = `<h3>OFW-linked jobs</h3>
-    <div class="stat-big" style="color:${ofwColor(0.95, 1)}">${(ofwJobs / 1e6).toFixed(1)}M</div>
-    <div class="stat-label">weighted by OFW share</div>`;
-
-        document.getElementById("block8").innerHTML = `<h3>Domestic jobs</h3>
-    <div class="stat-big" style="color:${ofwColor(0.08, 1)}">${(domesticJobs / 1e6).toFixed(1)}M</div>
-    <div class="stat-label">not in the OFW channel</div>`;
-      }
-
-      function updateExposureStats(totalJobs) {
-        let wS = 0,
-          wC = 0;
-        for (const d of data) {
-          if (d.exposure != null && d.jobs) {
-            wS += d.exposure * d.jobs;
-            wC += d.jobs;
-          }
-        }
-        const avg = wC > 0 ? wS / wC : 0;
-        document.getElementById("block2").innerHTML = `<h3>Avg. exposure</h3>
-    <div class="stat-big"><span style="color:${exposureColor(avg, 1)}">${avg.toFixed(1)}</span></div>
-    <div class="stat-label">job-weighted, 0\u201310</div>`;
-
-        // Histogram
-        const histogram = new Array(11).fill(0);
-        for (const d of data) {
-          if (d.exposure != null && d.jobs) histogram[d.exposure] += d.jobs;
-        }
-        const maxH = Math.max(...histogram);
-        document.getElementById("block3").innerHTML = `<h3>Jobs by exposure</h3>
-    <div class="histogram">${histogram.map((c, i) => `<div class="bar" style="height:${Math.max(2, maxH > 0 ? (c / maxH) * 100 : 0)}%;background:${exposureColor(i, 0.7)}"></div>`).join("")}</div>
-    <div class="hist-labels"><span>0</span><span>5</span><span>10</span></div>`;
-
-        // Tier breakdown
-        const tierDefs = [
-          { label: "Minimal (0\u20131)", lo: 0, hi: 1, mid: 0.5 },
-          { label: "Low (2\u20133)", lo: 2, hi: 3, mid: 2.5 },
-          { label: "Moderate (4\u20135)", lo: 4, hi: 5, mid: 4.5 },
-          { label: "High (6\u20137)", lo: 6, hi: 7, mid: 6.5 },
-          { label: "Very high (8\u201310)", lo: 8, hi: 10, mid: 9 },
-        ];
-        const tiers = tierDefs.map((t) => {
-          let jobs = 0;
-          for (const d of data) {
-            if (
-              d.exposure != null &&
-              d.jobs &&
-              d.exposure >= t.lo &&
-              d.exposure <= t.hi
-            )
-              jobs += d.jobs;
-          }
-          return { ...t, jobs, color: exposureColor(t.mid, 1) };
-        });
-        document.getElementById("block4").innerHTML =
-          `<h3>Exposure tiers</h3><div class="tier-bar">${renderTiers(tiers, totalJobs)}</div>`;
-
-        // Cross: exposure by pay
-        const byPay = weightedAvgByGroups(
-          PAY_BANDS,
-          (d, g) => d.pay != null && d.pay >= g.min && d.pay < g.max,
-          (d) => d.exposure,
-        );
-        document.getElementById("block5").innerHTML =
-          `<h3>Exposure by pay</h3><div class="hbar-chart">${renderHbars(
-            byPay.map((g) => ({
-              label: g.label,
-              val: g.avg.toFixed(1),
-              pct: (g.avg / 10) * 100,
-              color: exposureColor(g.avg, 0.8),
-            })),
-          )}</div>`;
-
-        // Cross: exposure by education
-        const byEdu = weightedAvgByGroups(
-          EDU_GROUPS,
-          (d, g) => g.match.includes(d.education),
-          (d) => d.exposure,
-        );
-        document.getElementById("block6").innerHTML =
-          `<h3>Exposure by education</h3><div class="hbar-chart">${renderHbars(
-            byEdu.map((g) => ({
-              label: g.label,
-              val: g.avg.toFixed(1),
-              pct: (g.avg / 10) * 100,
-              color: exposureColor(g.avg, 0.8),
-            })),
-          )}</div>`;
-
-        // Impact: wages exposed
-        let wagesExposed = 0;
-        for (const d of data) {
-          if (d.exposure != null && d.exposure >= 7 && d.jobs && d.pay)
-            wagesExposed += d.jobs * d.pay;
-        }
-        document.getElementById("block7").innerHTML = `<h3>Wages exposed</h3>
-    <div class="stat-big" style="color:${exposureColor(8, 1)}">${formatLargePhpAmount(wagesExposed)}</div>
-    <div class="stat-label">monthly, in jobs scoring 7+</div>`;
-        document.getElementById("block8").innerHTML = "";
-      }
-
-      function updateInformalStats(totalJobs) {
-        let wS = 0,
-          wC = 0;
-        for (const d of data) {
-          if (d.informal_share != null && d.jobs) {
-            wS += d.informal_share * d.jobs;
-            wC += d.jobs;
-          }
-        }
-        const avg = wC > 0 ? wS / wC : 0;
-        document.getElementById("block2").innerHTML =
-          `<h3>Avg. informal share</h3>
-    <div class="stat-big"><span style="color:${informalColor(avg, 1)}">${(avg * 100).toFixed(1)}%</span></div>
-    <div class="stat-label">job-weighted</div>`;
-
-        const buckets = [0.1, 0.3, 0.5, 0.7, 0.9, 1.01];
-        const histJobs = [0, 0, 0, 0, 0, 0];
-        for (const d of data) {
-          if (d.informal_share != null && d.jobs) {
-            const idx = buckets.findIndex((b) => d.informal_share <= b);
-            if (idx >= 0) histJobs[idx] += d.jobs;
-          }
-        }
-        const maxH = Math.max(...histJobs);
-        document.getElementById("block3").innerHTML =
-          `<h3>Jobs by informality</h3>
-    <div class="histogram">${histJobs.map((c, i) => `<div class="bar" style="height:${Math.max(2, maxH > 0 ? (c / maxH) * 100 : 0)}%;background:${informalColor((i + 1) / 6, 0.7)}"></div>`).join("")}</div>
-    <div class="hist-labels"><span>0%</span><span>50%</span><span>100%</span></div>`;
-
-        const tiers = [
-          { label: "Low (<30%)", lo: 0, hi: 0.3, mid: 0.2 },
-          { label: "Medium (30-60%)", lo: 0.3, hi: 0.6, mid: 0.45 },
-          { label: "High (60%+)", lo: 0.6, hi: 1.0, mid: 0.8 },
-        ].map((t) => {
-          let jobs = 0;
-          for (const d of data) {
-            if (
-              d.jobs &&
-              d.informal_share >= t.lo &&
-              d.informal_share < t.hi + 1e-9
-            )
-              jobs += d.jobs;
-          }
-          return { label: t.label, jobs, color: informalColor(t.mid, 1) };
-        });
-        document.getElementById("block4").innerHTML =
-          `<h3>Informal tiers</h3><div class="tier-bar">${renderTiers(tiers, totalJobs)}</div>`;
-
-        const byPay = weightedAvgByGroups(
-          PAY_BANDS,
-          (d, g) => d.pay != null && d.pay >= g.min && d.pay < g.max,
-          (d) => d.informal_share * 100,
-        );
-        document.getElementById("block5").innerHTML =
-          `<h3>Informal % by pay</h3><div class="hbar-chart">${renderHbars(
-            byPay.map((g) => ({
-              label: g.label,
-              val: g.avg.toFixed(0) + "%",
-              pct: g.avg,
-              color: informalColor(g.avg / 100, 0.8),
-            })),
-          )}</div>`;
-
-        const byEdu = weightedAvgByGroups(
-          EDU_GROUPS,
-          (d, g) => g.match.includes(d.education),
-          (d) => d.informal_share * 100,
-        );
-        document.getElementById("block6").innerHTML =
-          `<h3>Informal % by education</h3><div class="hbar-chart">${renderHbars(
-            byEdu.map((g) => ({
-              label: g.label,
-              val: g.avg.toFixed(0) + "%",
-              pct: g.avg,
-              color: informalColor(g.avg / 100, 0.8),
-            })),
-          )}</div>`;
-
-        let highInformal = 0;
-        for (const d of data) {
-          if (d.jobs && d.informal_share >= 0.6) highInformal += d.jobs;
-        }
-        document.getElementById("block7").innerHTML =
-          `<h3>High-informal jobs</h3>
-    <div class="stat-big" style="color:${informalColor(0.8, 1)}">${(highInformal / 1e6).toFixed(1)}M</div>
-    <div class="stat-label">60%+ informal share</div>`;
-        document.getElementById("block8").innerHTML = "";
-      }
-
-      // ── Events ─────────────────────────────────────────────────────────────
-
-      canvas.addEventListener("mousemove", (e) => {
-        if (compactLayout || isPanning) return;
-        const hit = hitTest(e.clientX, e.clientY);
-        if (hit !== hovered) {
-          hovered = hit;
-          requestDraw();
-        }
-        if (hovered) {
-          showTooltip(hovered, e.clientX, e.clientY);
-          canvas.style.cursor = "pointer";
-        } else {
-          hideTooltip();
-          canvas.style.cursor =
-            zoomEnabled && zoomScale > 1 ? "grab" : "default";
-        }
-      });
-      canvas.addEventListener("click", (e) => {
-        if (suppressNextClick) {
-          suppressNextClick = false;
-          return;
-        }
-        const hit = hitTest(e.clientX, e.clientY);
-        if (compactLayout) {
-          if (!hit) {
-            hideTooltip();
-            hovered = null;
-            requestDraw();
-            closeRiskExplainer();
-            return;
-          }
-          pinnedTooltip = hit;
-          showTooltip(hit, e.clientX, e.clientY);
-          hovered = hit;
-          const now = Date.now();
-          const dblTap =
-            zoomEnabled &&
-            lastTapClient &&
-            now - lastTapTime < 320 &&
-            Math.hypot(
-              lastTapClient.x - e.clientX,
-              lastTapClient.y - e.clientY,
-            ) < 28;
-          lastTapTime = now;
-          lastTapClient = { x: e.clientX, y: e.clientY };
-          if (dblTap) {
-            hideTooltip();
-            zoomToRect(hit, true);
+          const meta = document.createElement("dl");
+          meta.className = "metric-meta";
+          const pairs = [
+            ["Required source", def.required_source],
+            ["Source publishes at", def.expected_source_granularity.replace(/_/g, " ")],
+            ["Denominator", def.denominator],
+          ];
+          if (observed) {
+            pairs.push(["Reference period", observed.reference_period || "—"]);
+            pairs.push(["Confidence grade", observed.confidence_grade || "—"]);
+            pairs.push(["Value", observed.value === null ? "—" : String(observed.value)]);
           } else {
-            openRiskExplainer(hit);
+            pairs.push([
+              "Why no rows",
+              "No canonical unit exists at this granularity yet; PSOC minor and unit groups have not been retrieved.",
+            ]);
           }
-          requestDraw();
-          return;
-        }
-        if (hit) {
-          openRiskExplainer(hit);
-          if (hit.url) window.open(hit.url, "_blank");
-        }
-      });
-      canvas.addEventListener("dblclick", (e) => {
-        if (!zoomEnabled) return;
-        const hit = hitTest(e.clientX, e.clientY);
-        if (!hit) return;
-        e.preventDefault();
-        zoomToRect(hit, true);
-      });
-      canvas.addEventListener(
-        "wheel",
-        (e) => {
-          if (!zoomEnabled || (!e.ctrlKey && !e.metaKey)) return;
-          e.preventDefault();
-          const rect = canvas.getBoundingClientRect();
-          const canvasX = e.clientX - rect.left;
-          const canvasY = e.clientY - rect.top;
-          const factor = e.deltaY > 0 ? 0.9 : 1.1;
-          const next = Math.max(
-            ZOOM_MIN,
-            Math.min(ZOOM_MAX, zoomScale * factor),
-          );
-          applyZoomAtCanvasPoint(canvasX, canvasY, next, false);
-        },
-        { passive: false },
-      );
-      canvas.addEventListener("mouseleave", () => {
-        if (compactLayout || isPanning) return;
-        hovered = null;
-        hideTooltip();
-        requestDraw();
-      });
-
-      canvas.addEventListener("pointerdown", (e) => {
-        activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-        if (!zoomEnabled) return;
-        canvas.setPointerCapture(e.pointerId);
-        if (activePointers.size === 1 && zoomScale > 1) {
-          isPanning = true;
-          lastPanClient = { x: e.clientX, y: e.clientY };
-          canvas.style.cursor = "grabbing";
-        }
-        if (activePointers.size === 2) {
-          const pts = Array.from(activePointers.values());
-          pinchStartDistance = Math.hypot(
-            pts[1].x - pts[0].x,
-            pts[1].y - pts[0].y,
-          );
-          pinchStartScale = zoomScale;
-          const rect = canvas.getBoundingClientRect();
-          pinchAnchor = {
-            x: (pts[0].x + pts[1].x) / 2 - rect.left,
-            y: (pts[0].y + pts[1].y) / 2 - rect.top,
-          };
-          isPanning = false;
-        }
-      });
-
-      canvas.addEventListener("pointermove", (e) => {
-        if (!activePointers.has(e.pointerId)) return;
-        activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-        if (!zoomEnabled) return;
-
-        if (
-          activePointers.size === 2 &&
-          pinchStartDistance > 0 &&
-          pinchAnchor
-        ) {
-          const pts = Array.from(activePointers.values());
-          const dist = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y);
-          const ratio = dist / pinchStartDistance;
-          const target = pinchStartScale * ratio;
-          applyZoomAtCanvasPoint(pinchAnchor.x, pinchAnchor.y, target, false);
-          e.preventDefault();
-          return;
-        }
-
-        if (isPanning && lastPanClient && zoomScale > 1) {
-          const dx = e.clientX - lastPanClient.x;
-          const dy = e.clientY - lastPanClient.y;
-          if (Math.hypot(dx, dy) > 2) {
-            suppressNextClick = true;
+          for (const [label, value] of pairs) {
+            meta.appendChild(el("dt", null, label));
+            meta.appendChild(el("dd", null, value));
           }
-          lastPanClient = { x: e.clientX, y: e.clientY };
-          zoomPanX += dx;
-          zoomPanY += dy;
-          clampPan();
-          hovered = null;
-          hideTooltip();
-          requestDraw();
-          e.preventDefault();
-        }
-      });
+          card.appendChild(meta);
 
-      function releasePointerState(pointerId) {
-        activePointers.delete(pointerId);
-        if (activePointers.size < 2) {
-          pinchStartDistance = 0;
-          pinchAnchor = null;
-        }
-        if (activePointers.size === 0) {
-          isPanning = false;
-          lastPanClient = null;
-          canvas.style.cursor =
-            zoomEnabled && zoomScale > 1 ? "grab" : "default";
+          const misread = el("div", "misread");
+          misread.appendChild(el("b", null, "Often misread as: "));
+          misread.appendChild(document.createTextNode(def.common_misreading));
+          card.appendChild(misread);
+
+          host.appendChild(card);
         }
       }
 
-      canvas.addEventListener("pointerup", (e) =>
-        releasePointerState(e.pointerId),
-      );
-      canvas.addEventListener("pointercancel", (e) =>
-        releasePointerState(e.pointerId),
-      );
+      function renderTree(data) {
+        const host = document.getElementById("tree");
+        const majors = data.occupations.filter((o) => o.level === "psoc_major_group");
+        const subs = data.occupations.filter((o) => o.level === "psoc_sub_major_group");
 
-      function resize() {
-        dpr = window.devicePixelRatio || 1;
-        compactLayout = isCompactLayout();
-        layout();
-        hideTooltip();
-        clampPan();
-        updateZoomUi();
-        requestDraw();
+        document.getElementById("structureNote").textContent =
+          `${majors.length} PSOC major groups and ${subs.length} sub-major groups, ` +
+          `from ${data.release.psoc_version}. Detailed occupations are absent rather ` +
+          `than invented: the minor and unit group lists have not been retrieved.`;
+
+        for (const major of majors) {
+          const details = el("details", "group");
+          const summary = document.createElement("summary");
+          summary.appendChild(el("span", "group-code", major.psoc_code));
+          summary.appendChild(el("span", "group-title", major.title));
+
+          const children = subs.filter((s) => s.parent_psoc_code === major.psoc_code);
+          summary.appendChild(
+            el("span", "group-count", `${children.length} sub-major group${children.length === 1 ? "" : "s"}`)
+          );
+          details.appendChild(summary);
+
+          const list = el("div", "sub-list");
+          for (const child of children) {
+            const row = el("div", "sub-row");
+            row.appendChild(el("span", "sub-code", child.psoc_code));
+            row.appendChild(el("span", "sub-title", child.title));
+            const withValues = Object.values(child.metrics).filter((m) => m.value !== null).length;
+            row.appendChild(
+              el("span", "sub-state", withValues === 0 ? "no values available" : `${withValues} value(s)`)
+            );
+            list.appendChild(row);
+          }
+          details.appendChild(list);
+          host.appendChild(details);
+        }
       }
 
-      // ── Legend gradient ────────────────────────────────────────────────────
+      function renderSources(data) {
+        const tbody = document.getElementById("sourceRows");
+        for (const [id, info] of Object.entries(data.release.source_versions)) {
+          const tr = document.createElement("tr");
+          tr.appendChild(el("td", null, id));
+          tr.appendChild(el("td", null, info.organization));
 
-      const LEGEND_CONFIG = {
-        exposure: { low: "Low exposure", high: "High exposure" },
-        outlook: { low: "Low demand", high: "High demand" },
-        ofw: { low: "Low share", high: "High share" },
-        pay: { low: "\u20b16K", high: "\u20b1100K+" },
-        education: { low: "Elementary", high: "Post-grad" },
-        informal: { low: "Low informal", high: "High informal" },
-      };
+          const state = el("td", null, info.declared_status.replace(/_/g, " "));
+          if (info.declared_status === "blocked" || info.declared_status === "not_retrieved") {
+            state.className = "status-blocked";
+          } else if (info.declared_status === "not_used") {
+            state.className = "status-unused";
+          }
+          tr.appendChild(state);
 
-      function drawGradientLegend() {
-        const c = document.getElementById("gradientLegend");
-        const gctx = c.getContext("2d");
-        for (let x = 0; x < 80; x++) {
-          const t = x / 79;
-          if (colorMode === "exposure")
-            gctx.fillStyle = exposureColor(t * 10, 1);
-          else if (colorMode === "outlook")
-            gctx.fillStyle = outlookColor(t * 100, 1);
-          else if (colorMode === "ofw") gctx.fillStyle = ofwColor(t, 1);
-          else if (colorMode === "informal")
-            gctx.fillStyle = informalColor(t, 1);
-          else if (colorMode === "pay")
-            gctx.fillStyle = payColor(6000 + t * (100000 - 6000), 1);
-          else gctx.fillStyle = greenRedCSS(1 - t, 1);
-          gctx.fillRect(x, 0, 1, 8);
+          tr.appendChild(
+            el("td", null, (info.blocked_reason || "—").trim() || "—")
+          );
+          tbody.appendChild(tr);
         }
-        const cfg = LEGEND_CONFIG[colorMode];
-        document.getElementById("legendLow").textContent = cfg.low;
-        document.getElementById("legendHigh").textContent = cfg.high;
       }
 
-      // ── Layer toggle ─────────────────────────────────────────────────────
-
-      document.getElementById("colorToggle").addEventListener("click", (e) => {
-        const btn = e.target.closest("button");
-        if (!btn || !btn.dataset.mode) return;
-        colorMode = btn.dataset.mode;
-        // Save the selected layer to localStorage
-        localStorage.setItem("trabaholens_colorMode", colorMode);
-        document
-          .querySelectorAll("#colorToggle button")
-          .forEach((b) => b.classList.remove("active"));
-        btn.classList.add("active");
-        // Update layer description
-        updateLayerDesc();
-        // Auto-close risk panel on layer switch to avoid context mismatch
-        closeRiskExplainer();
-        // Canvas fade transition for smooth layer switch
-        canvas.classList.add('switching');
-        updateStats();
-        drawGradientLegend();
-        requestAnimationFrame(() => {
-          draw();
-          requestAnimationFrame(() => {
-            canvas.classList.remove('switching');
-          });
-        });
-        // Re-layout since stats height may have changed
-        requestAnimationFrame(resize);
-      });
-
-      document
-        .getElementById("industryFilter")
-        .addEventListener("change", (e) => {
-          industryFilter = e.target.value;
-          localStorage.setItem("trabaholens_industryFilter", industryFilter);
-          closeRiskExplainer();
-          applyIndustryFilter();
-        });
-
-      document.getElementById("riskClose").addEventListener("click", () => {
-        closeRiskExplainer();
-      });
-      document.getElementById("riskOverlay").addEventListener("click", () => {
-        closeRiskExplainer();
-      });
-      window.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") {
-          closeRiskExplainer();
-          resetZoom(true);
-        }
-      });
-
-      window.addEventListener("resize", resize);
-      window.addEventListener("orientationchange", resize);
-
-      // ── Load ───────────────────────────────────────────────────────────────
+      function renderFooter(data) {
+        const r = data.release;
+        document.getElementById("footerCounts").textContent =
+          `Release ${r.release_id} · schema ${r.schema_version} · methodology ${r.methodology_version} · ` +
+          `exposure rubric ${r.exposure_rubric_version} · prompt ${r.prompt_version} · ` +
+          `${r.psoc_version} · commit ${String(r.code_commit).slice(0, 10)}`;
+      }
 
       fetch("data.json")
-        .then((r) => r.json())
-        .then((d) => {
-          allData = d;
-          // Restore the saved layer button's active state
-          const activeBtn = document.querySelector(
-            `#colorToggle button[data-mode="${colorMode}"]`,
-          );
-          if (activeBtn) {
-            document
-              .querySelectorAll("#colorToggle button")
-              .forEach((b) => b.classList.remove("active"));
-            activeBtn.classList.add("active");
-          }
-          updateLayerDesc();
-          populateIndustryFilter();
-          applyIndustryFilter();
+        .then((response) => response.json())
+        .then((data) => {
+          document.getElementById("disclaimerText").textContent = data.disclaimers.exposure;
+          document.getElementById("classificationNotice").innerHTML =
+            "<strong>Classification not yet verified.</strong> " +
+            data.disclaimers.classification_verification;
+          renderSummary(data);
+          renderLegend(data);
+          renderLedger(data);
+          renderTree(data);
+          renderSources(data);
+          renderFooter(data);
+        })
+        .catch((error) => {
+          document.getElementById("summary").textContent =
+            "Could not load data.json: " + error.message;
         });
     </script>
   </body>

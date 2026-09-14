@@ -172,7 +172,7 @@ def build_ph_specific_records(current_by_title: dict[str, dict]) -> list[dict]:
     return records
 
 
-def main() -> None:
+def _v1_main() -> None:
     with open(INPUT_JSON, encoding="utf-8") as file_handle:
         onet_occupations = json.load(file_handle)
 
@@ -229,5 +229,14 @@ def main() -> None:
     print(f"PH-specific occupations: {ph_count}")
 
 
-if __name__ == "__main__":
-    main()
+_RETIRED = (
+    "{name} is a TrabahoLens v1 module, retired by the credibility rebuild.\n"
+    "It is kept readable because docs/audit/baseline-audit.md cites it line by\n"
+    "line, but it must not run: it would regenerate values the audit found to be\n"
+    "synthetic, constant-by-category or placeholder.\n"
+    "See docs/migration-notes.md. Use the v2 pipeline: `make help`."
+)
+
+
+def main(*_args, **_kwargs):  # noqa: D401 - retired entry point
+    raise SystemExit(_RETIRED.format(name=__name__))

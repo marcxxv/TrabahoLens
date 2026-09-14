@@ -121,7 +121,7 @@ def parse_job_zones(path: Path) -> dict[str, int]:
     return zones
 
 
-def main() -> None:
+def _v1_main() -> None:
     zip_path = RAW_ONET_DIR / ZIP_NAME
     print(f"Downloading O*NET text database {ONET_RELEASE}...")
     download_zip(ONET_TEXT_ZIP_URL, zip_path)
@@ -150,5 +150,14 @@ def main() -> None:
     print(f"Wrote {len(merged)} occupations to {OUTPUT_JSON}")
 
 
-if __name__ == "__main__":
-    main()
+_RETIRED = (
+    "{name} is a TrabahoLens v1 module, retired by the credibility rebuild.\n"
+    "It is kept readable because docs/audit/baseline-audit.md cites it line by\n"
+    "line, but it must not run: it would regenerate values the audit found to be\n"
+    "synthetic, constant-by-category or placeholder.\n"
+    "See docs/migration-notes.md. Use the v2 pipeline: `make help`."
+)
+
+
+def main(*_args, **_kwargs):  # noqa: D401 - retired entry point
+    raise SystemExit(_RETIRED.format(name=__name__))

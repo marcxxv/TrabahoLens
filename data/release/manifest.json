@@ -1,0 +1,145 @@
+{
+  "release_id": "v2.0.0-pre",
+  "release_date": "2026-01-01T00:00:00Z",
+  "generated_at": "2026-01-01T00:00:00Z",
+  "code_commit": "0d7d80462f91236e946c90aec3a7c2c5fe018868",
+  "schema_version": "2.0.0",
+  "methodology_version": "2.0.0",
+  "exposure_rubric_version": "0.1.0",
+  "prompt_version": "0.1.0",
+  "crosswalk_version": "0.1.0",
+  "psoc_version": "PSOC 2012",
+  "source_versions": {
+    "psa_psoc": {
+      "organization": "Philippine Statistics Authority",
+      "dataset": "Philippine Standard Occupational Classification (PSOC) 2012",
+      "declared_status": "not_retrieved",
+      "last_attempt": "2026-09-14T17:16:46Z",
+      "last_attempt_result": "failed",
+      "blocked_reason": "psa.gov.ph is unreachable from the build environment (HTTP 403 at the egress proxy). See docs/limitations.md."
+    },
+    "psa_lfs": {
+      "organization": "Philippine Statistics Authority",
+      "dataset": "Labor Force Survey (LFS)",
+      "declared_status": "blocked",
+      "last_attempt": "2026-09-14T17:16:46Z",
+      "last_attempt_result": "failed",
+      "blocked_reason": "openstat.psa.gov.ph is unreachable from the build environment (HTTP 403 at the egress proxy)."
+    },
+    "psa_ows": {
+      "organization": "Philippine Statistics Authority",
+      "dataset": "Occupational Wages Survey (OWS)",
+      "declared_status": "blocked",
+      "last_attempt": "2026-09-14T17:16:46Z",
+      "last_attempt_result": "failed",
+      "blocked_reason": "psa.gov.ph and openstat.psa.gov.ph unreachable from the build environment (HTTP 403)."
+    },
+    "psa_sof": {
+      "organization": "Philippine Statistics Authority",
+      "dataset": "Survey on Overseas Filipinos (SOF)",
+      "declared_status": "blocked",
+      "last_attempt": "2026-09-14T17:16:47Z",
+      "last_attempt_result": "failed",
+      "blocked_reason": "psa.gov.ph unreachable from the build environment (HTTP 403)."
+    },
+    "psa_informal": {
+      "organization": "Philippine Statistics Authority",
+      "dataset": "Informal sector / informal employment statistics",
+      "declared_status": "blocked",
+      "last_attempt": "never",
+      "last_attempt_result": "none",
+      "blocked_reason": "psa.gov.ph unreachable from the build environment (HTTP 403)."
+    },
+    "onet": {
+      "organization": "U.S. Department of Labor, O*NET Resource Center",
+      "dataset": "O*NET Database",
+      "declared_status": "blocked",
+      "last_attempt": "2026-09-14T17:16:47Z",
+      "last_attempt_result": "failed",
+      "blocked_reason": "www.onetcenter.org is unreachable from the build environment (HTTP 403 at the egress proxy)."
+    },
+    "philjobnet": {
+      "organization": "Department of Labor and Employment / PhilJobNet",
+      "dataset": "PhilJobNet job postings",
+      "declared_status": "not_used",
+      "last_attempt": "never",
+      "last_attempt_result": "none",
+      "blocked_reason": "No documented public download or API. Scraping is not appropriate where no official downloadable table or API exists, and platform-selection bias would make the result unrepresentative regardless."
+    },
+    "ibpap": {
+      "organization": "IT and Business Process Association of the Philippines (IBPAP)",
+      "dataset": "Industry roadmaps and headcount projections",
+      "declared_status": "not_used",
+      "last_attempt": "never",
+      "last_attempt_result": "none",
+      "blocked_reason": "No occupational dataset identified; v1 used none."
+    },
+    "dmw": {
+      "organization": "Department of Migrant Workers (DMW), formerly POEA",
+      "dataset": "Overseas employment administrative statistics",
+      "declared_status": "not_used",
+      "last_attempt": "never",
+      "last_attempt_result": "none",
+      "blocked_reason": "v1 cited \"POEA\" generically with no dataset attached."
+    },
+    "llm_scoring": {
+      "organization": "Model provider, recorded per run",
+      "dataset": "TrabahoLens generative-AI task exposure scoring runs",
+      "declared_status": "blocked",
+      "last_attempt": "never",
+      "last_attempt_result": "none",
+      "blocked_reason": "openrouter.ai is unreachable from the build environment (HTTP 403 at the egress proxy) and OPENROUTER_API_KEY is unset."
+    }
+  },
+  "source_hashes": {
+    "psa_psoc": null,
+    "psa_lfs": null,
+    "psa_ows": null,
+    "psa_sof": null,
+    "psa_informal": null,
+    "onet": null,
+    "philjobnet": null,
+    "ibpap": null,
+    "dmw": null,
+    "llm_scoring": null
+  },
+  "canonical_table_checksums": {
+    "data/canonical/classifications.csv": "22db37571875b47be57cc195b8d856dc797e059dd67636ad26a0a78d8ccf8272",
+    "data/canonical/occupations.csv": "fa1cf1a06805bd99d4136caa870d0ed330d8a4e5b75cc860846c5f3168c689b2",
+    "data/canonical/metric_observations.csv": "c65008106f688985856c60957d9a7e0689e61be94698d9c75532d7263247cfe7",
+    "data/canonical/crosswalk_psoc_isco_soc.csv": "6011b7cd5246e968b12b8342730c4dd37a0f96ed661c845b3ab78060024cf471",
+    "data/canonical/transformations.csv": "855f1570cd8683f38d764ac90a5380a3a0d2ccc7cb88fd739b1dc8049cc84434",
+    "data/canonical/model_scores.csv": "e50a5dc10fc3219f6516c92aa99bbeeede34f616587eff796f998eace9ce92ce"
+  },
+  "model_runs": [],
+  "publication_state": {
+    "metrics_defined": [
+      "employment_count",
+      "gen_ai_task_exposure",
+      "informal_employment_share",
+      "ofw_distribution_share",
+      "onet_job_zone",
+      "wage_basic_pay"
+    ],
+    "metrics_with_published_values": [],
+    "metrics_blocked_pending_source": [
+      "employment_count",
+      "informal_employment_share",
+      "ofw_distribution_share"
+    ],
+    "metrics_not_representable_at_current_granularity": [
+      "gen_ai_task_exposure",
+      "onet_job_zone",
+      "wage_basic_pay"
+    ]
+  },
+  "known_limitations": [
+    "No metric in this release carries a value. Every PSA host, www.onetcenter.org and openrouter.ai returned HTTP 403 at this build environment's egress proxy, so no source could be retrieved. See data/sources/retrieval-manifest.json for the dated attempts.",
+    "The PSOC 2012 code list was entered from classification documentation rather than the PSA volume. Every classification row is marked unverified_pending_source and must be diffed against the PSA volume.",
+    "The canonical table holds PSOC major and sub-major groups only. Minor and unit groups are absent rather than guessed, so occupation-level metrics (wages, O*NET Job Zone, task exposure) have no unit to attach to yet.",
+    "No generative-AI task exposure score is published. The scoring harness requires task evidence that could not be retrieved and a provider that could not be reached.",
+    "The v1 exposure scores are not carried forward and are not a fallback.",
+    "This experimental exposure score has not yet undergone independent labour-economist validation.",
+    "No component of this release has been reviewed by a Philippine labour statistician."
+  ]
+}

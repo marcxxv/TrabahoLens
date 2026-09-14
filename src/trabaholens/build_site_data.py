@@ -8,7 +8,7 @@ from .pipeline_utils import SITE_DATA_JSON, ensure_parent_dir
 from .validation import validate_scores_cover_titles
 
 
-def main() -> None:
+def _v1_main() -> None:
     rows, scores_list, missing_titles = validate_scores_cover_titles()
     scores = {entry["title"]: entry for entry in scores_list}
 
@@ -53,5 +53,14 @@ def main() -> None:
     print(f"Total jobs represented: {total_jobs:,}")
 
 
-if __name__ == "__main__":
-    main()
+_RETIRED = (
+    "{name} is a TrabahoLens v1 module, retired by the credibility rebuild.\n"
+    "It is kept readable because docs/audit/baseline-audit.md cites it line by\n"
+    "line, but it must not run: it would regenerate values the audit found to be\n"
+    "synthetic, constant-by-category or placeholder.\n"
+    "See docs/migration-notes.md. Use the v2 pipeline: `make help`."
+)
+
+
+def main(*_args, **_kwargs):  # noqa: D401 - retired entry point
+    raise SystemExit(_RETIRED.format(name=__name__))
