@@ -153,10 +153,25 @@ def test_legacy_archive_is_intact():
 
 
 def test_no_secrets_in_tracked_files():
+    """No credential material in anything git tracks.
+
+    The patterns are assembled from fragments so this file does not itself
+    contain the literals it searches for — otherwise the scanner flags its own
+    source, which is a false positive that would train someone to ignore it.
+    """
     tracked = subprocess.run(
         ["git", "ls-files"], cwd=REPO_ROOT, capture_output=True, text=True, check=True
     ).stdout.split()
-    patterns = ("sk-or-v1-", "OPENROUTER_API_KEY=sk", "BEGIN PRIVATE KEY", "BEGIN RSA PRIVATE KEY")
+
+    patterns = [
+        "sk-" + "or-v1-",                       # OpenRouter key prefix
+        "OPENROUTER_API_KEY=" + "sk",           # a real key assigned in a committed file
+        "BEGIN " + "PRIVATE KEY",
+        "BEGIN RSA " + "PRIVATE KEY",
+        "BEGIN OPENSSH " + "PRIVATE KEY",
+        "aws_secret_access" + "_key",
+    ]
+
     offenders = []
     for name in tracked:
         path = REPO_ROOT / name
@@ -170,3 +185,22 @@ def test_no_secrets_in_tracked_files():
             if pattern in text:
                 offenders.append(f"{name}: {pattern}")
     assert not offenders, offenders
+
+
+def test_env_example_holds_no_real_key():
+    example = REPO_ROOT / ".env.example"
+    if not example.exists():
+        return
+    text = example.read_text(encoding="utf-8")
+    assert "your_openrouter_api_key_here" in text or "=" not in text.strip(), (
+        ".env.example should carry a placeholder, not a value"
+    )
+
+
+def test_env_files_are_ignored():
+    ignored = (REPO_ROOT / ".gitignore").read_text(encoding="utf-8")
+    assert ".env" in ignored
+    tracked = subprocess.run(
+        ["git", "ls-files"], cwd=REPO_ROOT, capture_output=True, text=True, check=True
+    ).stdout.split()
+    assert ".env" not in tracked

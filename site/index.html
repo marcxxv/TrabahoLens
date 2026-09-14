@@ -228,11 +228,23 @@
       #tooltip .tt-title { font-weight: 600; margin-bottom: 4px; }
       #tooltip .tt-body { color: var(--fg2); }
 
-      table.provenance { width: 100%; border-collapse: collapse; font-size: 13px; }
+      /* The table has a sensible minimum width; below that it scrolls inside
+         its own container rather than widening the page. */
+      .table-scroll {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+      }
+      table.provenance {
+        width: 100%; min-width: 560px;
+        border-collapse: collapse; font-size: 13px;
+      }
       table.provenance th, table.provenance td {
-        text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line);
+        text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line);
         vertical-align: top;
       }
+      table.provenance tr:last-child td { border-bottom: none; }
       table.provenance th { color: var(--fg3); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
       table.provenance td { color: var(--fg2); }
       table.provenance td.status-blocked { color: var(--ev-estimate); }
@@ -250,12 +262,22 @@
       }
 
       @media (max-width: 640px) {
+        /* 16px side gutter, and nothing may widen the page. */
         #wrapper { padding: 20px 16px 48px; }
         h1 { font-size: 20px; }
         .metric-status { margin-left: 0; width: 100%; }
-        .sub-list { padding-left: 20px; }
+        .metric-meta { grid-template-columns: 1fr; }
+        .legend { grid-template-columns: 1fr; }
+        .sub-list { padding: 0 14px 12px 20px; }
+        .sub-row { flex-wrap: wrap; gap: 4px 10px; }
         .sub-state { margin-left: 0; width: 100%; }
+        .group > summary { flex-wrap: wrap; gap: 8px; }
+        .group-count { margin-left: 0; width: 100%; }
+        #tooltip { max-width: calc(100vw - 32px); }
       }
+
+      /* Belt and braces: no descendant may force a horizontal scrollbar. */
+      html, body { max-width: 100%; overflow-x: hidden; }
     </style>
   </head>
   <body>
@@ -343,6 +365,7 @@
           of each. A source listed here with no data is a source we have
           specified and not yet obtained — not a source we are quietly citing.
         </p>
+        <div class="table-scroll">
         <table class="provenance">
           <thead>
             <tr>
@@ -354,6 +377,7 @@
           </thead>
           <tbody id="sourceRows"></tbody>
         </table>
+        </div>
       </section>
 
       <footer>
