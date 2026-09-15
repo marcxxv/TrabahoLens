@@ -119,11 +119,16 @@ class SourceParser(abc.ABC):
 _REGISTRY: dict[str, SourceParser] = {}
 
 
-def register(parser: SourceParser) -> SourceParser:
-    if not parser.parser_id:
+def register(parser_class: type[SourceParser]) -> type[SourceParser]:
+    """Class decorator. Registers a single shared instance.
+
+    Parsers are stateless, so one instance per id is enough; registering the
+    class itself would hand callers an unbound ``run``.
+    """
+    if not parser_class.parser_id:
         raise ValueError("parser_id is required")
-    _REGISTRY[parser.parser_id] = parser
-    return parser
+    _REGISTRY[parser_class.parser_id] = parser_class()
+    return parser_class
 
 
 def get_parser(parser_id: str) -> SourceParser | None:
