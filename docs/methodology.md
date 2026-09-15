@@ -232,15 +232,28 @@ here.
 
 ### 5.2 Four dimensions, never combined
 
-| | Dimension | Scale |
-| --- | --- | --- |
-| A | Technical task exposure | 0–5 |
-| B | Human-interaction and physical-presence intensity | 0–5 |
-| C | Adoption-friction context | 0–5 |
-| D | Evidence confidence | 0–5 |
+| | Dimension | Scale | Who scores it |
+| --- | --- | --- | --- |
+| A | Technical task exposure | 0–5 ordinal | the model |
+| B | Human-interaction and physical-presence intensity | 0–5 ordinal | the model |
+| ~~C~~ | ~~Adoption-friction context~~ | — | **removed in rubric v0.2.0** |
+| ~~D~~ | ~~Evidence confidence~~ | 0–5 | **computed from provenance** |
 
 The rubric **prohibits** combining them. Any weighted sum would read as a
 job-loss probability, which is exactly what this measure refuses to produce.
+
+**C was removed, not deferred.** v0.1.0 asked the model to judge Philippine
+regulation, liability, connectivity, device access, employer scale and
+informality while supplying no Philippine evidence for any of it. A model
+inferring those conditions from an occupation title or a US task statement is
+inventing them. Adoption friction is redefined as a future evidence-based
+Philippine contextual layer and is unpublished until that evidence exists.
+
+**D is computed, not asked.** Everything it depends on — task source, task
+completeness, crosswalk quality and match type, Philippine specificity, human
+review status, successful-attempt coverage — is metadata the pipeline holds.
+Asking the scoring model to grade its own reliability conflates a measurement
+with its evaluation. The component reasons are published alongside the grade.
 
 B is not the inverse of A: a task can be both text-mediated and deeply
 relational. C is contextual judgement, the most speculative dimension, and is
@@ -266,16 +279,28 @@ to send them, rather than merely documenting that it shouldn't.
 
 ### 5.4 Model procedure
 
-Versioned prompt and rubric. Recorded provider, model id, snapshot, scoring
-date, temperature, run count and aggregation method. **At least two
-replicates** — a single run cannot report its own stability, and the harness
-refuses `--runs 1`. Task order is randomised per replicate so ordering effects
-surface as between-replicate disagreement instead of hiding inside one order.
-Every raw response is retained. Each invocation writes a new run directory;
-history is never overwritten.
+Versioned prompt and rubric. Recorded provider, model id, resolved model id,
+provider request id, scoring date, temperature and aggregation method.
 
-Consensus is the median. **Disagreement is retained and published**, not
-smoothed away.
+**The unit of record is the attempt, not the run.** Every call produces a record
+— status, timestamps, full request payload, raw response where one exists,
+parser status, structured error — and all of them are written, successful or
+not. Counts are derived from attempts that actually **succeeded**. A task below
+the configured minimum number of successes is excluded from publication and
+named. Before remediation the harness recorded the *requested* count and dropped
+failures, so one success out of three published as three runs.
+
+**These are repeated scoring attempts, not independent replicates.** Each task is
+a separate chat request, so randomising task order cannot test within-prompt
+ordering effects — there is no shared prompt to order, and that shuffle has been
+removed rather than relabelled. At temperature 0 repeated calls measure
+run-to-run reproducibility and provider variability. Genuine perturbation
+testing would require paraphrased task statements, rubric-anchor reordering,
+deterministic prompt variants, multiple models or multiple scoring dates; those
+are specified as future work and are not claimed.
+
+Each invocation writes a new run directory with a collision-resistant id;
+history is never overwritten.
 
 The prompt states no expected distribution. v1's `Expected average: ~3.5-4.5`
 anchored its own output before the model saw an occupation; the harness now
@@ -343,18 +368,64 @@ and hashes, canonical table checksums, model runs, and known limitations.
 
 ---
 
-## 8. What this release publishes
+## 8. The pipeline, stage by stage
+
+A value must pass through every stage below. It may not skip one, and a stage
+that has only ever seen a fixture may not back a published number — that rule is
+enforced by a validator, not by convention.
+
+```
+source registry (configuration)
+  -> retrieval attempt            -> retrieval manifest entry + SHA-256
+  -> immutable raw snapshot
+  -> hash verification            (bytes still match what was recorded)
+  -> format validation            (is this the shape the parser expects)
+  -> source-specific parser       -> normalised source rows, in the SOURCE's codes
+  -> classification reconciliation (version compatible? code known?)
+  -> documented transformation
+  -> canonical metric observation
+  -> release validation
+  -> site payload
+```
+
+**The registry is configuration; the manifest is evidence.** Publication state is
+derived from a verified manifest entry, never from a hand-edited registry field.
+Before remediation, flipping one word in the registry YAML produced rows marked
+`availability=published` with an empty value, hash and reference period.
+
+Per-stage status is machine-readable in `data/release/manifest.json` under
+`pipeline_stages`, rendered in the interface, and classified as one of:
+implemented and verified with a real source · implemented but fixture-tested
+only · partially implemented · designed, not implemented · blocked by source
+access · blocked by unresolved methodology · awaiting human review · rejected.
+
+### Classification version safety
+
+A source declares which PSOC version it used. If that version is not one this
+project can reconcile, the rows are **refused** rather than renumbered. The
+canonical version is the 2022 Updates to the 2012 PSOC; the architecture
+decision behind choosing one canonical version over parallel versioned trees is
+argued in `src/trabaholens/v2/sources/psoc_importer.py`.
+
+## 9. What this release publishes
 
 **No metric values.** Every PSA host, `www.onetcenter.org` and `openrouter.ai`
 returned HTTP 403 at the build environment's egress proxy, and
-`OPENROUTER_API_KEY` is unset. The dated attempts are in
+`OPENROUTER_API_KEY` is unset. Dated attempts are in
 `data/sources/retrieval-manifest.json`.
 
-So the release contains the PSOC structure, the metric definitions, the source
-registry, the crosswalk, the validation rules and the interface — and 30 metric
-observations that each carry an empty value and an explicit
-`blocked_pending_source`.
+It would be inaccurate to say only the bytes are missing. Parsing,
+classification reconciliation and transformation now exist and are covered by
+tests, but **no stage has processed a real primary source**, and the specific
+LFS, OWS and SOF tables have not even been identified. See
+[`readiness-report.md`](readiness-report.md) for the per-phase classification.
 
-That is the honest state. The alternative — carrying v1's numbers forward while
-the machinery around them improved — would have produced a more impressive
-dashboard making the same false claims.
+What the release does contain: the PSOC structure, the metric definitions, the
+source registry, the crosswalk framework, the validation rules, the interface,
+and 30 metric observations each carrying an empty value and an explicit
+`blocked_pending_source` with its reason.
+
+That the pipeline works is demonstrated rather than asserted:
+`make test-populated-pipeline` drives synthetic sources through every stage and
+proves six observations reach the payload with full provenance, while fourteen
+mutation tests prove each specific corruption stops publication.

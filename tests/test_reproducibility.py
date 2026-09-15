@@ -12,6 +12,8 @@ import hashlib
 import json
 import subprocess
 import sys
+
+import pytest
 from pathlib import Path
 
 from trabaholens.v2.paths import (
@@ -90,7 +92,7 @@ def test_site_payload_matches_the_canonical_tables():
     occupations = list(csv.DictReader(OCCUPATIONS_CSV.open(encoding="utf-8")))
     observations = list(csv.DictReader(METRIC_OBSERVATIONS_CSV.open(encoding="utf-8")))
 
-    assert payload["counts"]["occupations"] == len(occupations)
+    assert payload["counts"]["psoc_classification_units"] == len(occupations)
     assert payload["counts"]["metric_observations"] == len(observations)
     payload_codes = {entry["psoc_code"] for entry in payload["occupations"]}
     assert payload_codes == {row["psoc_code"] for row in occupations}
@@ -256,3 +258,136 @@ def test_staleness_check_does_not_discard_uncommitted_regeneration():
     staleness.check()
     after = {path: path.read_bytes() for path in staleness.CHECKED_ARTIFACTS}
     assert before == after
+
+
+# ---------------------------------------------------------------------------
+# Finding 17: legacy isolation
+# ---------------------------------------------------------------------------
+
+def test_no_production_make_target_invokes_a_legacy_module():
+    """No `make` target may reach v1 metric generation or v1 scoring.
+
+    The v1 modules stay importable because docs/audit/baseline-audit.md cites
+    them line by line. They must not be reachable from a normal build.
+    """
+    import re
+
+    makefile = (REPO_ROOT / "Makefile").read_text(encoding="utf-8")
+    legacy_modules = {
+        "assign_ph_stats", "build_site_data", "filter_ph_occupations",
+        "make_csv_ph", "score_ai_only", "fetch_onet", "fetch_psa",
+    }
+
+    # Every script a target runs, and every script those scripts import.
+    referenced_scripts = set(re.findall(r"scripts/([a-z_]+)\.py", makefile))
+    assert referenced_scripts, "no scripts referenced by the Makefile at all"
+
+    for name in referenced_scripts:
+        path = REPO_ROOT / "scripts" / f"{name}.py"
+        assert path.exists(), f"Makefile runs scripts/{name}.py which does not exist"
+        text = path.read_text(encoding="utf-8")
+        for legacy in legacy_modules:
+            assert f"trabaholens.{legacy}" not in text, (
+                f"scripts/{name}.py imports the legacy module {legacy}"
+            )
+
+
+def test_legacy_entry_point_scripts_are_gone():
+    for name in ("assign_ph_stats", "build_site_data", "filter_ph_occupations",
+                 "make_csv_ph", "score_ai_only", "fetch_onet", "fetch_psa"):
+        assert not (REPO_ROOT / "scripts" / f"{name}.py").exists(), (
+            f"scripts/{name}.py is a retired v1 entry point and should not exist"
+        )
+
+
+def test_legacy_module_main_functions_refuse_to_run():
+    """Importable for the audit, inert in practice."""
+    import importlib
+
+    for name in ("assign_ph_stats", "build_site_data", "score_ai_only"):
+        module = importlib.import_module(f"trabaholens.{name}")
+        assert hasattr(module, "main")
+        with pytest.raises(SystemExit) as excinfo:
+            module.main()
+        assert "retired" in str(excinfo.value).lower()
+        # The original logic is preserved for inspection, just not wired up.
+        assert hasattr(module, "_v1_main"), f"{name} lost its preserved v1 logic"
+
+
+def test_v1_scoring_prompt_is_not_reachable_from_the_v2_harness():
+    """The anchored v1 prompt must not be loadable as a v2 prompt version."""
+    from trabaholens.v2 import score_exposure as sx
+
+    v1_text = (REPO_ROOT / "src" / "trabaholens" / "score_ai_only.py").read_text(encoding="utf-8")
+    assert "Expected average" in v1_text, "the v1 anchor should still be visible for the audit"
+
+    # And the v2 harness would refuse it if anyone pasted it in.
+    with pytest.raises(sx.ScoringRefusal):
+        sx.assert_prompt_is_unanchored(
+            "# System prompt\nExpected average: ~3.5-4.5\n# User message template\n"
+        )
+
+
+# ---------------------------------------------------------------------------
+# Finding 16: staleness exclusions must be minimal and provably narrow
+# ---------------------------------------------------------------------------
+
+def test_every_staleness_exclusion_has_a_recorded_rationale():
+    from trabaholens.v2 import staleness
+
+    assert set(staleness.VOLATILE_FIELDS) == set(staleness.EXCLUSION_RATIONALE)
+
+
+@pytest.mark.parametrize("path_expr,mutate", [
+    ("counts.published_values", lambda d: d["counts"].__setitem__("published_values", 99)),
+    ("counts.psoc_classification_units",
+     lambda d: d["counts"].__setitem__("psoc_classification_units", 1)),
+    ("schema", lambda d: d.__setitem__("schema", "tampered")),
+])
+def test_substantive_payload_changes_are_detected(path_expr, mutate):
+    """Anything not on the exclusion list must be caught."""
+    from trabaholens.v2 import staleness
+
+    payload = json.loads(SITE_DATA_JSON.read_text(encoding="utf-8"))
+    before = staleness.normalise(payload)
+    mutate(payload)
+    after = staleness.normalise(payload)
+    difference = staleness._first_difference(before, after)
+    assert difference, f"a change to {path_expr} was not detected"
+
+
+def test_source_hashes_and_pipeline_stages_are_not_excluded():
+    """Two fields it would be tempting to exclude, and must not be."""
+    from trabaholens.v2 import staleness
+
+    manifest = json.loads(RELEASE_MANIFEST_JSON.read_text(encoding="utf-8"))
+    before = staleness.normalise(manifest)
+
+    tampered = json.loads(RELEASE_MANIFEST_JSON.read_text(encoding="utf-8"))
+    tampered["source_hashes"]["psa_lfs"] = "0" * 64
+    assert staleness._first_difference(before, staleness.normalise(tampered))
+
+    tampered2 = json.loads(RELEASE_MANIFEST_JSON.read_text(encoding="utf-8"))
+    assert tampered2.get("pipeline_stages"), "no pipeline stages to test against"
+    # Mutate to a value the stage definitely does not already hold, otherwise
+    # the test passes without exercising anything.
+    original = tampered2["pipeline_stages"][0]["status"]
+    tampered2["pipeline_stages"][0]["status"] = "rejected"
+    assert original != "rejected"
+    assert staleness._first_difference(before, staleness.normalise(tampered2))
+
+
+def test_release_manifest_derives_rather_than_hardcodes():
+    """Finding 16: model_runs and metric states must come from the data."""
+    manifest = json.loads(RELEASE_MANIFEST_JSON.read_text(encoding="utf-8"))
+    assert "pipeline_stages" in manifest
+    assert manifest["pipeline_stages"], "pipeline stages are empty"
+    # model_runs is derived from run manifests on disk; with none present it is
+    # empty, but the code path is the discovery function, not a literal.
+    from trabaholens.v2.build_release import _discover_model_runs
+
+    assert manifest["model_runs"] == _discover_model_runs()
+    state = manifest["publication_state"]
+    assert state["metrics_with_published_values"] == [], (
+        "the manifest claims published metrics while the canonical table has none"
+    )

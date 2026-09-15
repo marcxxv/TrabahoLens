@@ -254,15 +254,31 @@ def build_payload(release: dict[str, Any]) -> dict[str, Any]:
             }
             for definition in METRIC_DEFINITIONS.values()
         },
+        # Derived, never hard-coded. The vocabulary is deliberate: a PSOC
+        # classification unit is not an occupation, and an aggregate group is
+        # not a measured occupation. The previous build let 53 aggregate units
+        # read as 53 occupations.
         "counts": {
-            # Derived, never hard-coded. The interface reads these.
-            "occupations": len(entries),
+            "psoc_classification_units": len(entries),
             "psoc_major_groups": sum(1 for e in entries if e["level"] == "psoc_major_group"),
             "psoc_sub_major_groups": sum(1 for e in entries if e["level"] == "psoc_sub_major_group"),
+            "detailed_occupations": sum(1 for e in entries if not e["is_aggregate"]),
             "metrics_defined": len(METRIC_DEFINITIONS),
             "metric_observations": len(read_csv(METRIC_OBSERVATIONS_CSV)),
             "published_values": published_values,
+            "units_with_at_least_one_published_value": len({
+                entry["psoc_code"]
+                for entry in entries
+                for metric in entry["metrics"].values()
+                if metric["availability"] == "published" and metric["value"] is not None
+            }),
             "exposure_scores": len(read_csv(MODEL_SCORES_CSV)),
+            "vocabulary_note": (
+                "psoc_classification_units counts groups in the classification, "
+                "not measured occupations. detailed_occupations counts "
+                "non-aggregate units, which is currently zero: PSOC minor and "
+                "unit groups have not been retrieved."
+            ),
         },
         "occupations": entries,
     }
@@ -422,11 +438,12 @@ def main() -> None:
     counts = payload["counts"]
     print(f"{rel(RELEASE_MANIFEST_JSON)} written")
     print(f"{rel(SITE_DATA_JSON)} written")
-    print(f"  occupations (PSOC units): {counts['occupations']}")
-    print(f"  metrics defined:          {counts['metrics_defined']}")
-    print(f"  metric observations:      {counts['metric_observations']}")
-    print(f"  published values:         {counts['published_values']}")
-    print(f"  exposure scores:          {counts['exposure_scores']}")
+    print(f"  PSOC classification units: {counts['psoc_classification_units']}")
+    print(f"  detailed occupations:      {counts['detailed_occupations']}")
+    print(f"  metrics defined:           {counts['metrics_defined']}")
+    print(f"  metric observations:       {counts['metric_observations']}")
+    print(f"  published values:          {counts['published_values']}")
+    print(f"  exposure scores:           {counts['exposure_scores']}")
 
 
 if __name__ == "__main__":

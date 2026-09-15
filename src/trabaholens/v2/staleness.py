@@ -37,6 +37,27 @@ VOLATILE_FIELDS = frozenset(
     }
 )
 
+#: Reassessed under finding 16. Each exclusion was re-argued rather than
+#: inherited:
+#:
+#: * ``code_commit`` / ``repository_commit`` — genuinely self-referential. The
+#:   artifact records HEAD, and committing the artifact moves HEAD, so no value
+#:   can be stable. Unavoidable.
+#: * ``release_date`` / ``generated_at`` — wall-clock at build time. Excluded so
+#:   `make check-stale` can run at any time; `make determinism` pins them and
+#:   compares them byte for byte, so they are not unchecked overall.
+#:
+#: Candidates considered and NOT excluded, so they stay checked: every
+#: ``sha256``, every ``source_versions`` entry, every ``pipeline_stages`` entry,
+#: all counts, and every canonical table checksum. Substantive drift in any of
+#: those is a staleness failure, and a test proves it.
+EXCLUSION_RATIONALE = {
+    "code_commit": "self-referential; committing the artifact changes it",
+    "repository_commit": "self-referential; same reason",
+    "release_date": "wall-clock build stamp; pinned and compared by make determinism",
+    "generated_at": "wall-clock build stamp; pinned and compared by make determinism",
+}
+
 CHECKED_ARTIFACTS = (RELEASE_MANIFEST_JSON, SITE_DATA_JSON, PROFILE_JSON)
 
 

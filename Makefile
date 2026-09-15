@@ -87,7 +87,7 @@ determinism:
 	@diff /tmp/tl-build-1.sha /tmp/tl-build-2.sha && echo "Deterministic: two builds are byte-identical."
 	@$(MAKE) --no-print-directory build-release
 
-all: audit build-metrics sensitivity build-site test check-stale
+all: audit build-metrics sensitivity build-site test test-populated-pipeline check-stale
 
 clean-generated:
 	rm -rf data/raw

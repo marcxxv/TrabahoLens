@@ -79,9 +79,24 @@ def test_claim_that_no_value_is_published_holds():
     assert all(value is None for value in values)
 
 
-def test_occupation_count_in_payload_matches_the_canonical_table():
+def test_classification_unit_count_in_payload_matches_the_canonical_table():
     occupations = list(csv.DictReader(OCCUPATIONS_CSV.open(encoding="utf-8")))
-    assert _payload()["counts"]["occupations"] == len(occupations)
+    payload = _payload()
+    assert payload["counts"]["psoc_classification_units"] == len(occupations)
+
+
+def test_classification_units_are_not_described_as_measured_occupations():
+    """Finding 14: 53 aggregate units must not read as 53 occupations."""
+    payload = _payload()
+    counts = payload["counts"]
+    assert counts["detailed_occupations"] == 0, (
+        "detailed_occupations is non-zero, but PSOC minor and unit groups have not "
+        "been retrieved"
+    )
+    assert "vocabulary_note" in counts
+    # The interface must not carry a bare "N occupations" headline.
+    html = (REPO_ROOT / "site" / "index.html").read_text(encoding="utf-8")
+    assert "counts.occupations" not in html
 
 
 def test_every_evidence_axis_value_is_documented_in_the_dictionary():

@@ -4,7 +4,7 @@
     "release_id": "v2.0.0-pre",
     "release_date": "2026-01-01T00:00:00Z",
     "generated_at": "2026-01-01T00:00:00Z",
-    "code_commit": "23d77e04f51b8855113f9357a7cc93919eb0d892",
+    "code_commit": "afc2fd7941f816b0544f02c0ced093254d86d39a",
     "code_commit_note": "The commit the build ran at. It necessarily precedes the commit that records it, because committing this manifest moves HEAD. Treat it as 'generated from this input state', not as a self-describing id. `make check-stale` excludes it for the same reason.",
     "schema_version": "2.0.0",
     "methodology_version": "2.0.0",
@@ -387,13 +387,16 @@
     }
   },
   "counts": {
-    "occupations": 53,
+    "psoc_classification_units": 53,
     "psoc_major_groups": 10,
     "psoc_sub_major_groups": 43,
+    "detailed_occupations": 0,
     "metrics_defined": 6,
     "metric_observations": 30,
     "published_values": 0,
-    "exposure_scores": 0
+    "units_with_at_least_one_published_value": 0,
+    "exposure_scores": 0,
+    "vocabulary_note": "psoc_classification_units counts groups in the classification, not measured occupations. detailed_occupations counts non-aggregate units, which is currently zero: PSOC minor and unit groups have not been retrieved."
   },
   "occupations": [
     {

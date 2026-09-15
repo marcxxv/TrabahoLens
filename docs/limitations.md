@@ -25,8 +25,25 @@ attempts are recorded, with timestamps, in
 `OPENROUTER_API_KEY` is also unset.
 
 **What would change it.** Run `make fetch-data` from a network that permits
-these hosts. The acquisition code, the hashing, the manifest and the validators
-are complete and tested; only the bytes are missing.
+these hosts — but that alone is not sufficient, and the previous version of this
+document was wrong to imply it was.
+
+It previously said "only the bytes are missing". That was false. Parsing,
+classification reconciliation, estimation and source-to-observation construction
+did not exist. They exist now and are covered by tests, but **no stage has ever
+processed a real primary source**. Precisely:
+
+| Stage | State |
+| --- | --- |
+| Source registry | verified against the real artifacts |
+| Retrieval, raw snapshot | blocked by source access |
+| Hash verification, format validation, parsing, normalisation, transformation, canonical observation | implemented, **fixture-tested only** |
+| Classification reconciliation | partially implemented — no minor or unit groups |
+| Release validation, site payload | verified, running on every build |
+
+There is also work that network access would not solve: **the specific LFS, OWS
+and SOF tables have not been identified.** The registry entries point at PXWeb
+API directories and landing pages, now flagged as such.
 
 **Why nothing was substituted.** The alternative was to keep v1's numbers while
 improving the machinery around them. That would have produced a more impressive
@@ -184,6 +201,30 @@ incomparable rounds.
 
 ---
 
+## 6a. Limitations the independent review exposed
+
+An adversarial review of the rebuild found defects the rebuild's own tests did
+not. Recorded here because a limitations document that only lists a project's
+known unknowns is understating the case.
+
+1. **Publication state was read from a hand-edited YAML field**, not from the
+   retrieval manifest, and no parser existed. Fixed; the registry is now
+   configuration and the manifest is evidence.
+2. **Evidence classification was single-axis**, putting `official_statistic` on
+   four survey estimates. Fixed; derivation and authority are separate.
+3. **The exposure harness could claim more replication than it achieved.** One
+   success out of three attempts published as three runs, with failures dropped.
+   Fixed; attempts are the unit of record.
+4. **Ordinal scores were averaged arithmetically.** Fixed; median-based.
+5. **The model was asked to judge Philippine adoption conditions** it had no
+   evidence for. Removed.
+6. **The tests proved rejection but never publication.** On an empty dataset
+   that is close to vacuous. Fixed by `make test-populated-pipeline`.
+
+The general lesson, which applies to what follows: the rebuild's own validation
+was good at catching bad input and blind to overstated completion. Read the
+section below with that in mind.
+
 ## 7. Known weaknesses in the rebuild itself
 
 Stated so a reviewer does not have to find them.
@@ -225,3 +266,22 @@ Stated so a reviewer does not have to find them.
    at commit `128dd22`. The v1 modules have since been retired to inert stubs,
    so some line numbers have shifted. The original files are preserved verbatim
    at that commit and in `data/legacy/v1/index_v1.html` for the interface.
+
+7. **The crosswalk composer has never composed a real chain.** Its logic is
+   fixture-tested — weakest-hop quality, ambiguity refusal, title-similarity
+   exclusion — but no published correspondence has been retrieved, so its
+   behaviour on real many-to-many mappings is untested against reality.
+
+8. **The PSA licensing statement is recorded from documentation.** The site-wide
+   CC BY 4.0 notice could not be confirmed against the live page, and
+   dataset-specific exceptions may override it. Confirm before redistributing.
+
+9. **The populated fixtures are synthetic and small.** They prove the path works
+   and that specific corruptions stop it. They do not prove the parsers handle
+   the real files' quirks — encodings, footnotes, merged header rows, regional
+   breakdowns — which is exactly where table parsing usually fails.
+
+10. **`compute_evidence_confidence` is a rule table, not a validated
+    instrument.** It is deterministic and explains itself, which is an
+    improvement on asking a model. It has not been checked against expert
+    judgement about what the grades should be.

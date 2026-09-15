@@ -310,11 +310,12 @@
             exists, the metric says so instead of showing a number.
           </p>
           <p>
-            <strong>This release publishes no metric values.</strong> The
-            structure, the source registry, the validation rules and the
-            interface are complete; the data behind them is not, because none
-            of the required sources could be retrieved in the build
-            environment. The reasons are recorded per source below and in
+            <strong>This release publishes no metric values.</strong> What is
+            implemented, what is only fixture-tested, and what is blocked differ
+            per pipeline stage, and the table below says which is which rather
+            than calling the whole thing complete. No primary source could be
+            retrieved in this environment, so no parser has processed real data.
+            The reasons are recorded per source below and in
             <a href="../docs/limitations.md">docs/limitations.md</a>.
           </p>
           <p>
@@ -380,6 +381,26 @@
         <h2>Occupational structure</h2>
         <p class="section-note" id="structureNote"></p>
         <div id="tree"></div>
+      </section>
+
+      <section>
+        <h2>Pipeline stages</h2>
+        <p class="section-note">
+          A value must pass through every stage below to be published. Each
+          reports its own state: implemented and verified against the real
+          source, implemented but tested only against a fixture, partially
+          implemented, or blocked. "Fixture-tested" means the code is covered by
+          tests and has never seen real data — it may not put a number in front
+          of you.
+        </p>
+        <div class="table-scroll">
+        <table class="provenance">
+          <thead>
+            <tr><th>Stage</th><th>State</th><th>Detail</th></tr>
+          </thead>
+          <tbody id="stageRows"></tbody>
+        </table>
+        </div>
       </section>
 
       <section>
@@ -483,17 +504,28 @@
 
       function renderSummary(data) {
         const counts = data.counts;
+        // Vocabulary matters here. A classification unit is a group in the
+        // PSOC tree, not a measured occupation, and the two must not be
+        // conflated in a headline number.
         const cells = [
           {
-            k: "PSOC units",
-            v: counts.occupations,
-            n: `${counts.psoc_major_groups} major · ${counts.psoc_sub_major_groups} sub-major`,
+            k: "Classification units",
+            v: counts.psoc_classification_units,
+            n: `${counts.psoc_major_groups} major · ${counts.psoc_sub_major_groups} sub-major groups`,
           },
-          { k: "Metrics defined", v: counts.metrics_defined, n: "each with a named source" },
+          {
+            k: "Detailed occupations",
+            v: counts.detailed_occupations,
+            n: counts.detailed_occupations === 0
+              ? "PSOC minor and unit groups not retrieved"
+              : "non-aggregate units",
+          },
           {
             k: "Values published",
             v: counts.published_values,
-            n: counts.published_values === 0 ? "no source retrieved yet" : "with full provenance",
+            n: counts.published_values === 0
+              ? "no source retrieved, parsed and transformed yet"
+              : `across ${counts.units_with_at_least_one_published_value} unit(s), with full provenance`,
           },
           {
             k: "Exposure scores",
@@ -664,6 +696,25 @@
         }
       }
 
+      function renderStages(data) {
+        const tbody = document.getElementById("stageRows");
+        const stages = (data.release && data.release.pipeline_stages) || [];
+        for (const stage of stages) {
+          const tr = document.createElement("tr");
+          tr.appendChild(el("td", null, stage.stage.replace(/_/g, " ")));
+          const state = el("td", null, stage.status.replace(/_/g, " "));
+          if (stage.status.startsWith("blocked")) state.className = "status-blocked";
+          else if (stage.status !== "implemented_verified_with_real_source") {
+            state.className = "status-unused";
+          }
+          state.title = stage.status_meaning || "";
+          tr.appendChild(state);
+          const detail = [stage.detail, ...(stage.blockers || [])].filter(Boolean).join(" ");
+          tr.appendChild(el("td", null, detail));
+          tbody.appendChild(tr);
+        }
+      }
+
       function renderFooter(data) {
         const r = data.release;
         document.getElementById("footerCounts").textContent =
@@ -683,6 +734,7 @@
           renderLegend(data);
           renderLedger(data);
           renderTree(data);
+          renderStages(data);
           renderSources(data);
           renderFooter(data);
         })

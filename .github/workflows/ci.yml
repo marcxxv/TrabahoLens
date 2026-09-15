@@ -43,3 +43,8 @@ jobs:
 
       - name: Tests
         run: make test
+
+      # Proves the pipeline PUBLISHES, not merely that it rejects bad input.
+      # Passing against an empty production dataset is not evidence it works.
+      - name: Populated end-to-end pipeline
+        run: make test-populated-pipeline
