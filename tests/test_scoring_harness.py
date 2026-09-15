@@ -67,7 +67,7 @@ TASKS = [
 
 
 def test_prompt_v010_is_not_distribution_anchored():
-    sx.assert_prompt_is_unanchored(sx.load_prompt("0.1.0"))
+    sx.assert_prompt_is_unanchored(sx.load_prompt(sx.DEFAULT_PROMPT_VERSION))
 
 
 def test_v1_style_anchor_is_refused():
@@ -84,34 +84,48 @@ def test_labour_market_inputs_are_refused(field):
 
 def test_scoring_one_task_never_sends_prohibited_fields():
     client = StubClient()
-    system = sx.extract_system_prompt(sx.load_prompt("0.1.0"))
+    system = sx.extract_system_prompt(sx.load_prompt(sx.DEFAULT_PROMPT_VERSION))
     sx.score_one_task(client, system, TASKS[0], "stub/model", 0.0)
     sent = client.seen_user_messages[0]
     for banned in ("employment", "wage", "ofw", "informal"):
         assert banned not in sent.lower(), f"{banned!r} reached the model"
 
 
-def test_replication_detects_instability():
+def test_repeated_attempts_surface_disagreement():
+    """Repeated attempts, not independent replicates — see rubric v0.2.0."""
+    from trabaholens.v2.exposure_runs import ordinal_summary
+
     client = StubClient()
-    system = sx.extract_system_prompt(sx.load_prompt("0.1.0"))
+    system = sx.extract_system_prompt(sx.load_prompt(sx.DEFAULT_PROMPT_VERSION))
     by_task: dict[str, list[int]] = {}
-    for _ in range(4):
+    for attempt in range(1, 5):
         for task in TASKS:
-            parsed, _ = sx.score_one_task(client, system, task, "stub/model", 0.0)
-            by_task.setdefault(task["task_id"], []).append(parsed["technical_task_exposure"])
+            record = sx.score_one_task(
+                client, system, task, "stub/model", 0.0, attempt_index=attempt
+            )
+            assert record.succeeded
+            by_task.setdefault(task["task_id"], []).append(
+                record.parsed["technical_task_exposure"]
+            )
 
-    stable = sx.aggregate_replicates(by_task["T1"])
-    unstable = sx.aggregate_replicates(by_task["T2"])
-    assert stable["stability"] == "stable"
-    assert unstable["stability"] == "unstable"
-    # Disagreement is retained, not averaged away.
+    stable = ordinal_summary(by_task["T1"])
+    unstable = ordinal_summary(by_task["T2"])
+    assert stable["range"] == 0
+    assert stable["agreement"] == 1.0
     assert unstable["range"] >= 2
-    assert unstable["values"] == by_task["T2"]
+    # Disagreement is retained, not averaged away.
+    assert unstable["values"] == sorted(by_task["T2"])
+    assert unstable["agreement"] < 1.0
 
 
-def test_single_replicate_reports_no_stability():
-    result = sx.aggregate_replicates([3])
-    assert result["stability"] == "single_run_no_stability_measure"
+def test_single_attempt_reports_no_agreement_signal():
+    from trabaholens.v2.exposure_runs import ordinal_summary
+
+    result = ordinal_summary([3])
+    assert result["n"] == 1
+    assert result["range"] == 0
+    # One attempt cannot evidence reproducibility, whatever its agreement reads.
+    assert result["median"] == 3
 
 
 def test_weighted_and_unweighted_aggregation_stay_separate():
@@ -143,48 +157,47 @@ def test_out_of_range_response_is_rejected():
 
 def test_written_scores_carry_full_provenance(tmp_path, monkeypatch):
     """A released score row must satisfy the release validator."""
+    from argparse import Namespace
+
     from trabaholens.v2 import validate
+    from trabaholens.v2.exposure_runs import AttemptRecord, TaskRunRecord
 
     out = tmp_path / "model_scores.csv"
     monkeypatch.setattr(sx, "MODEL_SCORES_CSV", out)
 
-    run_manifest = {
-        "run_id": "20260101T000000Z__stub-model",
-        "scoring_date": "2026-01-01T00:00:00Z",
-        "model_provider": "openrouter",
-        "model_id": "stub/model",
-        "model_release_or_snapshot": "unpinned",
-        "temperature": 0.0,
-        "run_count": 3,
-        "rubric_version": "0.1.0",
-        "prompt_version": "0.1.0",
-        "task_source": "O*NET task statements via PSOC crosswalk",
-        "human_review_status": "not_reviewed",
-        "required_statement": "This experimental score has not yet undergone independent labour-economist validation.",
-        "tasks": [
-            {
-                "task_id": task["task_id"],
-                "task": task,
-                "consensus": {
-                    key: {"score": 3, "range": 1, "stdev": 0.5, "stability": "stable"}
-                    for key in sx.DIMENSIONS
-                },
-            }
-            for task in TASKS
-        ],
-    }
-    sx.write_occupation_scores(run_manifest)
+    records = {}
+    for task in TASKS:
+        record = TaskRunRecord(task_id=task["task_id"], task=task)
+        record.attempts = [
+            AttemptRecord(
+                task["task_id"], i, "succeeded", "2026-01-01T00:00:00Z",
+                parsed={"technical_task_exposure": 3, "human_interaction_intensity": 2},
+            )
+            for i in (1, 2, 3)
+        ]
+        records[task["task_id"]] = record
+
+    args = Namespace(attempts=3, min_successful=2, model="stub/model", temperature=0.0,
+                     rubric_version=sx.DEFAULT_RUBRIC_VERSION,
+                     prompt_version=sx.DEFAULT_PROMPT_VERSION, exposure_threshold=4)
+    manifest = sx.build_run_manifest(
+        records, args, "20260101T000000Z__stub-model__abcd1234",
+        sx.load_rubric(sx.DEFAULT_RUBRIC_VERSION),
+    )
+    sx.write_occupation_scores(manifest)
 
     import csv
 
     rows = list(csv.DictReader(out.open(encoding="utf-8")))
     assert rows, "no score rows written"
     assert not validate.check_model_scores(rows)
-    # Both aggregations present, neither presented as the score.
-    methods = {row["aggregation_method"] for row in rows}
-    assert methods == {"unweighted_mean", "importance_weighted_mean"}
-    # All four dimensions kept separate.
-    assert {row["dimension"] for row in rows} == {"A", "B", "C", "D"}
+    # Only the two model-scored dimensions are released.
+    assert {row["dimension"] for row in rows} == {"A", "B"}
+    # Ordinal aggregation, and the attempt accounting is real.
+    assert all(row["aggregation_method"] == "median_across_tasks_ordinal" for row in rows)
+    assert all(row["successful_attempts"] == "3" for row in rows)
+    assert all(row["attempted_attempts"] == "3" for row in rows)
+    assert all(row["score_distribution"] for row in rows)
 
 
 def test_harness_refuses_to_score_without_task_evidence(tmp_path):

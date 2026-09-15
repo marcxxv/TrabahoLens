@@ -1,8 +1,8 @@
 {
   "release_id": "v2.0.0-pre",
-  "release_date": "2026-01-01T00:00:00Z",
-  "generated_at": "2026-01-01T00:00:00Z",
-  "code_commit": "c0c9356885cf71c59c837cd29cc7139d8a531cf4",
+  "release_date": "2026-09-15T00:00:00Z",
+  "generated_at": "2026-09-15T00:00:00Z",
+  "code_commit": "2bda40dd2a54752bd6dbf42e3a7a9462f29590e5",
   "code_commit_note": "The commit the build ran at. It necessarily precedes the commit that records it, because committing this manifest moves HEAD. Treat it as 'generated from this input state', not as a self-describing id. `make check-stale` excludes it for the same reason.",
   "schema_version": "2.0.0",
   "methodology_version": "2.0.0",
@@ -110,7 +110,7 @@
     "data/canonical/metric_observations.csv": "dcba43fc98caf7e42ce5c74867e6a702cc805e158e5253833a7612b7643d3fd0",
     "data/canonical/crosswalk_psoc_isco_soc.csv": "6011b7cd5246e968b12b8342730c4dd37a0f96ed661c845b3ab78060024cf471",
     "data/canonical/transformations.csv": "855f1570cd8683f38d764ac90a5380a3a0d2ccc7cb88fd739b1dc8049cc84434",
-    "data/canonical/model_scores.csv": "e50a5dc10fc3219f6516c92aa99bbeeede34f616587eff796f998eace9ce92ce"
+    "data/canonical/model_scores.csv": "3e33b59dd7077d383528b02140f910e71811cc5e60eb4928818d281bb2a4d277"
   },
   "model_runs": [],
   "pipeline_stages": [

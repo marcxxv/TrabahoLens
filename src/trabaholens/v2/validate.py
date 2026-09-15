@@ -462,7 +462,45 @@ def check_model_scores(scores) -> list[Failure]:
         if (row.get("run_count") or "").strip().isdigit() and int(row["run_count"]) < 2:
             failures.append(
                 Failure("score_provenance",
-                        f"{sid}: run_count={row['run_count']} cannot support a stability measure")
+                        f"{sid}: run_count={row['run_count']} cannot support a reproducibility measure")
+            )
+
+        # Attempt accounting must be present and coherent. The previous schema
+        # recorded only the requested count, so a task that succeeded once out
+        # of three attempts published as "3 runs".
+        attempted = (row.get("attempted_attempts") or "").strip()
+        successful = (row.get("successful_attempts") or "").strip()
+        if attempted.isdigit() and successful.isdigit():
+            if int(successful) > int(attempted):
+                failures.append(
+                    Failure("attempt_accounting",
+                            f"{sid}: successful_attempts={successful} exceeds "
+                            f"attempted_attempts={attempted}")
+                )
+            if int(successful) < 2:
+                failures.append(
+                    Failure("attempt_accounting",
+                            f"{sid}: only {successful} successful attempt(s). A score needs at "
+                            "least 2 successes; the requested count is not evidence of coverage.")
+                )
+        elif row.get("score", "").strip():
+            failures.append(
+                Failure("attempt_accounting",
+                        f"{sid}: published a score without attempted/successful attempt counts")
+            )
+
+        if row.get("partial_coverage") == "true" and not (row.get("tasks_included") or "").strip():
+            failures.append(
+                Failure("attempt_accounting",
+                        f"{sid}: partial coverage declared without tasks_included")
+            )
+
+        # The retired dimensions must never reappear in a released score.
+        if row.get("dimension") in {"C", "D"}:
+            failures.append(
+                Failure("retired_dimension",
+                        f"{sid}: dimension {row['dimension']!r} was retired in rubric v0.2.0. "
+                        "C was unsupported model judgment; D is now computed from provenance.")
             )
         value = (row.get("score") or "").strip()
         if value:

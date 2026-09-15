@@ -221,7 +221,7 @@ def test_score_missing_any_provenance_field_is_rejected(field):
 
 def test_single_run_score_is_rejected():
     failures = validate.check_model_scores([score_row(run_count="1")])
-    assert any("cannot support a stability measure" in f.detail for f in failures)
+    assert any("cannot support a reproducibility measure" in f.detail for f in failures)
 
 
 def test_score_outside_its_declared_scale_is_rejected():

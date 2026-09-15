@@ -1,0 +1,255 @@
+rubric_version: "0.2.0"
+supersedes: "0.1.0"
+name: TrabahoLens generative-AI task exposure rubric
+status: experimental
+created: "2026-09-15"
+
+# ---------------------------------------------------------------------------
+# What this rubric measures, and what it refuses to measure
+# ---------------------------------------------------------------------------
+
+question_answered: >-
+  To what extent could currently available or plausibly near-term generative-AI
+  systems assist with or perform the tasks associated with this occupation?
+
+question_not_answered: >-
+  Will a worker in this occupation lose their job? This rubric cannot answer
+  that and must never be presented as if it does.
+
+not_a_measure_of:
+  - automation probability
+  - replacement probability
+  - displacement
+  - layoffs
+  - unemployment
+  - job-loss risk
+  - occupational decline
+  - future employment change
+
+why_not: >-
+  Employment outcomes depend on adoption rates, costs, regulation, product and
+  labour demand, productivity effects, how work is reorganised around a new
+  tool, worker adaptation, institutional capacity, and the creation of new
+  kinds of work. None of those is measured here. A task that a model can
+  perform is not thereby a task an employer will stop paying a person to do.
+
+unit_of_analysis: >-
+  The task, not the occupation and not the job title. Occupation scores are
+  aggregated from task scores and are only as good as the task evidence and the
+  crosswalk behind them.
+
+# ---------------------------------------------------------------------------
+# Dimension A: technical task exposure (the primary scale)
+# ---------------------------------------------------------------------------
+
+dimensions:
+  - id: A
+    name: Technical task exposure
+    scale: [0, 5]
+    scale_type: ordinal
+    description: >-
+      How much of this task's content a competent current-generation
+      generative-AI system could produce or transform, assuming the system has
+      the inputs the task normally has. Judged on technical capability alone —
+      not on whether any employer would deploy it, whether it would be legal,
+      or whether it would be cheaper.
+    anchors:
+      0: >-
+        No meaningful generative-AI applicability. The task is physical,
+        embodied, or depends on presence, dexterity or real-world sensing that
+        text and image models do not provide.
+      1: >-
+        Minor assistance to peripheral parts of the task. The core of the task
+        is unchanged; a model might draft a note about it.
+      2: >-
+        Assistance to a meaningful minority of the task's content. A recognisable
+        slice can be drafted or checked by a model; most still is not.
+      3: >-
+        Substantial assistance, but humans remain central to most of the task's
+        execution. The model accelerates; it does not carry the task.
+      4: >-
+        Generative AI can perform or transform much of the task's content with
+        human oversight. The human role shifts toward specification, judgement
+        and verification.
+      5: >-
+        Generative AI can perform most of the task's content under realistic
+        conditions, subject to verification, accountability and workflow
+        integration. Someone still has to be answerable for the output.
+    notes: >-
+      The scale tops out at "can perform most of the content, subject to
+      verification" rather than at "fully automated", because verification,
+      accountability and integration are not optional in real work and a scale
+      that ignored them would systematically overstate exposure.
+
+  - id: B
+    name: Human-interaction and physical-presence intensity
+    scale: [0, 5]
+    scale_type: ordinal
+    description: >-
+      How much of the task requires being physically present, handling objects
+      or people, or sustaining a relationship of trust that a person must hold.
+      Scored independently of A. It is not "the inverse of A": a task can be
+      both highly text-mediated and highly relational.
+    anchors:
+      0: Fully remote and text-mediated; no presence or relationship required.
+      1: Occasional presence or interaction, peripheral to the task.
+      2: Regular interaction, but the substance is documentary.
+      3: Interaction or presence is a substantial part of doing the task well.
+      4: The task is largely conducted through presence, handling or relationship.
+      5: The task is constituted by physical presence or embodied human contact.
+
+  # --- Dimensions removed in v0.2.0 ------------------------------------
+  #
+  # C (adoption friction) and D (evidence confidence) were scored by the
+  # language model in v0.1.0. Both were withdrawn from model scoring because
+  # neither was something the model was positioned to judge.
+
+retired_dimensions:
+  - id: C
+    name: Adoption-friction context
+    retired_in: "0.2.0"
+    reason: >-
+      v0.1.0 asked the model to judge Philippine regulation, liability,
+      certification, connectivity, device access, employer scale and how much of
+      the work happens outside formal firms — while supplying no Philippine
+      evidence for any of it. A model inferring those conditions from an
+      occupation title or a US task statement is inventing them, not measuring
+      them.
+    replacement: >-
+      Redefined as a future evidence-based Philippine contextual layer, built
+      from actual Philippine regulatory, connectivity and firm-size data. It is
+      unpublished until that data exists. It is not scored, not inferred, and
+      not shown.
+    status: blocked_by_unresolved_methodology
+
+  - id: D
+    name: Evidence confidence
+    retired_in: "0.2.0"
+    reason: >-
+      v0.1.0 asked the scoring model how far its own score should be trusted.
+      That conflates a measurement with its evaluation, and every input to the
+      judgement is metadata the pipeline already holds.
+    replacement: >-
+      Computed deterministically by
+      src/trabaholens/v2/score_exposure.compute_evidence_confidence from task
+      source, task completeness, crosswalk quality and match type, Philippine
+      specificity, human-review status and successful-attempt coverage. The
+      component reasons are published alongside the grade, not just the number.
+    status: implemented_fixture_tested_only
+
+combination_rule: >-
+  PROHIBITED. Dimensions A and B are published separately and are never combined
+  into a single index. Any weighted sum of them would read as a job-loss
+  probability, which is precisely what this rubric refuses to produce.
+
+# ---------------------------------------------------------------------------
+# Aggregation
+# ---------------------------------------------------------------------------
+
+aggregation:
+  scale_type_constraint: >-
+    Each dimension is ORDINAL. The rubric does not establish that the distance
+    from 1 to 2 equals the distance from 4 to 5, so any statistic that assumes
+    equal spacing is unjustified on its own terms. v0.1.0 declared the scale
+    ordinal and then took arithmetic means across tasks, which was internally
+    inconsistent.
+
+  across_attempts:
+    method: median
+    spread: full category distribution, range, and modal-category agreement
+    note: >-
+      These are repeated scoring attempts against the same prompt, not
+      independent replicates. Each task is a separate request, so task-order
+      randomisation cannot test within-prompt ordering effects; there is no
+      shared prompt to order. At temperature 0 they measure run-to-run
+      reproducibility and provider variability.
+
+  task_to_occupation:
+    primary:
+      - median task score
+      - interquartile range
+      - full task-score distribution across all six categories
+      - count and share of tasks in each score category
+      - share of tasks at or above a predeclared technical-exposure threshold
+    threshold:
+      default: 4
+      declared_before_scoring: true
+      sensitivity: >-
+        The share-above statistic is reported at the declared threshold and
+        recomputed at adjacent thresholds so a reader can see how much the
+        choice of cut point drives the result.
+    weighted:
+      method: weighted median
+      weight: O*NET task importance where published
+      status: experimental
+      note: >-
+        A weighted median is the ordinal-safe analogue of a weighted mean.
+        Published beside the unweighted median, never instead of it.
+    experimental_convenience_statistic:
+      arithmetic_mean:
+        published: true
+        labelled: experimental convenience statistic
+        justification: >-
+          Retained only so the effect of the ordinal-versus-interval choice is
+          visible to a reader, and always printed beside the median with its
+          caveat attached. It is not the headline statistic, is not described as
+          precise, and no downstream product may use it alone.
+
+  never:
+    - combining dimensions into a single index
+    - presenting an arithmetic mean as the score
+    - describing an ordinal score as naturally quantitative or precise
+
+# ---------------------------------------------------------------------------
+# Prohibitions, each traceable to a defect found in the v1 audit
+# ---------------------------------------------------------------------------
+
+prohibited_inputs:
+  - id: employment
+    reason: >-
+      How many people do a job is not evidence about whether a model can do its
+      tasks. v1 fed synthetic employment into the scorer.
+  - id: wages
+    reason: Pay level is not technical capability.
+  - id: ofw_share
+    reason: >-
+      Where workers are is not evidence of task content. v1's system prompt
+      instructed the model to reason from OFW share toward higher exposure.
+  - id: informality
+    reason: >-
+      Informality is an adoption-friction consideration (dimension C at most),
+      never evidence about dimension A. v1 conflated the two.
+  - id: expected_output_distribution
+    reason: >-
+      v1's prompt stated "Expected average: ~3.5-4.5", anchoring the score
+      distribution before the model saw any occupation. Any statement of a
+      target mean, median or spread is prohibited.
+  - id: philippine_adoption_conditions
+    reason: >-
+      Added in v0.2.0. The model must not be asked to infer Philippine
+      regulation, liability, connectivity, device access, employer scale or
+      informality. It has no evidence for them, and a plausible-sounding guess
+      is the failure mode this project exists to remove.
+  - id: self_assessed_confidence
+    reason: >-
+      Added in v0.2.0. The model must not grade the reliability of its own
+      score. Evidence confidence is computed from provenance.
+
+prohibited_outputs:
+  - a single combined "risk" score
+  - any probability of job loss, displacement or automation
+  - any statement about future employment levels
+
+# ---------------------------------------------------------------------------
+# Validation status
+# ---------------------------------------------------------------------------
+
+validation:
+  independent_expert_review: none
+  required_statement: >-
+    This experimental score has not yet undergone independent labour-economist
+    validation.
+  model_rationale_is_not_validation: >-
+    The scoring model's own explanation of its score is an artifact of the same
+    process that produced the score. It is displayed as "the scoring model
+    judged", never as a finding.
