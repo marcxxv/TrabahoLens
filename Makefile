@@ -7,7 +7,7 @@ PY := uv run python
 
 .PHONY: help audit fetch-data validate-raw build-crosswalk build-metrics \
         build-release score-exposure sensitivity validate-release build-site \
-        test check check-stale determinism all clean-generated
+        test test-populated-pipeline check check-stale determinism all clean-generated
 
 help:
 	@echo "TrabahoLens v2"
@@ -23,6 +23,7 @@ help:
 	@echo "  make validate-release Run every release validator"
 	@echo "  make build-site       build-release + validate-release"
 	@echo "  make test             Run the test suite"
+	@echo "  make test-populated-pipeline  Prove a populated fixture publishes end to end"
 	@echo "  make check            Compile sources and validate the release"
 	@echo "  make check-stale      Prove the committed artifacts match their inputs"
 	@echo "  make determinism      Prove two builds are byte-identical"
@@ -61,6 +62,13 @@ build-site: build-release validate-release
 
 test:
 	uv run pytest tests/ -q
+
+# The rest of the suite proves validators reject bad input. This target proves
+# the opposite direction: that a correctly populated source actually reaches a
+# published value. On an empty production dataset every other check passes
+# trivially, so this is the one that shows the pipeline works.
+test-populated-pipeline:
+	uv run pytest tests/test_populated_pipeline.py -q
 
 check:
 	$(PY) scripts/check.py

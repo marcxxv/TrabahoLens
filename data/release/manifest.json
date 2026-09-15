@@ -1,8 +1,8 @@
 {
   "release_id": "v2.0.0-pre",
-  "release_date": "2026-09-14T00:00:00Z",
-  "generated_at": "2026-09-14T00:00:00Z",
-  "code_commit": "eff03c981808d98787f2000648cbba8a171e91d3",
+  "release_date": "2026-01-01T00:00:00Z",
+  "generated_at": "2026-01-01T00:00:00Z",
+  "code_commit": "4af84f6c43407ca1e523e6334e40580375228422",
   "code_commit_note": "The commit the build ran at. It necessarily precedes the commit that records it, because committing this manifest moves HEAD. Treat it as 'generated from this input state', not as a self-describing id. `make check-stale` excludes it for the same reason.",
   "schema_version": "2.0.0",
   "methodology_version": "2.0.0",
@@ -107,12 +107,116 @@
   "canonical_table_checksums": {
     "data/canonical/classifications.csv": "22db37571875b47be57cc195b8d856dc797e059dd67636ad26a0a78d8ccf8272",
     "data/canonical/occupations.csv": "fa1cf1a06805bd99d4136caa870d0ed330d8a4e5b75cc860846c5f3168c689b2",
-    "data/canonical/metric_observations.csv": "c65008106f688985856c60957d9a7e0689e61be94698d9c75532d7263247cfe7",
+    "data/canonical/metric_observations.csv": "dcba43fc98caf7e42ce5c74867e6a702cc805e158e5253833a7612b7643d3fd0",
     "data/canonical/crosswalk_psoc_isco_soc.csv": "6011b7cd5246e968b12b8342730c4dd37a0f96ed661c845b3ab78060024cf471",
     "data/canonical/transformations.csv": "855f1570cd8683f38d764ac90a5380a3a0d2ccc7cb88fd739b1dc8049cc84434",
     "data/canonical/model_scores.csv": "e50a5dc10fc3219f6516c92aa99bbeeede34f616587eff796f998eace9ce92ce"
   },
   "model_runs": [],
+  "pipeline_stages": [
+    {
+      "stage": "source_registry",
+      "status": "implemented_verified_with_real_source",
+      "status_meaning": "Implemented, and exercised end to end against the real primary source.",
+      "detail": "Ten sources registered with universe, exclusions, licensing and attribution.",
+      "evidence": "data/sources/source-registry.yaml",
+      "blockers": []
+    },
+    {
+      "stage": "retrieval",
+      "status": "blocked_by_source_access",
+      "status_meaning": "Cannot proceed because the source cannot be retrieved in this environment.",
+      "detail": "Retrieval attempts are recorded with timestamps and outcomes.",
+      "evidence": "data/sources/retrieval-manifest.json",
+      "blockers": [
+        "All registered hosts returned HTTP 403 at the egress proxy."
+      ]
+    },
+    {
+      "stage": "raw_snapshot",
+      "status": "blocked_by_source_access",
+      "status_meaning": "Cannot proceed because the source cannot be retrieved in this environment.",
+      "detail": "Raw snapshots are written under data/raw/ (gitignored) when retrieval succeeds.",
+      "evidence": "",
+      "blockers": []
+    },
+    {
+      "stage": "hash_verification",
+      "status": "implemented_fixture_tested_only",
+      "status_meaning": "Implemented and covered by tests, but only against a synthetic fixture. It has never processed the real source.",
+      "detail": "SHA-256 recorded at retrieval and re-checked against the file before parsing.",
+      "evidence": "src/trabaholens/v2/acquisition_state.py",
+      "blockers": []
+    },
+    {
+      "stage": "format_validation",
+      "status": "implemented_fixture_tested_only",
+      "status_meaning": "Implemented and covered by tests, but only against a synthetic fixture. It has never processed the real source.",
+      "detail": "Each parser validates the snapshot's shape before reading rows.",
+      "evidence": "src/trabaholens/v2/sources/",
+      "blockers": []
+    },
+    {
+      "stage": "parsing",
+      "status": "implemented_fixture_tested_only",
+      "status_meaning": "Implemented and covered by tests, but only against a synthetic fixture. It has never processed the real source.",
+      "detail": "Parsers implemented for LFS, OWS, SOF and four O*NET files.",
+      "evidence": "src/trabaholens/v2/sources/",
+      "blockers": [
+        "No parser has processed its real source."
+      ]
+    },
+    {
+      "stage": "normalised_source_table",
+      "status": "implemented_fixture_tested_only",
+      "status_meaning": "Implemented and covered by tests, but only against a synthetic fixture. It has never processed the real source.",
+      "detail": "Parsers emit normalised rows carrying the source's own codes and version.",
+      "evidence": "",
+      "blockers": []
+    },
+    {
+      "stage": "classification_reconciliation",
+      "status": "partially_implemented",
+      "status_meaning": "Some of the stage exists; named parts are missing.",
+      "detail": "Version compatibility is enforced and unmatched codes are reported, but the PSOC minor and unit group lists are absent, so only aggregate codes reconcile.",
+      "evidence": "",
+      "blockers": [
+        "PSOC 2012 (2022 Updates) volume not retrievable."
+      ]
+    },
+    {
+      "stage": "transformation",
+      "status": "implemented_fixture_tested_only",
+      "status_meaning": "Implemented and covered by tests, but only against a synthetic fixture. It has never processed the real source.",
+      "detail": "Documented transformations for employment, wages, OFW distribution and Job Zone.",
+      "evidence": "src/trabaholens/v2/transform.py",
+      "blockers": []
+    },
+    {
+      "stage": "canonical_observation",
+      "status": "implemented_fixture_tested_only",
+      "status_meaning": "Implemented and covered by tests, but only against a synthetic fixture. It has never processed the real source.",
+      "detail": "Observations carry derivation class, source authority, hash, parser and transformation.",
+      "evidence": "",
+      "blockers": []
+    },
+    {
+      "stage": "release_validation",
+      "status": "implemented_verified_with_real_source",
+      "status_meaning": "Implemented, and exercised end to end against the real primary source.",
+      "detail": "Validators run on every build and are each tested against a violating fixture.",
+      "evidence": "src/trabaholens/v2/validate.py",
+      "blockers": []
+    },
+    {
+      "stage": "site_payload",
+      "status": "implemented_verified_with_real_source",
+      "status_meaning": "Implemented, and exercised end to end against the real primary source.",
+      "detail": "Payload is provenance-first; the interface cannot render a value without it.",
+      "evidence": "",
+      "blockers": []
+    }
+  ],
   "publication_state": {
     "metrics_defined": [
       "employment_count",

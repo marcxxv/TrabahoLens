@@ -11,15 +11,40 @@ occupation shown or something broader. The columns below are that story.
 
 ## Controlled vocabularies
 
-### `estimate_type` — what kind of evidence this is
+### `derivation_class` — how the number was produced
+
+This is one of **two independent axes**. It answers *how*, never *who*.
 
 | Value | Label shown | Meaning |
 | --- | --- | --- |
-| `official_statistic` | Official statistic | Published by an official statistical agency, reproduced at the granularity that agency published it. |
-| `calculated_statistic` | Calculated statistic | Arithmetic we performed on official figures — a share, a rate, a sum. Inputs official; calculation ours and documented. |
-| `estimate` | Estimate | A modelled or survey-weighted value with sampling uncertainty. Reported with an interval where the source supports one. |
-| `proxy` | Proxy | Measured on a different population, place or unit than the one shown. An indication, not a measurement of this occupation in the Philippines. |
-| `experimental_model_score` | Experimental model-derived score | Produced by a language model under a published rubric. A research signal, not an observation. |
+| `directly_observed` | Directly observed | A complete enumeration or administrative record — every unit counted, not a sample. Census and register counts qualify; sample surveys do not. |
+| `calculated` | Calculated | Arithmetic we performed on published figures. Documented, and inherits its inputs' uncertainty. |
+| `estimated` | Estimated | Produced from a sample and generalised to a population, so it carries sampling error. **Most official labour statistics are of this kind.** |
+| `proxy_derived` | Proxy-derived | Measured on a different population, place or unit than the one shown, carried across by a documented mapping. |
+| `model_derived` | Model-derived | Produced by a model following a published rubric. A research signal, not an observation. |
+
+### `source_authority` — who produced it
+
+The second axis. It answers *who*, never *how*.
+
+| Value | Label shown | Meaning |
+| --- | --- | --- |
+| `ph_official_statistical_authority` | Philippine official statistical authority | PSA or another body designated to produce official Philippine statistics. |
+| `ph_government_other` | Other Philippine government source | A Philippine government body publishing administrative or programme data. |
+| `international_official_occupational` | International official occupational source | An official occupational database from a government outside the Philippines, or an international organisation. |
+| `industry_administrative` | Industry or administrative source | An industry association or private administrative dataset. |
+| `project_generated` | Project-generated research output | Produced by this project; not independent of its own assumptions. |
+
+**Why two axes.** The pre-remediation schema had one field, `estimate_type`,
+and put `official_statistic` on the LFS, OWS and SOF metrics. That conflated
+two unrelated questions. PSA publishing a figure makes it an official
+statistic; it does not make it directly observed, because LFS, OWS and SOF are
+sample surveys whose figures carry sampling error. Both facts are true at once
+and neither implies the other, so they are separate fields and the interface
+shows both.
+
+Under the current classification **no metric is `directly_observed`**, and that
+is the correct state rather than a gap to be filled.
 
 ### `availability` — whether there is a value at all
 

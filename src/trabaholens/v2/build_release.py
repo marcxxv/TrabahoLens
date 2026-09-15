@@ -38,12 +38,14 @@ from .paths import (
     ensure_parent,
     rel,
 )
+from .build_canonical import pipeline_stage_reports
 from .schema import (
     AVAILABILITY,
     CONFIDENCE_GRADES,
-    ESTIMATE_TYPES,
+    DERIVATION_CLASSES,
     METRIC_DEFINITIONS,
     SCHEMA_VERSION,
+    SOURCE_AUTHORITIES,
 )
 
 PAYLOAD_SCHEMA = "trabaholens-site-payload/2"
@@ -99,10 +101,21 @@ def build_metric_block(row: dict[str, str]) -> dict[str, Any]:
     return {
         "value": _value_or_none(row.get("metric_value", "")),
         "unit": row.get("unit", ""),
-        "estimate_type": row.get("estimate_type", ""),
-        "estimate_type_label": ESTIMATE_TYPES.get(row.get("estimate_type", ""), ("", ""))[0],
+        # Two independent axes. The interface shows both, because "PSA
+        # published it" and "it was directly observed" are different claims.
+        "derivation_class": row.get("derivation_class", ""),
+        "derivation_class_label": DERIVATION_CLASSES.get(row.get("derivation_class", ""), ("", ""))[0],
+        "source_authority": row.get("source_authority", ""),
+        "source_authority_label": SOURCE_AUTHORITIES.get(row.get("source_authority", ""), ("", ""))[0],
         "availability": row.get("availability", ""),
         "confidence_grade": row.get("confidence_grade", ""),
+        "confidence_reasons": [
+            r.strip() for r in (row.get("confidence_reasons", "") or "").split("|") if r.strip()
+        ],
+        "pipeline_status": row.get("pipeline_status", ""),
+        "parser_id": row.get("parser_id", ""),
+        "normalised_row_id": row.get("normalised_row_id", ""),
+        "transformation_id": row.get("transformation_id", ""),
         "reference_period": row.get("reference_period", ""),
         "geography": row.get("geography", ""),
         "population_scope": row.get("population_scope", ""),
@@ -204,9 +217,13 @@ def build_payload(release: dict[str, Any]) -> dict[str, Any]:
                 "unverified_pending_source."
             ),
         },
-        "estimate_type_legend": {
+        "derivation_class_legend": {
             key: {"label": label, "explanation": explanation}
-            for key, (label, explanation) in ESTIMATE_TYPES.items()
+            for key, (label, explanation) in DERIVATION_CLASSES.items()
+        },
+        "source_authority_legend": {
+            key: {"label": label, "explanation": explanation}
+            for key, (label, explanation) in SOURCE_AUTHORITIES.items()
         },
         "confidence_grade_legend": CONFIDENCE_GRADES,
         "availability_legend": {
@@ -231,7 +248,9 @@ def build_payload(release: dict[str, Any]) -> dict[str, Any]:
                 "common_misreading": definition.common_misreading,
                 "required_source": definition.required_source_id,
                 "expected_source_granularity": definition.expected_source_granularity,
-                "expected_estimate_type": definition.expected_estimate_type,
+                "expected_derivation_class": definition.expected_derivation_class,
+                "expected_source_authority": definition.expected_source_authority,
+                "parser_id": definition.parser_id,
             }
             for definition in METRIC_DEFINITIONS.values()
         },
@@ -247,6 +266,40 @@ def build_payload(release: dict[str, Any]) -> dict[str, Any]:
         },
         "occupations": entries,
     }
+
+
+def _discover_model_runs() -> list[dict[str, Any]]:
+    """Derive the model-run list from run manifests on disk.
+
+    Previously hard-coded to []. A hard-coded empty list is indistinguishable
+    from "we looked and found none", which is the distinction that matters.
+    """
+    from .paths import EXPOSURE_RUNS_DIR
+
+    runs: list[dict[str, Any]] = []
+    if not EXPOSURE_RUNS_DIR.exists():
+        return runs
+    for run_json in sorted(EXPOSURE_RUNS_DIR.glob("*/run.json")):
+        try:
+            payload = json.loads(run_json.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            runs.append({"run_id": run_json.parent.name, "status": "unreadable_run_manifest"})
+            continue
+        runs.append(
+            {
+                "run_id": payload.get("run_id", run_json.parent.name),
+                "model_id": payload.get("model_id", ""),
+                "rubric_version": payload.get("rubric_version", ""),
+                "prompt_version": payload.get("prompt_version", ""),
+                "scoring_date": payload.get("scoring_date", ""),
+                "attempted_replicates": payload.get("attempted_replicates"),
+                "min_successful_replicates": payload.get("min_successful_replicates"),
+                "tasks_meeting_minimum": payload.get("tasks_meeting_minimum"),
+                "tasks_below_minimum": payload.get("tasks_below_minimum"),
+                "human_review_status": payload.get("human_review_status", ""),
+            }
+        )
+    return runs
 
 
 def build_release_manifest(frozen_time: str | None) -> dict[str, Any]:
@@ -313,7 +366,8 @@ def build_release_manifest(frozen_time: str | None) -> dict[str, Any]:
         "source_versions": source_versions,
         "source_hashes": source_hashes,
         "canonical_table_checksums": checksums,
-        "model_runs": [],
+        "model_runs": _discover_model_runs(),
+        "pipeline_stages": [report.as_dict() for report in pipeline_stage_reports()],
         "publication_state": {
             "metrics_defined": sorted(METRIC_DEFINITIONS),
             "metrics_with_published_values": [],

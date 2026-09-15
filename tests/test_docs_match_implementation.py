@@ -24,7 +24,7 @@ from trabaholens.v2.paths import (
     SITE_DATA_JSON,
     SOURCE_REGISTRY_YAML,
 )
-from trabaholens.v2.schema import ESTIMATE_TYPES, METRIC_DEFINITIONS
+from trabaholens.v2.schema import DERIVATION_CLASSES, METRIC_DEFINITIONS, SOURCE_AUTHORITIES
 
 DOCS = [REPO_ROOT / "README.md"] + sorted((REPO_ROOT / "docs").glob("*.md"))
 
@@ -84,10 +84,23 @@ def test_occupation_count_in_payload_matches_the_canonical_table():
     assert _payload()["counts"]["occupations"] == len(occupations)
 
 
-def test_every_estimate_type_is_documented_in_the_dictionary():
+def test_every_evidence_axis_value_is_documented_in_the_dictionary():
+    """Both axes must be documented, not just one."""
     text = (REPO_ROOT / "docs" / "data-dictionary.md").read_text(encoding="utf-8")
-    for key in ESTIMATE_TYPES:
-        assert f"`{key}`" in text, f"estimate_type {key!r} is undocumented"
+    for key in DERIVATION_CLASSES:
+        assert f"`{key}`" in text, f"derivation_class {key!r} is undocumented"
+    for key in SOURCE_AUTHORITIES:
+        assert f"`{key}`" in text, f"source_authority {key!r} is undocumented"
+
+
+def test_no_metric_is_directly_observed_while_its_source_is_a_survey():
+    """Guards the axis conflation the remediation removed."""
+    for definition in METRIC_DEFINITIONS.values():
+        if definition.expected_derivation_class == "directly_observed":
+            assert "survey" not in definition.definition.lower(), (
+                f"{definition.metric_id} is marked directly_observed but its definition "
+                "describes a survey. Authority is not derivation."
+            )
 
 
 def test_every_metric_is_documented_in_the_methodology_or_dictionary():

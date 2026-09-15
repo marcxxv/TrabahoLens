@@ -12,40 +12,87 @@ from dataclasses import dataclass
 SCHEMA_VERSION = "2.0.0"
 
 # --------------------------------------------------------------------------
-# Evidence classification
+# Evidence classification — TWO INDEPENDENT AXES
 # --------------------------------------------------------------------------
-# Exactly the five classes the interface is required to display. Every
-# published numeric field carries one, and the badge shown in the UI is this
-# value — not a separate editorial choice that could drift from the data.
+# The previous version had one axis and put `official_statistic` on LFS, OWS and
+# SOF figures. That conflated two unrelated questions:
+#
+#   * WHO produced it        -> source_authority
+#   * HOW it was produced    -> derivation_class
+#
+# PSA publishing a number makes it an official statistic. It does not make it
+# directly observed: LFS, OWS and SOF are sample surveys, so their figures are
+# *estimates* with sampling error, published by an official authority. Both
+# facts are true at once and neither implies the other, so they are separate
+# fields and the interface shows both.
 
-ESTIMATE_TYPES = {
-    "official_statistic": (
-        "Official statistic",
-        "A figure published by an official statistical agency, reproduced at the "
-        "granularity that agency published it.",
+DERIVATION_CLASSES = {
+    "directly_observed": (
+        "Directly observed",
+        "A complete enumeration or administrative record of the population "
+        "concerned — every unit counted, not a sample. Census and register "
+        "counts qualify; sample surveys do not.",
     ),
-    "calculated_statistic": (
-        "Calculated statistic",
-        "Arithmetic we performed on official figures — a share, a rate, a sum. "
-        "The inputs are official; the calculation is ours and is documented.",
+    "calculated": (
+        "Calculated",
+        "Arithmetic we performed on published figures — a share, a rate, a sum. "
+        "The calculation is ours and is documented; it inherits the uncertainty "
+        "of its inputs.",
     ),
-    "estimate": (
-        "Estimate",
-        "A modelled or survey-weighted value with sampling uncertainty. Reported "
-        "with an interval wherever the source supports one.",
+    "estimated": (
+        "Estimated",
+        "Produced from a sample and generalised to a population, so it carries "
+        "sampling error. Reported with an interval wherever the source "
+        "publishes one. Most official labour statistics are of this kind.",
     ),
-    "proxy": (
-        "Proxy",
-        "A stand-in measured on a different population, place or unit than the "
-        "one shown. Useful as an indication, not as a measurement of this "
-        "occupation in the Philippines.",
+    "proxy_derived": (
+        "Proxy-derived",
+        "Measured on a different population, place or unit than the one shown, "
+        "and carried across by a documented mapping. An indication, not a "
+        "measurement of this occupation in the Philippines.",
     ),
-    "experimental_model_score": (
-        "Experimental model-derived score",
-        "Produced by a language model following a published rubric. It is a "
-        "research signal, not an observation, and it has not been validated by "
-        "independent labour economists.",
+    "model_derived": (
+        "Model-derived",
+        "Produced by a model following a published rubric. A research signal, "
+        "not an observation.",
     ),
+}
+
+SOURCE_AUTHORITIES = {
+    "ph_official_statistical_authority": (
+        "Philippine official statistical authority",
+        "The Philippine Statistics Authority or another body designated to "
+        "produce official Philippine statistics.",
+    ),
+    "ph_government_other": (
+        "Other Philippine government source",
+        "A Philippine government body publishing administrative or programme "
+        "data that is not an official statistical series.",
+    ),
+    "international_official_occupational": (
+        "International official occupational source",
+        "An official occupational database maintained by a government outside "
+        "the Philippines, or by an international organisation.",
+    ),
+    "industry_administrative": (
+        "Industry or administrative source",
+        "An industry association or private administrative dataset.",
+    ),
+    "project_generated": (
+        "Project-generated research output",
+        "Produced by this project. Not an external source, and not independent "
+        "of the project's own assumptions.",
+    ),
+}
+
+# Retained only to describe what v1 and the pre-remediation v2 published, so the
+# audit can name the old class. Never written to a new row.
+LEGACY_ESTIMATE_TYPES = {
+    "official_statistic",
+    "calculated_statistic",
+    "estimate",
+    "proxy",
+    "experimental_model_score",
 }
 
 # Availability is orthogonal to estimate type. A metric can be well specified
@@ -170,7 +217,9 @@ METRIC_OBSERVATIONS_COLUMNS = [
     "reference_period",
     "geography",
     "population_scope",
-    "estimate_type",
+    # Two independent axes; see DERIVATION_CLASSES / SOURCE_AUTHORITIES.
+    "derivation_class",
+    "source_authority",
     "availability",
     "source_granularity",
     "display_granularity",
@@ -181,9 +230,14 @@ METRIC_OBSERVATIONS_COLUMNS = [
     "source_url",
     "source_file_hash",
     "retrieved_at",
+    "parser_id",
+    "parser_version",
+    "normalised_row_id",
     "transformation_id",
     "crosswalk_id",
     "confidence_grade",
+    "confidence_reasons",
+    "pipeline_status",
     "uncertainty_lower",
     "uncertainty_upper",
     "suppression_status",
@@ -263,9 +317,14 @@ class MetricDefinition:
     definition: str
     required_source_id: str
     expected_source_granularity: str
-    expected_estimate_type: str
+    # Two axes, never one. See DERIVATION_CLASSES / SOURCE_AUTHORITIES.
+    expected_derivation_class: str
+    expected_source_authority: str
     denominator: str
     common_misreading: str
+    # Which parser would turn the retrieved file into normalised rows. Empty
+    # means no parser exists yet, which is itself publishable information.
+    parser_id: str = ""
 
 
 METRIC_DEFINITIONS: dict[str, MetricDefinition] = {
@@ -279,8 +338,12 @@ METRIC_DEFINITIONS: dict[str, MetricDefinition] = {
         ),
         required_source_id="psa_lfs",
         expected_source_granularity="psoc_major_group",
-        expected_estimate_type="official_statistic",
+        # A sample survey generalised to the population: estimated, not
+        # observed, however official the publisher.
+        expected_derivation_class="estimated",
+        expected_source_authority="ph_official_statistical_authority",
         denominator="n/a (a count)",
+        parser_id="psa_lfs_occupation_table",
         common_misreading=(
             "Not the number of jobs, and not additive with any finer occupation "
             "list drawn from a different classification."
@@ -296,8 +359,10 @@ METRIC_DEFINITIONS: dict[str, MetricDefinition] = {
         ),
         required_source_id="psa_ows",
         expected_source_granularity="occupation",
-        expected_estimate_type="official_statistic",
+        expected_derivation_class="estimated",
+        expected_source_authority="ph_official_statistical_authority",
         denominator="workers in covered establishments only",
+        parser_id="psa_ows_occupation_table",
         common_misreading=(
             "Not the average earnings of all Filipino workers in the occupation. "
             "OWS covers non-agricultural establishments above an employment "
@@ -315,8 +380,10 @@ METRIC_DEFINITIONS: dict[str, MetricDefinition] = {
         ),
         required_source_id="psa_sof",
         expected_source_granularity="psoc_major_group",
-        expected_estimate_type="official_statistic",
+        expected_derivation_class="estimated",
+        expected_source_authority="ph_official_statistical_authority",
         denominator="all OFWs",
+        parser_id="psa_sof_occupation_table",
         common_misreading=(
             "This is P(occupation | OFW). It is NOT the share of workers in an "
             "occupation who are OFWs, P(OFW | occupation) — that needs domestic "
@@ -334,8 +401,10 @@ METRIC_DEFINITIONS: dict[str, MetricDefinition] = {
         ),
         required_source_id="psa_informal",
         expected_source_granularity="psoc_major_group",
-        expected_estimate_type="official_statistic",
+        expected_derivation_class="estimated",
+        expected_source_authority="ph_official_statistical_authority",
         denominator="employed persons in the group",
+        parser_id="",
         common_misreading=(
             "'Informal sector' and 'informal employment' are different concepts "
             "with different counts. The definition used must be quoted from the "
@@ -352,8 +421,12 @@ METRIC_DEFINITIONS: dict[str, MetricDefinition] = {
         ),
         required_source_id="onet",
         expected_source_granularity="occupation",
-        expected_estimate_type="proxy",
+        # A real O*NET rating, but measured on US occupations and carried across
+        # by a crosswalk: proxy-derived, from an international official source.
+        expected_derivation_class="proxy_derived",
+        expected_source_authority="international_official_occupational",
         denominator="n/a",
+        parser_id="onet_job_zones",
         common_misreading=(
             "Describes United States entry requirements. It is a proxy for the "
             "Philippine occupation only to the extent the crosswalk holds."
@@ -370,8 +443,10 @@ METRIC_DEFINITIONS: dict[str, MetricDefinition] = {
         ),
         required_source_id="llm_scoring",
         expected_source_granularity="occupation",
-        expected_estimate_type="experimental_model_score",
+        expected_derivation_class="model_derived",
+        expected_source_authority="project_generated",
         denominator="n/a",
+        parser_id="exposure_run_manifest",
         common_misreading=(
             "Not automation probability, replacement probability, displacement, "
             "job loss, or any forecast of employment change."

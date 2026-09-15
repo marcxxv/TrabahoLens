@@ -38,7 +38,8 @@ from .schema import (
     BANNED_EXPOSURE_TERMS,
     CONFIDENCE_GRADES,
     CROSSWALK_COLUMNS,
-    ESTIMATE_TYPES,
+    DERIVATION_CLASSES,
+    SOURCE_AUTHORITIES,
     GRANULARITIES,
     MAPPING_BASIS,
     MATCH_QUALITY,
@@ -151,12 +152,26 @@ def check_observations(observations, registry_ids: set[str]) -> list[Failure]:
     for row in observations:
         oid = row.get("observation_id", "?")
         value = (row.get("metric_value") or "").strip()
-        estimate_type = row.get("estimate_type", "")
+        derivation = row.get("derivation_class", "")
+        authority = row.get("source_authority", "")
         availability = row.get("availability", "")
         grade = row.get("confidence_grade", "")
 
-        if estimate_type not in ESTIMATE_TYPES:
-            failures.append(Failure("estimate_type", f"{oid}: unknown estimate_type {estimate_type!r}"))
+        if derivation not in DERIVATION_CLASSES:
+            failures.append(Failure("derivation_class", f"{oid}: unknown derivation_class {derivation!r}"))
+        if authority not in SOURCE_AUTHORITIES:
+            failures.append(Failure("source_authority", f"{oid}: unknown source_authority {authority!r}"))
+        # A sample survey is an estimate however official its publisher. The two
+        # axes are independent, so an official authority must never be read as
+        # licence to call a figure directly observed.
+        if derivation == "directly_observed" and authority in {
+            "ph_official_statistical_authority", "international_official_occupational"
+        } and "survey" in (row.get("source_dataset", "") or "").lower():
+            failures.append(
+                Failure("derivation_class",
+                        f"{oid}: {row.get('source_dataset')!r} is a survey, so its figures are "
+                        "estimated, not directly observed. Authority is a separate axis.")
+            )
         if availability not in AVAILABILITY:
             failures.append(Failure("availability", f"{oid}: unknown availability {availability!r}"))
         if grade not in CONFIDENCE_GRADES:
@@ -187,6 +202,16 @@ def check_observations(observations, registry_ids: set[str]) -> list[Failure]:
                 failures.append(Failure("provenance", f"{oid}: published without a source_file_hash"))
             if not row.get("retrieved_at"):
                 failures.append(Failure("provenance", f"{oid}: published without a retrieved_at"))
+            if not row.get("parser_id"):
+                failures.append(Failure("provenance", f"{oid}: published without a parser_id"))
+            if not row.get("transformation_id"):
+                failures.append(Failure("provenance", f"{oid}: published without a transformation_id"))
+            if not row.get("normalised_row_id"):
+                failures.append(
+                    Failure("provenance",
+                            f"{oid}: published without a normalised_row_id — a value must be "
+                            "traceable to the source row it came from")
+                )
 
         # A value must never appear on a row that says it has none.
         if availability != "published" and value:
@@ -200,11 +225,11 @@ def check_observations(observations, registry_ids: set[str]) -> list[Failure]:
         display_level = row.get("display_granularity")
         if source_level in GRANULARITIES and display_level in GRANULARITIES:
             if GRANULARITIES.index(source_level) < GRANULARITIES.index(display_level):
-                if estimate_type == "official_statistic":
+                if derivation in {"directly_observed", "estimated", "calculated"}:
                     failures.append(
                         Failure("granularity_mismatch",
                                 f"{oid}: source is {source_level} but displayed at {display_level} while "
-                                f"labelled official_statistic. A broader source shown finer is a proxy.")
+                                f"labelled {derivation}. A broader source shown finer is proxy_derived.")
                     )
                 if grade in {"A", "B"}:
                     failures.append(
@@ -233,6 +258,21 @@ def check_observations(observations, registry_ids: set[str]) -> list[Failure]:
             else:
                 if numeric < 0:
                     failures.append(Failure("negative_count", f"{oid}: negative employment {numeric}"))
+
+        # A published value must declare which pipeline stage backs it, and a
+        # fixture-tested stage may not back a published number.
+        if availability == "published":
+            status = row.get("pipeline_status", "")
+            if status != "implemented_verified_with_real_source":
+                failures.append(
+                    Failure("pipeline_status",
+                            f"{oid}: published with pipeline_status={status!r}. Only a stage "
+                            "verified against the real source may back a published value.")
+                )
+            if not (row.get("confidence_reasons") or "").strip():
+                failures.append(
+                    Failure("provenance", f"{oid}: published without confidence_reasons")
+                )
 
         metric_id = row.get("metric_id", "")
         if metric_id and metric_id not in METRIC_DEFINITIONS:
@@ -532,7 +572,8 @@ def check_site_payload(path: Path) -> list[Failure]:
     failures: list[Failure] = []
     payload = json.loads(path.read_text(encoding="utf-8"))
 
-    for key in ("schema", "release", "estimate_type_legend", "occupations", "metrics"):
+    for key in ("schema", "release", "derivation_class_legend", "source_authority_legend",
+                "occupations", "metrics"):
         if key not in payload:
             failures.append(Failure("site_payload", f"{rel(path)} is missing top-level key {key!r}"))
     if failures:
@@ -546,10 +587,13 @@ def check_site_payload(path: Path) -> list[Failure]:
                 continue
             if metric.get("availability") not in AVAILABILITY:
                 failures.append(Failure("site_payload", f"{code}/{metric_id}: invalid availability"))
-            if metric.get("estimate_type") not in ESTIMATE_TYPES:
-                failures.append(Failure("site_payload", f"{code}/{metric_id}: invalid estimate_type"))
+            if metric.get("derivation_class") not in DERIVATION_CLASSES:
+                failures.append(Failure("site_payload", f"{code}/{metric_id}: invalid derivation_class"))
+            if metric.get("source_authority") not in SOURCE_AUTHORITIES:
+                failures.append(Failure("site_payload", f"{code}/{metric_id}: invalid source_authority"))
             if metric.get("value") is not None:
-                for field in ("source_organization", "source_url", "reference_period", "confidence_grade"):
+                for field in ("source_organization", "source_url", "reference_period",
+                              "confidence_grade", "parser_id", "transformation_id"):
                     if not metric.get(field):
                         failures.append(
                             Failure("site_payload",

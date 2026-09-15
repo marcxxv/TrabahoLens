@@ -96,24 +96,24 @@ def test_unregistered_source_is_rejected():
 def test_broad_source_shown_finer_cannot_be_official():
     rows = [observation(source_granularity="psoc_major_group",
                         display_granularity="occupation",
-                        estimate_type="official_statistic")]
+                        derivation_class="estimated")]
     failures = validate.check_observations(rows, {"psa_lfs"})
-    assert any(f.check == "granularity_mismatch" and "proxy" in f.detail for f in failures)
+    assert any(f.check == "granularity_mismatch" and "proxy_derived" in f.detail for f in failures)
 
 
 def test_broad_source_shown_finer_cannot_hold_high_confidence():
     rows = [observation(source_granularity="psoc_major_group",
                         display_granularity="occupation",
-                        estimate_type="proxy", confidence_grade="A")]
+                        derivation_class="proxy_derived", confidence_grade="A")]
     failures = validate.check_observations(rows, {"psa_lfs"})
     assert any(f.check == "granularity_mismatch" and "confidence grade" in f.detail for f in failures)
 
 
 def test_disclosed_proxy_at_finer_granularity_passes():
-    """Allowed when labelled proxy and graded down — the disclosure is the point."""
+    """Allowed when labelled proxy_derived and graded down — disclosure is the point."""
     rows = [observation(source_granularity="psoc_major_group",
                         display_granularity="occupation",
-                        estimate_type="proxy", confidence_grade="C")]
+                        derivation_class="proxy_derived", confidence_grade="C")]
     failures = validate.check_observations(rows, {"psa_lfs"})
     assert not [f for f in failures if f.check == "granularity_mismatch"]
 
@@ -305,7 +305,8 @@ def test_site_payload_rejects_a_zero_filled_missing_value(tmp_path: Path):
     import json
 
     payload = {
-        "schema": "x", "release": {}, "estimate_type_legend": {}, "metrics": {},
+        "schema": "x", "release": {}, "derivation_class_legend": {},
+        "source_authority_legend": {}, "metrics": {},
         "occupations": [
             {
                 "psoc_code": "1",
@@ -313,7 +314,8 @@ def test_site_payload_rejects_a_zero_filled_missing_value(tmp_path: Path):
                     "employment_count": {
                         "value": 0,
                         "availability": "blocked_pending_source",
-                        "estimate_type": "official_statistic",
+                        "derivation_class": "estimated",
+                        "source_authority": "ph_official_statistical_authority",
                     }
                 },
             }
@@ -329,7 +331,8 @@ def test_site_payload_rejects_a_value_without_provenance(tmp_path: Path):
     import json
 
     payload = {
-        "schema": "x", "release": {}, "estimate_type_legend": {}, "metrics": {},
+        "schema": "x", "release": {}, "derivation_class_legend": {},
+        "source_authority_legend": {}, "metrics": {},
         "occupations": [
             {
                 "psoc_code": "1",
@@ -337,9 +340,11 @@ def test_site_payload_rejects_a_value_without_provenance(tmp_path: Path):
                     "employment_count": {
                         "value": 1200000,
                         "availability": "published",
-                        "estimate_type": "official_statistic",
+                        "derivation_class": "estimated",
+                        "source_authority": "ph_official_statistical_authority",
                         "source_organization": "", "source_url": "",
                         "reference_period": "", "confidence_grade": "",
+                        "parser_id": "", "transformation_id": "",
                     }
                 },
             }

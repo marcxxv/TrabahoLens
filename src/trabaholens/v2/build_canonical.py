@@ -22,6 +22,12 @@ from typing import Any
 
 from . import psoc
 from .acquire import load_registry
+from .acquisition_state import verify_all
+from .pipeline import Stage, StageReport, StageStatus
+from .sources import get_parser
+from .sources import onet as _onet_parsers  # noqa: F401  (registers parsers)
+from .sources import psa as _psa_parsers  # noqa: F401  (registers parsers)
+from .transform import confidence_for, transform_rows
 from .paths import (
     CLASSIFICATIONS_CSV,
     CROSSWALK_CSV,
@@ -119,17 +125,56 @@ def build_occupations(classifications: list[dict[str, Any]]) -> list[dict[str, A
 def build_metric_observations(occupations: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """One row per (unit, metric) the project intends to publish.
 
-    Each row declares what would be published, from where, at what granularity,
-    and why it currently has no value. `metric_value` stays empty: a blocked
-    metric is never given a zero, a midpoint, or a neighbour's number.
+    Publication state is derived from the **retrieval manifest**, verified
+    against the file on disk, and only after a parser and a documented
+    transformation have actually produced a value.
+
+    The pre-remediation version read a hand-edited ``status:`` field in the
+    source registry. Flipping that one word produced rows marked
+    ``availability=published`` with an empty value, empty hash and empty
+    reference period. The registry is now treated as configuration only.
     """
     registry = {entry["source_id"]: entry for entry in load_registry()["sources"]}
+    acquisitions = verify_all(registry.keys())
+    canonical_codes = {unit["psoc_code"] for unit in occupations}
+    canonical_version = psoc.PSOC_VERSION
+
     rows: list[dict[str, Any]] = []
 
     for definition in METRIC_DEFINITIONS.values():
         source = registry.get(definition.required_source_id, {})
-        retrieval = source.get("retrieval", {})
-        retrieved = retrieval.get("status") == "retrieved"
+        acquisition = acquisitions.get(
+            definition.required_source_id,
+        )
+        parser = get_parser(definition.parser_id) if definition.parser_id else None
+
+        # Run the parser only when the source verified. A missing or
+        # hash-mismatched file never reaches a parser.
+        outcomes_by_code: dict[str, Any] = {}
+        parse_note = ""
+        if acquisition is not None and acquisition.acquired and parser is not None:
+            try:
+                parsed = parser.run(acquisition.path)
+                outcomes = transform_rows(
+                    definition.metric_id,
+                    parsed.rows,
+                    acquisition,
+                    canonical_codes,
+                    canonical_version,
+                )
+                outcomes_by_code = {o.psoc_code: o for o in outcomes}
+                parse_note = (
+                    f"Parsed {parsed.row_count} source row(s) with "
+                    f"{parser.parser_id} v{parser.parser_version}."
+                )
+            except Exception as exc:  # parser and format failures are findings
+                parse_note = f"Parser {definition.parser_id} failed: {type(exc).__name__}: {exc}"
+        elif acquisition is not None and acquisition.acquired and parser is None:
+            parse_note = (
+                f"Source acquired, but no parser is implemented for metric "
+                f"{definition.metric_id!r}. Acquisition alone does not make a "
+                "metric publishable."
+            )
 
         matching_units = [
             unit
@@ -143,6 +188,30 @@ def build_metric_observations(occupations: list[dict[str, Any]]) -> list[dict[st
             continue
 
         for unit in matching_units:
+            outcome = outcomes_by_code.get(unit["psoc_code"])
+            has_value = outcome is not None and outcome.value is not None
+
+            grade, reasons = confidence_for(
+                derivation_class=definition.expected_derivation_class,
+                source_granularity=definition.expected_source_granularity,
+                display_granularity=unit["occupation_level"],
+                has_uncertainty=bool(outcome and outcome.uncertainty_lower is not None),
+            )
+            if not has_value:
+                grade = "D" if definition.expected_derivation_class != "model_derived" else "E"
+                reasons = ["No value yet: source not acquired, parsed and transformed."]
+
+            blocked_reason = (source.get("retrieval", {}) or {}).get("blocked_reason", "")
+            why = (
+                outcome.reason
+                if outcome is not None
+                else (
+                    acquisition.reason
+                    if acquisition is not None and not acquisition.acquired
+                    else parse_note or "Source not retrieved."
+                )
+            )
+
             rows.append(
                 {
                     "observation_id": f"{definition.metric_id}:{unit['psoc_code']}",
@@ -150,14 +219,16 @@ def build_metric_observations(occupations: list[dict[str, Any]]) -> list[dict[st
                     "psoc_code": unit["psoc_code"],
                     "metric_id": definition.metric_id,
                     "metric_name": definition.metric_name,
-                    # Deliberately empty. See module docstring.
-                    "metric_value": "",
+                    "metric_value": "" if not has_value else _format_value(outcome.value),
                     "unit": definition.unit,
-                    "reference_period": "",
+                    "reference_period": (outcome.reference_period if outcome else "") or "",
                     "geography": "Philippines",
                     "population_scope": definition.denominator,
-                    "estimate_type": definition.expected_estimate_type,
-                    "availability": "published" if retrieved else "blocked_pending_source",
+                    "derivation_class": definition.expected_derivation_class,
+                    "source_authority": definition.expected_source_authority,
+                    "availability": (
+                        outcome.availability if outcome is not None else "blocked_pending_source"
+                    ),
                     "source_granularity": definition.expected_source_granularity,
                     "display_granularity": unit["occupation_level"],
                     "source_id": definition.required_source_id,
@@ -165,22 +236,91 @@ def build_metric_observations(occupations: list[dict[str, Any]]) -> list[dict[st
                     "source_dataset": source.get("dataset", ""),
                     "source_table": "",
                     "source_url": source.get("authoritative_url", ""),
-                    "source_file_hash": "",
-                    "retrieved_at": "",
-                    "transformation_id": "",
+                    "source_file_hash": acquisition.sha256 if (acquisition and acquisition.acquired) else "",
+                    "retrieved_at": acquisition.retrieved_at if (acquisition and acquisition.acquired) else "",
+                    "parser_id": definition.parser_id,
+                    "parser_version": parser.parser_version if parser else "",
+                    "normalised_row_id": (outcome.normalised_row_id if outcome else ""),
+                    "transformation_id": (outcome.transformation_id if outcome else ""),
                     "crosswalk_id": "",
-                    # D: source specified but not yet retrieved and verified.
-                    "confidence_grade": "D",
+                    "confidence_grade": grade,
+                    "confidence_reasons": " | ".join(reasons),
+                    "pipeline_status": (
+                        StageStatus.VERIFIED_REAL_SOURCE.value
+                        if has_value
+                        else StageStatus.BLOCKED_BY_SOURCE_ACCESS.value
+                    ),
                     "uncertainty_lower": "",
                     "uncertainty_upper": "",
-                    "suppression_status": "no_value_yet",
+                    "suppression_status": (
+                        outcome.suppression_status if outcome is not None else "no_value_yet"
+                    ),
                     "notes": (
-                        f"{retrieval.get('blocked_reason', 'Source not retrieved.').strip()} "
-                        f"Common misreading to avoid: {definition.common_misreading}"
+                        f"{why} {blocked_reason}".strip()
+                        + f" Common misreading to avoid: {definition.common_misreading}"
                     ),
                 }
             )
     return rows
+
+
+def _format_value(value: float) -> str:
+    """Stable textual form, so a rebuild is byte-identical."""
+    if value == int(value):
+        return str(int(value))
+    return f"{value:.10g}"
+
+
+def pipeline_stage_reports() -> list[StageReport]:
+    """Honest per-stage status, derived from what actually exists."""
+    registry = load_registry()["sources"]
+    acquisitions = verify_all([entry["source_id"] for entry in registry])
+    any_acquired = any(record.acquired for record in acquisitions.values())
+
+    acquired_status = (
+        StageStatus.VERIFIED_REAL_SOURCE if any_acquired else StageStatus.BLOCKED_BY_SOURCE_ACCESS
+    )
+    downstream = (
+        StageStatus.VERIFIED_REAL_SOURCE if any_acquired else StageStatus.FIXTURE_TESTED_ONLY
+    )
+
+    return [
+        StageReport(Stage.SOURCE_REGISTRY, StageStatus.VERIFIED_REAL_SOURCE,
+                    "Ten sources registered with universe, exclusions, licensing and attribution.",
+                    evidence="data/sources/source-registry.yaml"),
+        StageReport(Stage.RETRIEVAL, acquired_status,
+                    "Retrieval attempts are recorded with timestamps and outcomes.",
+                    evidence="data/sources/retrieval-manifest.json",
+                    blockers=() if any_acquired else ("All registered hosts returned HTTP 403 at the egress proxy.",)),
+        StageReport(Stage.RAW_SNAPSHOT, acquired_status,
+                    "Raw snapshots are written under data/raw/ (gitignored) when retrieval succeeds."),
+        StageReport(Stage.HASH_VERIFICATION, downstream,
+                    "SHA-256 recorded at retrieval and re-checked against the file before parsing.",
+                    evidence="src/trabaholens/v2/acquisition_state.py"),
+        StageReport(Stage.FORMAT_VALIDATION, downstream,
+                    "Each parser validates the snapshot's shape before reading rows.",
+                    evidence="src/trabaholens/v2/sources/"),
+        StageReport(Stage.PARSING, downstream,
+                    "Parsers implemented for LFS, OWS, SOF and four O*NET files.",
+                    evidence="src/trabaholens/v2/sources/",
+                    blockers=() if any_acquired else ("No parser has processed its real source.",)),
+        StageReport(Stage.NORMALISED_SOURCE_TABLE, downstream,
+                    "Parsers emit normalised rows carrying the source's own codes and version."),
+        StageReport(Stage.CLASSIFICATION_RECONCILIATION, StageStatus.PARTIALLY_IMPLEMENTED,
+                    "Version compatibility is enforced and unmatched codes are reported, but the "
+                    "PSOC minor and unit group lists are absent, so only aggregate codes reconcile.",
+                    blockers=("PSOC 2012 (2022 Updates) volume not retrievable.",)),
+        StageReport(Stage.TRANSFORMATION, downstream,
+                    "Documented transformations for employment, wages, OFW distribution and Job Zone.",
+                    evidence="src/trabaholens/v2/transform.py"),
+        StageReport(Stage.CANONICAL_OBSERVATION, downstream,
+                    "Observations carry derivation class, source authority, hash, parser and transformation."),
+        StageReport(Stage.RELEASE_VALIDATION, StageStatus.VERIFIED_REAL_SOURCE,
+                    "Validators run on every build and are each tested against a violating fixture.",
+                    evidence="src/trabaholens/v2/validate.py"),
+        StageReport(Stage.SITE_PAYLOAD, StageStatus.VERIFIED_REAL_SOURCE,
+                    "Payload is provenance-first; the interface cannot render a value without it."),
+    ]
 
 
 # ---------------------------------------------------------------------------

@@ -147,7 +147,19 @@
       .badge.calculated_statistic { color: var(--ev-calculated); }
       .badge.estimate { color: var(--ev-estimate); }
       .badge.proxy { color: var(--ev-proxy); }
-      .badge.experimental_model_score { color: var(--ev-model); }
+      .badge.model_derived { color: var(--ev-model); }
+      .badge.directly_observed { color: var(--ev-official); }
+      .badge.calculated { color: var(--ev-calculated); }
+      .badge.estimated { color: var(--ev-estimate); }
+      .badge.proxy_derived { color: var(--ev-proxy); }
+      /* Source authority is a different axis, so it gets a different shape
+         rather than a different hue on the same ramp. */
+      .badge.authority {
+        color: var(--fg2);
+        border-style: dashed;
+        border-radius: 4px;
+      }
+      .badge.authority::before { border-radius: 1px; }
       .badge.none { color: var(--ev-none); }
 
       /* ── Metric ledger ───────────────────────────────────────────────── */
@@ -303,13 +315,13 @@
             interface are complete; the data behind them is not, because none
             of the required sources could be retrieved in the build
             environment. The reasons are recorded per source below and in
-            <a href="https://github.com/marcxxv/TrabahoLens/blob/main/docs/limitations.md">docs/limitations.md</a>.
+            <a href="../docs/limitations.md">docs/limitations.md</a>.
           </p>
           <p>
             The previous version of this tool displayed employment, wage,
             informality, overseas-worker and hiring figures that were not
             measurements. They have been withdrawn rather than relabelled. See
-            <a href="https://github.com/marcxxv/TrabahoLens/blob/main/docs/audit/baseline-audit.md">the baseline audit</a>
+            <a href="../docs/audit/baseline-audit.md">the baseline audit</a>
             for what each one actually was.
           </p>
         </div>
@@ -333,12 +345,24 @@
       </header>
 
       <section>
-        <h2>What the evidence labels mean</h2>
+        <h2>How a figure was produced</h2>
         <p class="section-note">
-          Every metric in this tool is one of these five. Hover or focus a badge
-          for the plain-language explanation.
+          The <b>derivation class</b> says how a number came to exist. Hover or
+          focus a badge for the plain-language explanation. Note that a sample
+          survey is an <i>estimate</i> even when an official agency publishes
+          it — most official labour statistics are.
         </p>
         <div class="legend" id="legend"></div>
+      </section>
+
+      <section>
+        <h2>Who produced it</h2>
+        <p class="section-note">
+          The <b>source authority</b> says who stands behind a number. It is a
+          separate question from how the number was produced, and the two are
+          shown separately so neither is mistaken for the other.
+        </p>
+        <div class="legend" id="authorityLegend"></div>
       </section>
 
       <section>
@@ -388,7 +412,7 @@
           occupation. PSA statistics are official Philippine statistics and are
           not covered by this repository's MIT licence, which applies to the
           code only. Licensing is documented per source in
-          <a href="https://github.com/marcxxv/TrabahoLens/blob/main/docs/data-licenses.md">docs/data-licenses.md</a>.
+          <a href="../docs/data-licenses.md">docs/data-licenses.md</a>.
         </p>
         <p>
           Visualisation approach inspired by
@@ -432,10 +456,10 @@
         tooltip.classList.remove("visible");
       }
 
-      function badge(estimateType, legend) {
-        const entry = legend[estimateType];
+      function badge(key, legend, extraClass) {
+        const entry = legend[key];
         const el = document.createElement("span");
-        el.className = "badge " + (estimateType || "none");
+        el.className = "badge " + (extraClass || key || "none");
         el.textContent = entry ? entry.label : "Unlabelled";
         el.tabIndex = 0;
         const explanation = entry ? entry.explanation : "No evidence class recorded.";
@@ -488,12 +512,22 @@
       }
 
       function renderLegend(data) {
+        // Two independent axes. Keeping them visually separate is the point:
+        // "PSA published it" and "it was directly observed" are different
+        // claims, and the previous build merged them into one label.
         const host = document.getElementById("legend");
-        for (const [key, entry] of Object.entries(data.estimate_type_legend)) {
+        for (const [key, entry] of Object.entries(data.derivation_class_legend)) {
           const item = el("div", "legend-item");
-          item.appendChild(badge(key, data.estimate_type_legend));
+          item.appendChild(badge(key, data.derivation_class_legend));
           item.appendChild(el("p", null, entry.explanation));
           host.appendChild(item);
+        }
+        const authHost = document.getElementById("authorityLegend");
+        for (const [key, entry] of Object.entries(data.source_authority_legend)) {
+          const item = el("div", "legend-item");
+          item.appendChild(badge(key, data.source_authority_legend, "authority"));
+          item.appendChild(el("p", null, entry.explanation));
+          authHost.appendChild(item);
         }
       }
 
@@ -515,7 +549,10 @@
           const head = el("div", "metric-head");
           head.appendChild(el("span", "metric-name", def.name));
           head.appendChild(el("span", "metric-unit", def.unit));
-          head.appendChild(badge(def.expected_estimate_type, data.estimate_type_legend));
+          head.appendChild(badge(def.expected_derivation_class, data.derivation_class_legend));
+          head.appendChild(
+            badge(def.expected_source_authority, data.source_authority_legend, "authority")
+          );
 
           const availability = observed ? observed.availability : "not_applicable";
           const status = el("span", "metric-status");
@@ -535,6 +572,9 @@
           const meta = document.createElement("dl");
           meta.className = "metric-meta";
           const pairs = [
+            ["Derivation", (data.derivation_class_legend[def.expected_derivation_class] || {}).label || "—"],
+            ["Source authority", (data.source_authority_legend[def.expected_source_authority] || {}).label || "—"],
+            ["Parser", def.parser_id || "not implemented"],
             ["Required source", def.required_source],
             ["Source publishes at", def.expected_source_granularity.replace(/_/g, " ")],
             ["Denominator", def.denominator],
