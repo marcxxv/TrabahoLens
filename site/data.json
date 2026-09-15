@@ -2,20 +2,20 @@
   "schema": "trabaholens-site-payload/2",
   "release": {
     "release_id": "v2.0.0-pre",
-    "release_date": "2026-09-15T00:00:00Z",
-    "generated_at": "2026-09-15T00:00:00Z",
-    "code_commit": "2bda40dd2a54752bd6dbf42e3a7a9462f29590e5",
+    "release_date": "2026-01-01T00:00:00Z",
+    "generated_at": "2026-01-01T00:00:00Z",
+    "code_commit": "23d77e04f51b8855113f9357a7cc93919eb0d892",
     "code_commit_note": "The commit the build ran at. It necessarily precedes the commit that records it, because committing this manifest moves HEAD. Treat it as 'generated from this input state', not as a self-describing id. `make check-stale` excludes it for the same reason.",
     "schema_version": "2.0.0",
     "methodology_version": "2.0.0",
     "exposure_rubric_version": "0.1.0",
     "prompt_version": "0.1.0",
     "crosswalk_version": "0.1.0",
-    "psoc_version": "PSOC 2012",
+    "psoc_version": "PSOC 2012 (2022 Updates)",
     "source_versions": {
       "psa_psoc": {
         "organization": "Philippine Statistics Authority",
-        "dataset": "Philippine Standard Occupational Classification (PSOC) 2012",
+        "dataset": "2022 Updates to the 2012 Philippine Standard Occupational Classification (PSOC)",
         "declared_status": "not_retrieved",
         "last_attempt": "2026-09-14T17:16:46Z",
         "last_attempt_result": "failed",
@@ -107,10 +107,10 @@
       "llm_scoring": null
     },
     "canonical_table_checksums": {
-      "data/canonical/classifications.csv": "22db37571875b47be57cc195b8d856dc797e059dd67636ad26a0a78d8ccf8272",
-      "data/canonical/occupations.csv": "fa1cf1a06805bd99d4136caa870d0ed330d8a4e5b75cc860846c5f3168c689b2",
+      "data/canonical/classifications.csv": "94288a0f863a6a08d5acc4335ebed49ab9e091eaf23d2a5dc18fc4f83bfd578b",
+      "data/canonical/occupations.csv": "d7aeeabf29102cba4345224f056c8af3fa69c6dbd15d8af917c4eb8e4820c641",
       "data/canonical/metric_observations.csv": "dcba43fc98caf7e42ce5c74867e6a702cc805e158e5253833a7612b7643d3fd0",
-      "data/canonical/crosswalk_psoc_isco_soc.csv": "6011b7cd5246e968b12b8342730c4dd37a0f96ed661c845b3ab78060024cf471",
+      "data/canonical/crosswalk_psoc_isco_soc.csv": "13695184b27fae9f7ae0e64e7ebce30ce14d87ff4380f5281756b851dcfebb03",
       "data/canonical/transformations.csv": "855f1570cd8683f38d764ac90a5380a3a0d2ccc7cb88fd739b1dc8049cc84434",
       "data/canonical/model_scores.csv": "3e33b59dd7077d383528b02140f910e71811cc5e60eb4928818d281bb2a4d277"
     },
@@ -399,7 +399,7 @@
     {
       "occupation_id": "PSOC-0",
       "psoc_code": "0",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Armed Forces Occupations",
       "level": "psoc_major_group",
       "parent_psoc_code": "",
@@ -516,7 +516,7 @@
     {
       "occupation_id": "PSOC-01",
       "psoc_code": "01",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Commissioned Armed Forces Officers",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "0",
@@ -530,7 +530,7 @@
     {
       "occupation_id": "PSOC-02",
       "psoc_code": "02",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Non-commissioned Armed Forces Officers",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "0",
@@ -544,7 +544,7 @@
     {
       "occupation_id": "PSOC-03",
       "psoc_code": "03",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Armed Forces Occupations, Other Ranks",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "0",
@@ -558,7 +558,7 @@
     {
       "occupation_id": "PSOC-1",
       "psoc_code": "1",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Managers",
       "level": "psoc_major_group",
       "parent_psoc_code": "",
@@ -675,7 +675,7 @@
     {
       "occupation_id": "PSOC-11",
       "psoc_code": "11",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Chief Executives, Senior Officials and Legislators",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "1",
@@ -689,7 +689,7 @@
     {
       "occupation_id": "PSOC-12",
       "psoc_code": "12",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Administrative and Commercial Managers",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "1",
@@ -703,7 +703,7 @@
     {
       "occupation_id": "PSOC-13",
       "psoc_code": "13",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Production and Specialised Services Managers",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "1",
@@ -717,7 +717,7 @@
     {
       "occupation_id": "PSOC-14",
       "psoc_code": "14",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Hospitality, Retail and Other Services Managers",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "1",
@@ -731,7 +731,7 @@
     {
       "occupation_id": "PSOC-2",
       "psoc_code": "2",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Professionals",
       "level": "psoc_major_group",
       "parent_psoc_code": "",
@@ -848,7 +848,7 @@
     {
       "occupation_id": "PSOC-21",
       "psoc_code": "21",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Science and Engineering Professionals",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "2",
@@ -862,7 +862,7 @@
     {
       "occupation_id": "PSOC-22",
       "psoc_code": "22",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Health Professionals",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "2",
@@ -876,7 +876,7 @@
     {
       "occupation_id": "PSOC-23",
       "psoc_code": "23",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Teaching Professionals",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "2",
@@ -890,7 +890,7 @@
     {
       "occupation_id": "PSOC-24",
       "psoc_code": "24",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Business and Administration Professionals",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "2",
@@ -904,7 +904,7 @@
     {
       "occupation_id": "PSOC-25",
       "psoc_code": "25",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Information and Communications Technology Professionals",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "2",
@@ -918,7 +918,7 @@
     {
       "occupation_id": "PSOC-26",
       "psoc_code": "26",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Legal, Social and Cultural Professionals",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "2",
@@ -932,7 +932,7 @@
     {
       "occupation_id": "PSOC-3",
       "psoc_code": "3",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Technicians and Associate Professionals",
       "level": "psoc_major_group",
       "parent_psoc_code": "",
@@ -1049,7 +1049,7 @@
     {
       "occupation_id": "PSOC-31",
       "psoc_code": "31",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Science and Engineering Associate Professionals",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "3",
@@ -1063,7 +1063,7 @@
     {
       "occupation_id": "PSOC-32",
       "psoc_code": "32",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Health Associate Professionals",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "3",
@@ -1077,7 +1077,7 @@
     {
       "occupation_id": "PSOC-33",
       "psoc_code": "33",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Business and Administration Associate Professionals",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "3",
@@ -1091,7 +1091,7 @@
     {
       "occupation_id": "PSOC-34",
       "psoc_code": "34",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Legal, Social, Cultural and Related Associate Professionals",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "3",
@@ -1105,7 +1105,7 @@
     {
       "occupation_id": "PSOC-35",
       "psoc_code": "35",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Information and Communications Technicians",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "3",
@@ -1119,7 +1119,7 @@
     {
       "occupation_id": "PSOC-4",
       "psoc_code": "4",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Clerical Support Workers",
       "level": "psoc_major_group",
       "parent_psoc_code": "",
@@ -1236,7 +1236,7 @@
     {
       "occupation_id": "PSOC-41",
       "psoc_code": "41",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "General and Keyboard Clerks",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "4",
@@ -1250,7 +1250,7 @@
     {
       "occupation_id": "PSOC-42",
       "psoc_code": "42",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Customer Services Clerks",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "4",
@@ -1264,7 +1264,7 @@
     {
       "occupation_id": "PSOC-43",
       "psoc_code": "43",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Numerical and Material Recording Clerks",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "4",
@@ -1278,7 +1278,7 @@
     {
       "occupation_id": "PSOC-44",
       "psoc_code": "44",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Other Clerical Support Workers",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "4",
@@ -1292,7 +1292,7 @@
     {
       "occupation_id": "PSOC-5",
       "psoc_code": "5",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Service and Sales Workers",
       "level": "psoc_major_group",
       "parent_psoc_code": "",
@@ -1409,7 +1409,7 @@
     {
       "occupation_id": "PSOC-51",
       "psoc_code": "51",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Personal Service Workers",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "5",
@@ -1423,7 +1423,7 @@
     {
       "occupation_id": "PSOC-52",
       "psoc_code": "52",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Sales Workers",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "5",
@@ -1437,7 +1437,7 @@
     {
       "occupation_id": "PSOC-53",
       "psoc_code": "53",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Personal Care Workers",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "5",
@@ -1451,7 +1451,7 @@
     {
       "occupation_id": "PSOC-54",
       "psoc_code": "54",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Protective Services Workers",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "5",
@@ -1465,7 +1465,7 @@
     {
       "occupation_id": "PSOC-6",
       "psoc_code": "6",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Skilled Agricultural, Forestry and Fishery Workers",
       "level": "psoc_major_group",
       "parent_psoc_code": "",
@@ -1582,7 +1582,7 @@
     {
       "occupation_id": "PSOC-61",
       "psoc_code": "61",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Market-oriented Skilled Agricultural Workers",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "6",
@@ -1596,7 +1596,7 @@
     {
       "occupation_id": "PSOC-62",
       "psoc_code": "62",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Market-oriented Skilled Forestry, Fishery and Hunting Workers",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "6",
@@ -1610,7 +1610,7 @@
     {
       "occupation_id": "PSOC-63",
       "psoc_code": "63",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Subsistence Farmers, Fishers, Hunters and Gatherers",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "6",
@@ -1624,7 +1624,7 @@
     {
       "occupation_id": "PSOC-7",
       "psoc_code": "7",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Craft and Related Trades Workers",
       "level": "psoc_major_group",
       "parent_psoc_code": "",
@@ -1741,7 +1741,7 @@
     {
       "occupation_id": "PSOC-71",
       "psoc_code": "71",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Building and Related Trades Workers, Excluding Electricians",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "7",
@@ -1755,7 +1755,7 @@
     {
       "occupation_id": "PSOC-72",
       "psoc_code": "72",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Metal, Machinery and Related Trades Workers",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "7",
@@ -1769,7 +1769,7 @@
     {
       "occupation_id": "PSOC-73",
       "psoc_code": "73",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Handicraft and Printing Workers",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "7",
@@ -1783,7 +1783,7 @@
     {
       "occupation_id": "PSOC-74",
       "psoc_code": "74",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Electrical and Electronic Trades Workers",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "7",
@@ -1797,7 +1797,7 @@
     {
       "occupation_id": "PSOC-75",
       "psoc_code": "75",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Food Processing, Woodworking, Garment and Other Craft and Related Trades Workers",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "7",
@@ -1811,7 +1811,7 @@
     {
       "occupation_id": "PSOC-8",
       "psoc_code": "8",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Plant and Machine Operators and Assemblers",
       "level": "psoc_major_group",
       "parent_psoc_code": "",
@@ -1928,7 +1928,7 @@
     {
       "occupation_id": "PSOC-81",
       "psoc_code": "81",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Stationary Plant and Machine Operators",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "8",
@@ -1942,7 +1942,7 @@
     {
       "occupation_id": "PSOC-82",
       "psoc_code": "82",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Assemblers",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "8",
@@ -1956,7 +1956,7 @@
     {
       "occupation_id": "PSOC-83",
       "psoc_code": "83",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Drivers and Mobile Plant Operators",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "8",
@@ -1970,7 +1970,7 @@
     {
       "occupation_id": "PSOC-9",
       "psoc_code": "9",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Elementary Occupations",
       "level": "psoc_major_group",
       "parent_psoc_code": "",
@@ -2087,7 +2087,7 @@
     {
       "occupation_id": "PSOC-91",
       "psoc_code": "91",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Cleaners and Helpers",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "9",
@@ -2101,7 +2101,7 @@
     {
       "occupation_id": "PSOC-92",
       "psoc_code": "92",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Agricultural, Forestry and Fishery Labourers",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "9",
@@ -2115,7 +2115,7 @@
     {
       "occupation_id": "PSOC-93",
       "psoc_code": "93",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Labourers in Mining, Construction, Manufacturing and Transport",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "9",
@@ -2129,7 +2129,7 @@
     {
       "occupation_id": "PSOC-94",
       "psoc_code": "94",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Food Preparation Assistants",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "9",
@@ -2143,7 +2143,7 @@
     {
       "occupation_id": "PSOC-95",
       "psoc_code": "95",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Street and Related Sales and Service Workers",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "9",
@@ -2157,7 +2157,7 @@
     {
       "occupation_id": "PSOC-96",
       "psoc_code": "96",
-      "psoc_version": "PSOC 2012",
+      "psoc_version": "PSOC 2012 (2022 Updates)",
       "title": "Refuse Workers and Other Elementary Workers",
       "level": "psoc_sub_major_group",
       "parent_psoc_code": "9",

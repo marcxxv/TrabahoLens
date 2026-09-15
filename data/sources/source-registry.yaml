@@ -24,21 +24,43 @@ sources:
   - source_id: psa_psoc
     tier: 1
     organization: Philippine Statistics Authority
-    dataset: Philippine Standard Occupational Classification (PSOC) 2012
+    dataset: 2022 Updates to the 2012 Philippine Standard Occupational Classification (PSOC)
     purpose: Canonical occupational classification and code list.
     authoritative_url: https://psa.gov.ph/classification/psoc
-    api_or_download: Published volume (PDF/XLS) on the PSA classification page.
+    api_or_download: Published volume on the PSA classification page. A VOLUME, not a machine-readable table.
     download_url: https://psa.gov.ph/classification/psoc
-    classification_version: PSOC 2012
+    unit_group_browser: https://psa.gov.ph/classification/psoc/unit
+    table_identification: >-
+      unconfirmed - the classification page is a landing page. The authoritative
+      artifact is the published volume; whether PSA offers a machine-readable
+      export or a classification API for it must be established on retrieval.
+    classification_version: PSOC 2012 (2022 Updates)
+    published_structure:
+      major_groups: 10
+      sub_major_groups: 43
+      minor_groups: 130
+      unit_groups: 456
+      note: >-
+        Structure as described by the PSA publication. Recorded so an import can
+        be checked for completeness. NOT used to generate rows: transcribing
+        several hundred codes from secondary material would manufacture exactly
+        the false precision this project exists to remove.
     survey_universe: n/a - a classification, not a survey.
     exclusions: n/a
     reference_period: n/a
     redistribution: Not redistributed. Acquisition instruction only.
     license: >-
-      Philippine government work. PSA classification volumes are published for
-      public use; the PSA does not attach an open-data licence identifier to
-      them. Reuse should carry PSA attribution. Confirm terms with PSA before
-      redistributing the volume itself.
+      The PSA website states that its data and content are made available under
+      the Creative Commons Attribution 4.0 International licence unless otherwise
+      stated. Individual datasets may carry their own terms that override that
+      default, so the dataset page must be checked as well as the site notice.
+    license_source_page: https://psa.gov.ph/
+    license_retrieved_at: >-
+      NOT RETRIEVED. psa.gov.ph is unreachable from this environment, so the
+      licence statement above is recorded from documentation and must be
+      confirmed against the live page, with the retrieval date noted, before
+      redistribution.
+    dataset_specific_exception: none identified; re-check on retrieval
     attribution: "Philippine Statistics Authority, Philippine Standard Occupational Classification (PSOC) 2012."
     retrieval:
       status: not_retrieved
@@ -65,6 +87,10 @@ sources:
     authoritative_url: https://openstat.psa.gov.ph/PXWeb/pxweb/en/DB/DB__1B__LFS/
     api_or_download: PSA OpenSTAT PXWeb API (json-stat2), table id to be confirmed on retrieval.
     download_url: https://openstat.psa.gov.ph/PXWeb/api/v1/en/DB/DB__1B__LFS/
+    table_identification: >-
+      UNCONFIRMED. This URL is a PXWeb API DIRECTORY that lists tables; it is not
+      a table endpoint. The specific table id must be established before the
+      employment metric is implementable.
     classification_version: To be read from the table metadata on retrieval. Do not assume.
     survey_universe: >-
       Household-based sample survey of the population 15 years and over, all
@@ -110,6 +136,17 @@ sources:
     authoritative_url: https://psa.gov.ph/statistics/occupational-wages-survey
     api_or_download: Published statistical tables; some series mirrored in OpenSTAT.
     download_url: https://openstat.psa.gov.ph/PXWeb/api/v1/en/DB/DB__1B__OWS/
+    table_identification: >-
+      UNCONFIRMED. A PXWeb API directory, not a table. The OWS occupation table
+      must be identified specifically - v1 targeted an OWS INDUSTRY table, which
+      cannot yield an occupational wage.
+    must_verify_before_publication:
+      - occupation table versus industry table
+      - basic pay versus total earnings
+      - mean versus median
+      - establishment-size threshold
+      - covered industries
+      - excluded workers (agriculture, informal, own-account, unpaid family)
     classification_version: To be read from the release. Do not assume.
     survey_universe: >-
       Establishment-based. Covers non-agricultural establishments at or above an
@@ -150,6 +187,9 @@ sources:
     authoritative_url: https://psa.gov.ph/statistics/survey/overseas-filipinos
     api_or_download: Published statistical tables.
     download_url: https://psa.gov.ph/statistics/survey/overseas-filipinos
+    table_identification: >-
+      UNCONFIRMED. This is a LANDING PAGE, not a downloadable table. The specific
+      statistical table must be identified before the metric is implementable.
     classification_version: To be read from the release.
     survey_universe: >-
       Rider to the LFS October round. Covers overseas Filipinos who left within
@@ -193,9 +233,19 @@ sources:
       status: blocked
       blocked_reason: psa.gov.ph unreachable from the build environment (HTTP 403).
       manual_instruction: Confirm first that an occupation-level informality table exists at all.
-    granularity_available: UNVERIFIED, and possibly none by occupation.
+    table_identification: >-
+      NO SOURCE IDENTIFIED. No occupation-level Philippine informality table has
+      been found. The previous entry left an open-ended implication that one
+      would soon be available.
+    planned_for_core_release: false
+    removal_reason: >-
+      Removed from the planned core release rather than left indefinitely
+      pending. "Informal sector" (an enterprise characteristic) and "informal
+      employment" (a job characteristic) are different counts, and a release must
+      state which it used. Re-add only when a specific PSA table is identified.
+    granularity_available: NONE IDENTIFIED by occupation.
     used_for:
-      - metric informal_employment_share
+      - metric informal_employment_share (blocked_by_unresolved_methodology)
     notes: >-
       "Informal sector" and "informal employment" are distinct concepts with
       different counts. Whichever the release uses must be carried into the
@@ -211,12 +261,32 @@ sources:
       frequency ratings, and Job Zones. Used as task evidence and as a
       US-derived proxy, never as a Philippine observation.
     authoritative_url: https://www.onetcenter.org/database.html
-    api_or_download: https://www.onetcenter.org/dl_files/database/db_30_2_text.zip
-    download_url: https://www.onetcenter.org/dl_files/database/db_30_2_text.zip
+    api_or_download: https://www.onetcenter.org/dl_files/database/db_31_0_text.zip
+    download_url: https://www.onetcenter.org/dl_files/database/db_31_0_text.zip
+    table_identification: confirmed - the text database archive is a single named file
     classification_version: O*NET-SOC 2019
     survey_universe: US occupations; incumbent and analyst ratings.
     exclusions: Not a Philippine source. No Philippine establishments or workers are sampled.
-    reference_period: Release 30.2
+    reference_period: Release 31.0
+    release_pinning:
+      pinned_release: "31.0"
+      previously_pinned: "30.2"
+      why_pinned_rather_than_latest: >-
+        A specific release is pinned so a score can be traced to the exact task
+        text that produced it. "Latest" would silently change task statements and
+        importance ratings under existing scores, and the release id is recorded
+        on every derived row.
+      why_this_release: >-
+        31.0 is the current release. The prior branch pinned 30.2 with no stated
+        reason, which is not a reproducibility argument — it was staleness. There
+        is no compatibility reason to stay on 30.2, so the pin moves forward.
+      update_policy: >-
+        On a new O*NET release: retrieve and hash it, import it alongside the
+        current one, diff task statements and importance for the mapped
+        occupations, and re-score. Scores from different releases are not
+        comparable and the harness refuses to mix task-source versions in one
+        run. The pinned release is never changed without a re-score.
+      verified_snapshot: none - www.onetcenter.org is unreachable from this environment
     redistribution: >-
       Redistribution is permitted under CC BY 4.0 with attribution, but this
       repository does not vendor the archive; it is downloaded by script and

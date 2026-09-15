@@ -29,10 +29,14 @@ Aggregate levels only, no invented detail: that is the point.
 
 from __future__ import annotations
 
-PSOC_VERSION = "PSOC 2012"
+# The current PSA publication is the 2022 Updates to the 2012 PSOC. The rows in
+# this module are still the ISCO-08-aligned skeleton, so they are marked
+# unverified; the version string names what they are meant to become, and
+# transform.COMPATIBLE_PSOC_VERSIONS decides what may reconcile onto it.
+PSOC_VERSION = "PSOC 2012 (2022 Updates)"
 PSOC_SOURCE_URL = "https://psa.gov.ph/classification/psoc"
 PSOC_SOURCE_ORGANIZATION = "Philippine Statistics Authority"
-PSOC_SOURCE_DATASET = "Philippine Standard Occupational Classification (PSOC) 2012"
+PSOC_SOURCE_DATASET = "2022 Updates to the 2012 Philippine Standard Occupational Classification (PSOC)"
 
 # major code -> title
 MAJOR_GROUPS: dict[str, str] = {
