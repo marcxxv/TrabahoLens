@@ -354,3 +354,49 @@ def test_site_payload_rejects_a_value_without_provenance(tmp_path: Path):
     path.write_text(json.dumps(payload), encoding="utf-8")
     failures = validate.check_site_payload(path)
     assert any("published value without" in f.detail for f in failures)
+
+
+# ---------------------------------------------------------------------------
+# Finding 12: the conceptual constraint, across every published surface
+# ---------------------------------------------------------------------------
+
+def test_no_published_surface_asserts_the_forbidden_framing():
+    """Code, generated JSON, HTML and metadata — everything a reader receives."""
+    from pathlib import Path
+
+    from trabaholens.v2.paths import REPO_ROOT
+
+    surfaces = [
+        REPO_ROOT / "site" / "index.html",
+        REPO_ROOT / "site" / "data.json",
+        REPO_ROOT / "data" / "canonical" / "metric_observations.csv",
+        REPO_ROOT / "data" / "canonical" / "model_scores.csv",
+        REPO_ROOT / "data" / "release" / "manifest.json",
+    ]
+    failures = validate.check_language([p for p in surfaces if p.exists()])
+    assert not failures, [str(f) for f in failures]
+
+
+def test_social_and_seo_metadata_carry_no_forbidden_framing():
+    import re
+
+    from trabaholens.v2.paths import SITE_INDEX_HTML
+    from trabaholens.v2.schema import BANNED_EXPOSURE_TERMS
+
+    html = SITE_INDEX_HTML.read_text(encoding="utf-8")
+    meta = " ".join(re.findall(r'<meta[^>]*content="([^"]*)"', html)).lower()
+    title = " ".join(re.findall(r"<title>(.*?)</title>", html, re.S)).lower()
+    for term in BANNED_EXPOSURE_TERMS:
+        assert term not in meta, f"social/SEO metadata contains {term!r}"
+        assert term not in title, f"page title contains {term!r}"
+
+
+def test_the_exposure_disclaimer_is_present_in_the_payload():
+    import json
+
+    from trabaholens.v2.paths import SITE_DATA_JSON
+
+    payload = json.loads(SITE_DATA_JSON.read_text(encoding="utf-8"))
+    disclaimer = payload["disclaimers"]["exposure"]
+    assert "not an estimate of automation" in disclaimer
+    assert "displacement" in disclaimer

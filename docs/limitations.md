@@ -229,11 +229,23 @@ section below with that in mind.
 
 Stated so a reviewer does not have to find them.
 
-1. **The language validator is heuristic.** It bans hazard vocabulary and
-   allows negated uses via a sentence-scoped negation window. That is a
-   heuristic: a sufficiently convoluted sentence could evade it, and an unusual
-   phrasing could trip it. Both directions are tested, but the check is a
-   backstop for review, not a substitute.
+1. **The language validator is heuristic, and is a backstop, not the safeguard.**
+   It bans hazard vocabulary and permits negated uses via a sentence-scoped
+   negation window. Both directions are tested, but it has known blind spots in
+   both directions:
+
+   * It **over-flags** prohibitive prose. `docs/methodology.md` says "exposure is
+     **not** automation probability, replacement probability, displacement,
+     layoffs, …" — a list that runs past the negation window, so items late in it
+     read as assertions. Running the checker over the documentation produces 13
+     such false positives.
+   * It could in principle **under-flag** a convoluted assertion.
+
+   The gate therefore runs over **published surfaces** — the interface, the site
+   payload, the canonical tables and the release manifest — where it reports
+   zero failures and a test holds it there. Documentation prose is not gated,
+   and relies on human review. This is the intended division: human review is
+   the primary safeguard, heuristic scanning the secondary backstop.
 
 2. **The double-counting check compares code prefixes.** It catches a parent
    published with its own descendants within PSOC. It would not catch
