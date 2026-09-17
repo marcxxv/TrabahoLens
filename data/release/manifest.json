@@ -2,12 +2,12 @@
   "release_id": "v2.0.0-pre",
   "release_date": "2026-09-14T00:00:00Z",
   "generated_at": "2026-09-14T00:00:00Z",
-  "code_commit": "fa75b8c339ac01755f01b46d6962bef6b55a85dc",
+  "code_commit": "79cc3625586173b9c8d18344e06f6df21c785c51",
   "code_commit_note": "The commit the build ran at. It necessarily precedes the commit that records it, because committing this manifest moves HEAD. Treat it as 'generated from this input state', not as a self-describing id. `make check-stale` excludes it for the same reason.",
   "schema_version": "2.0.0",
   "methodology_version": "2.0.0",
-  "exposure_rubric_version": "0.1.0",
-  "prompt_version": "0.1.0",
+  "exposure_rubric_version": "0.2.0",
+  "prompt_version": "0.2.0",
   "crosswalk_version": "0.1.0",
   "psoc_version": "PSOC 2012 (2022 Updates)",
   "source_versions": {
@@ -105,12 +105,12 @@
     "llm_scoring": null
   },
   "canonical_table_checksums": {
-    "data/canonical/classifications.csv": "94288a0f863a6a08d5acc4335ebed49ab9e091eaf23d2a5dc18fc4f83bfd578b",
-    "data/canonical/occupations.csv": "d7aeeabf29102cba4345224f056c8af3fa69c6dbd15d8af917c4eb8e4820c641",
-    "data/canonical/metric_observations.csv": "dcba43fc98caf7e42ce5c74867e6a702cc805e158e5253833a7612b7643d3fd0",
-    "data/canonical/crosswalk_psoc_isco_soc.csv": "13695184b27fae9f7ae0e64e7ebce30ce14d87ff4380f5281756b851dcfebb03",
-    "data/canonical/transformations.csv": "855f1570cd8683f38d764ac90a5380a3a0d2ccc7cb88fd739b1dc8049cc84434",
-    "data/canonical/model_scores.csv": "3e33b59dd7077d383528b02140f910e71811cc5e60eb4928818d281bb2a4d277"
+    "data/canonical/classifications.csv": "3ab1117303fa3e4a81d600fb8db1f7e282c9d73cb280333d416005a8a5a4dbaf",
+    "data/canonical/occupations.csv": "c5ed92d0aba512409ed6054ca438df4d4781ed99ba764154fdd629677333ac98",
+    "data/canonical/metric_observations.csv": "ee8612aab9fc4e57fd844526f0e69b26b2f0aacea6be3e1df6a88169fbaaa894",
+    "data/canonical/crosswalk_psoc_isco_soc.csv": "602e568e5f44a30fcb4301e4444c5ff6e64ab952169d49432c28ef81564f34f7",
+    "data/canonical/transformations.csv": "b166a6beed23800ac4a224c3eb2bbb46884787171f4dd0e690f9dd4184a40868",
+    "data/canonical/model_scores.csv": "0892fc0e7909988a008eefc12c1e89a86417b324928c4cf93440c563d506d617"
   },
   "model_runs": [],
   "pipeline_stages": [
@@ -129,7 +129,7 @@
       "detail": "Retrieval attempts are recorded with timestamps and outcomes.",
       "evidence": "data/sources/retrieval-manifest.json",
       "blockers": [
-        "All registered hosts returned HTTP 403 at the egress proxy."
+        "One or more required sources have not been retrieved and verified."
       ]
     },
     {
@@ -163,7 +163,7 @@
       "detail": "Parsers implemented for LFS, OWS, SOF and four O*NET files.",
       "evidence": "src/trabaholens/v2/sources/",
       "blockers": [
-        "No parser has processed its real source."
+        "At least one source-specific parser has not processed its real source."
       ]
     },
     {
@@ -217,11 +217,62 @@
       "blockers": []
     }
   ],
+  "source_pipeline_status": {
+    "psa_psoc": {
+      "retrieval": "blocked_by_source_access",
+      "parsing": "implemented_fixture_tested_only",
+      "transformation": "implemented_fixture_tested_only"
+    },
+    "psa_lfs": {
+      "retrieval": "blocked_by_source_access",
+      "parsing": "implemented_fixture_tested_only",
+      "transformation": "implemented_fixture_tested_only"
+    },
+    "psa_ows": {
+      "retrieval": "blocked_by_source_access",
+      "parsing": "implemented_fixture_tested_only",
+      "transformation": "implemented_fixture_tested_only"
+    },
+    "psa_sof": {
+      "retrieval": "blocked_by_source_access",
+      "parsing": "implemented_fixture_tested_only",
+      "transformation": "implemented_fixture_tested_only"
+    },
+    "psa_informal": {
+      "retrieval": "blocked_by_source_access",
+      "parsing": "designed_not_implemented",
+      "transformation": "designed_not_implemented"
+    },
+    "onet": {
+      "retrieval": "blocked_by_source_access",
+      "parsing": "implemented_fixture_tested_only",
+      "transformation": "implemented_fixture_tested_only"
+    },
+    "philjobnet": {
+      "retrieval": "blocked_by_source_access",
+      "parsing": "designed_not_implemented",
+      "transformation": "designed_not_implemented"
+    },
+    "ibpap": {
+      "retrieval": "blocked_by_source_access",
+      "parsing": "designed_not_implemented",
+      "transformation": "designed_not_implemented"
+    },
+    "dmw": {
+      "retrieval": "blocked_by_source_access",
+      "parsing": "designed_not_implemented",
+      "transformation": "designed_not_implemented"
+    },
+    "llm_scoring": {
+      "retrieval": "blocked_by_source_access",
+      "parsing": "implemented_fixture_tested_only",
+      "transformation": "implemented_fixture_tested_only"
+    }
+  },
   "publication_state": {
     "metrics_defined": [
       "employment_count",
       "gen_ai_task_exposure",
-      "informal_employment_share",
       "ofw_distribution_share",
       "onet_job_zone",
       "wage_basic_pay"
@@ -229,7 +280,6 @@
     "metrics_with_published_values": [],
     "metrics_blocked_pending_source": [
       "employment_count",
-      "informal_employment_share",
       "ofw_distribution_share"
     ],
     "metrics_not_representable_at_current_granularity": [

@@ -27,13 +27,15 @@ from .pipeline import Stage, StageReport, StageStatus
 from .sources import get_parser
 from .sources import onet as _onet_parsers  # noqa: F401  (registers parsers)
 from .sources import psa as _psa_parsers  # noqa: F401  (registers parsers)
-from .transform import confidence_for, transform_rows
+from .sources import psoc_importer as _psoc_parser  # noqa: F401
+from .transform import TransformOutcome, confidence_for, transform_rows
 from .paths import (
     CLASSIFICATIONS_CSV,
     CROSSWALK_CSV,
     METRIC_OBSERVATIONS_CSV,
     MODEL_SCORES_CSV,
     OCCUPATIONS_CSV,
+    REVIEWED_PSOC_ONET_CROSSWALK_CSV,
     TRANSFORMATIONS_CSV,
     ensure_parent,
     rel,
@@ -51,10 +53,44 @@ from .schema import (
 UNVERIFIED = "unverified_pending_source"
 
 
+def collapse_outcomes_by_code(
+    outcomes: list[TransformOutcome], metric_id: str
+) -> dict[str, TransformOutcome]:
+    """Resolve the release's one-current-value contract without overwriting.
+
+    Multiple source cells for the same metric/code usually mean a query returned
+    multiple periods or slices. Until the release schema supports a time series,
+    ambiguity blocks publication instead of selecting the final row.
+    """
+    grouped: dict[str, list[TransformOutcome]] = {}
+    for outcome in outcomes:
+        grouped.setdefault(outcome.psoc_code, []).append(outcome)
+    resolved: dict[str, TransformOutcome] = {}
+    for code, candidates in grouped.items():
+        if len(candidates) == 1:
+            resolved[code] = candidates[0]
+        else:
+            resolved[code] = TransformOutcome(
+                metric_id=metric_id,
+                psoc_code=code,
+                value=None,
+                availability="blocked_pending_source",
+                reason=(
+                    f"{len(candidates)} source rows resolve to this metric/code. "
+                    "The release schema holds one current value, so the source query "
+                    "must select one period and slice; refusing silent overwrite."
+                ),
+                normalised_row_id=" | ".join(c.normalised_row_id for c in candidates),
+            )
+    return resolved
+
+
 def write_table(path, columns: list[str], rows: list[dict[str, Any]]) -> None:
     ensure_parent(path)
     with open(path, "w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=columns, extrasaction="raise")
+        writer = csv.DictWriter(
+            handle, fieldnames=columns, extrasaction="raise", lineterminator="\n"
+        )
         writer.writeheader()
         for row in rows:
             writer.writerow({column: row.get(column, "") for column in columns})
@@ -65,6 +101,26 @@ def write_table(path, columns: list[str], rows: list[dict[str, Any]]) -> None:
 # ---------------------------------------------------------------------------
 
 def build_classifications() -> list[dict[str, Any]]:
+    registry = {entry["source_id"]: entry for entry in load_registry()["sources"]}
+    acquisition = verify_all(["psa_psoc"])["psa_psoc"]
+    if acquisition.acquired:
+        parser = get_parser("psa_psoc_volume")
+        report = parser.import_classification(acquisition.path)
+        fatal = [problem for problem in report.problems if "partial import" not in problem]
+        if report.complete and not fatal and report.version == psoc.PSOC_VERSION:
+            source = registry["psa_psoc"]
+            return [
+                {
+                    **entry,
+                    "source_organization": source["organization"],
+                    "source_dataset": source["dataset"],
+                    "source_url": acquisition.url or source["authoritative_url"],
+                    "verification_status": "verified_against_source",
+                    "notes": f"Imported from SHA-256 {acquisition.sha256}.",
+                }
+                for entry in report.rows
+            ]
+
     rows = []
     for entry in psoc.iter_classification_rows():
         rows.append(
@@ -107,11 +163,12 @@ def build_occupations(classifications: list[dict[str, Any]]) -> list[dict[str, A
                 "parent_psoc_code": entry["parent_psoc_code"],
                 "psoc_major": entry["psoc_major"],
                 "psoc_major_label": entry["psoc_major_label"],
-                "is_aggregate": "true",
-                "verification_status": UNVERIFIED,
+                "is_aggregate": "false" if entry["level"] == "psoc_unit_group" else "true",
+                "verification_status": entry["verification_status"],
                 "notes": (
-                    "Aggregate classification unit. Detailed (minor and unit group) "
-                    "occupations are absent pending retrieval of the PSOC 2012 volume."
+                    "Detailed PSOC unit group imported from the authoritative source."
+                    if entry["level"] == "psoc_unit_group"
+                    else "Aggregate PSOC classification unit."
                 ),
             }
         )
@@ -122,7 +179,9 @@ def build_occupations(classifications: list[dict[str, Any]]) -> list[dict[str, A
 # Metric observations
 # ---------------------------------------------------------------------------
 
-def build_metric_observations(occupations: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def build_metric_observations(
+    occupations: list[dict[str, Any]], crosswalk_rows: list[dict[str, Any]] | None = None
+) -> list[dict[str, Any]]:
     """One row per (unit, metric) the project intends to publish.
 
     Publication state is derived from the **retrieval manifest**, verified
@@ -161,8 +220,9 @@ def build_metric_observations(occupations: list[dict[str, Any]]) -> list[dict[st
                     acquisition,
                     canonical_codes,
                     canonical_version,
+                    crosswalk_rows=crosswalk_rows or [],
                 )
-                outcomes_by_code = {o.psoc_code: o for o in outcomes}
+                outcomes_by_code = collapse_outcomes_by_code(outcomes, definition.metric_id)
                 parse_note = (
                     f"Parsed {parsed.row_count} source row(s) with "
                     f"{parser.parser_id} v{parser.parser_version}."
@@ -222,8 +282,8 @@ def build_metric_observations(occupations: list[dict[str, Any]]) -> list[dict[st
                     "metric_value": "" if not has_value else _format_value(outcome.value),
                     "unit": definition.unit,
                     "reference_period": (outcome.reference_period if outcome else "") or "",
-                    "geography": "Philippines",
-                    "population_scope": definition.denominator,
+                    "geography": (outcome.geography if outcome else "") or "Philippines",
+                    "population_scope": (outcome.population_scope if outcome else "") or definition.denominator,
                     "derivation_class": definition.expected_derivation_class,
                     "source_authority": definition.expected_source_authority,
                     "availability": (
@@ -234,15 +294,18 @@ def build_metric_observations(occupations: list[dict[str, Any]]) -> list[dict[st
                     "source_id": definition.required_source_id,
                     "source_organization": source.get("organization", ""),
                     "source_dataset": source.get("dataset", ""),
-                    "source_table": "",
-                    "source_url": source.get("authoritative_url", ""),
+                    "source_table": (outcome.source_table if outcome else ""),
+                    "source_url": (
+                        acquisition.url if acquisition and acquisition.acquired and acquisition.url
+                        else source.get("authoritative_url", "")
+                    ),
                     "source_file_hash": acquisition.sha256 if (acquisition and acquisition.acquired) else "",
                     "retrieved_at": acquisition.retrieved_at if (acquisition and acquisition.acquired) else "",
                     "parser_id": definition.parser_id,
                     "parser_version": parser.parser_version if parser else "",
                     "normalised_row_id": (outcome.normalised_row_id if outcome else ""),
                     "transformation_id": (outcome.transformation_id if outcome else ""),
-                    "crosswalk_id": "",
+                    "crosswalk_id": (outcome.crosswalk_id if outcome else ""),
                     "confidence_grade": grade,
                     "confidence_reasons": " | ".join(reasons),
                     "pipeline_status": (
@@ -250,8 +313,14 @@ def build_metric_observations(occupations: list[dict[str, Any]]) -> list[dict[st
                         if has_value
                         else StageStatus.BLOCKED_BY_SOURCE_ACCESS.value
                     ),
-                    "uncertainty_lower": "",
-                    "uncertainty_upper": "",
+                    "uncertainty_lower": (
+                        "" if not outcome or outcome.uncertainty_lower is None
+                        else _format_value(outcome.uncertainty_lower)
+                    ),
+                    "uncertainty_upper": (
+                        "" if not outcome or outcome.uncertainty_upper is None
+                        else _format_value(outcome.uncertainty_upper)
+                    ),
                     "suppression_status": (
                         outcome.suppression_status if outcome is not None else "no_value_yet"
                     ),
@@ -275,13 +344,15 @@ def pipeline_stage_reports() -> list[StageReport]:
     """Honest per-stage status, derived from what actually exists."""
     registry = load_registry()["sources"]
     acquisitions = verify_all([entry["source_id"] for entry in registry])
-    any_acquired = any(record.acquired for record in acquisitions.values())
+    required_ids = {d.required_source_id for d in METRIC_DEFINITIONS.values() if d.parser_id} | {"psa_psoc"}
+    required = [acquisitions[sid] for sid in required_ids if sid in acquisitions]
+    all_acquired = bool(required) and all(record.acquired for record in required)
 
     acquired_status = (
-        StageStatus.VERIFIED_REAL_SOURCE if any_acquired else StageStatus.BLOCKED_BY_SOURCE_ACCESS
+        StageStatus.VERIFIED_REAL_SOURCE if all_acquired else StageStatus.BLOCKED_BY_SOURCE_ACCESS
     )
     downstream = (
-        StageStatus.VERIFIED_REAL_SOURCE if any_acquired else StageStatus.FIXTURE_TESTED_ONLY
+        StageStatus.VERIFIED_REAL_SOURCE if all_acquired else StageStatus.FIXTURE_TESTED_ONLY
     )
 
     return [
@@ -291,7 +362,7 @@ def pipeline_stage_reports() -> list[StageReport]:
         StageReport(Stage.RETRIEVAL, acquired_status,
                     "Retrieval attempts are recorded with timestamps and outcomes.",
                     evidence="data/sources/retrieval-manifest.json",
-                    blockers=() if any_acquired else ("All registered hosts returned HTTP 403 at the egress proxy.",)),
+                    blockers=() if all_acquired else ("One or more required sources have not been retrieved and verified.",)),
         StageReport(Stage.RAW_SNAPSHOT, acquired_status,
                     "Raw snapshots are written under data/raw/ (gitignored) when retrieval succeeds."),
         StageReport(Stage.HASH_VERIFICATION, downstream,
@@ -303,7 +374,7 @@ def pipeline_stage_reports() -> list[StageReport]:
         StageReport(Stage.PARSING, downstream,
                     "Parsers implemented for LFS, OWS, SOF and four O*NET files.",
                     evidence="src/trabaholens/v2/sources/",
-                    blockers=() if any_acquired else ("No parser has processed its real source.",)),
+                    blockers=() if all_acquired else ("At least one source-specific parser has not processed its real source.",)),
         StageReport(Stage.NORMALISED_SOURCE_TABLE, downstream,
                     "Parsers emit normalised rows carrying the source's own codes and version."),
         StageReport(Stage.CLASSIFICATION_RECONCILIATION, StageStatus.PARTIALLY_IMPLEMENTED,
@@ -335,12 +406,15 @@ def build_crosswalk(classifications: list[dict[str, Any]]) -> list[dict[str, Any
     # the correspondence is structural rather than a judgement about titles.
     for entry in classifications:
         code = entry["psoc_code"]
+        isco_code = entry.get("isco08_code", "")
+        if not isco_code:
+            continue
         rows.append(
             {
                 "crosswalk_id": f"XW-ISCO-{code}",
                 "psoc_code": code,
                 "psoc_version": psoc.PSOC_VERSION,
-                "source_code": psoc.ISCO08_EQUIVALENT[code],
+                "source_code": isco_code,
                 "source_classification": "ISCO-08",
                 "match_type": "exact",
                 "match_quality": "high",
@@ -386,6 +460,27 @@ def build_crosswalk(classifications: list[dict[str, Any]]) -> list[dict[str, Any
             }
         )
 
+    # Reviewed composed mappings are a governed input, not generated by title
+    # similarity. Their absence is expected until the correspondence work and
+    # human review are complete.
+    if REVIEWED_PSOC_ONET_CROSSWALK_CSV.exists():
+        with open(REVIEWED_PSOC_ONET_CROSSWALK_CSV, encoding="utf-8", newline="") as handle:
+            for raw in csv.DictReader(handle):
+                if raw.get("review_status") != "human_reviewed":
+                    continue
+                rows.append({
+                    "crosswalk_id": raw["crosswalk_id"],
+                    "psoc_code": raw["psoc_code"],
+                    "psoc_version": raw.get("psoc_version", psoc.PSOC_VERSION),
+                    "source_code": raw["onet_soc_code"],
+                    "source_classification": "O*NET-SOC",
+                    "match_type": raw["match_type"],
+                    "match_quality": raw["match_quality"],
+                    "mapping_basis": raw["mapping_basis"],
+                    "review_status": raw["review_status"],
+                    "notes": raw.get("notes", ""),
+                })
+
     return _annotate_cardinality(rows)
 
 
@@ -430,7 +525,7 @@ def build_transformations() -> list[dict[str, Any]]:
             "outputs": "metric_value",
             "code_reference": "n/a",
             "reversible": "true",
-            "notes": "The only transformation permitted for an official_statistic.",
+            "notes": "Identity preserves the source value; derivation and authority remain separate metadata.",
         },
         {
             "transformation_id": "T-001-psoc-structure",
@@ -448,23 +543,17 @@ def build_transformations() -> list[dict[str, Any]]:
         {
             "transformation_id": "T-002-task-aggregation-unweighted",
             "name": "Unweighted task score aggregation",
-            "description": (
-                "Mean of per-task exposure scores for an occupation, all tasks "
-                "weighted equally."
-            ),
+            "description": "Median and category distribution across task scores.",
             "inputs": "per-task scores",
             "outputs": "occupation-level exposure score",
             "code_reference": "src/trabaholens/v2/score_exposure.py",
             "reversible": "false",
-            "notes": "Kept separate from the importance-weighted variant; never merged.",
+            "notes": "Ordinal-safe primary aggregation; arithmetic mean is diagnostic only.",
         },
         {
             "transformation_id": "T-003-task-aggregation-weighted",
             "name": "Importance-weighted task score aggregation",
-            "description": (
-                "Per-task exposure scores weighted by O*NET task importance "
-                "where importance ratings are available."
-            ),
+            "description": "Importance-weighted median across task scores.",
             "inputs": "per-task scores, O*NET task importance ratings",
             "outputs": "occupation-level exposure score",
             "code_reference": "src/trabaholens/v2/score_exposure.py",
@@ -474,8 +563,8 @@ def build_transformations() -> list[dict[str, Any]]:
         {
             "transformation_id": "T-004-run-median",
             "name": "Cross-run median",
-            "description": "Median across independent scoring replicates.",
-            "inputs": "replicate scores",
+            "description": "Median across repeated scoring attempts.",
+            "inputs": "attempt scores",
             "outputs": "consensus score plus disagreement range",
             "code_reference": "src/trabaholens/v2/score_exposure.py",
             "reversible": "false",
@@ -521,8 +610,8 @@ def build_transformations() -> list[dict[str, Any]]:
 def main() -> None:
     classifications = build_classifications()
     occupations = build_occupations(classifications)
-    observations = build_metric_observations(occupations)
     crosswalk = build_crosswalk(classifications)
+    observations = build_metric_observations(occupations, crosswalk)
     transformations = build_transformations()
 
     write_table(CLASSIFICATIONS_CSV, CLASSIFICATIONS_COLUMNS, classifications)

@@ -2,7 +2,7 @@
 
 Reads every run under ``data/exposure/runs/`` and reports:
 
-* within-model stability (disagreement across replicates of the same run);
+* within-model stability (disagreement across repeated attempts in the same run);
 * between-model agreement (when two or more runs used different models);
 * task-weighting sensitivity (unweighted vs importance-weighted aggregation);
 * crosswalk-quality sensitivity (does score depend on how good the mapping was);
@@ -79,12 +79,12 @@ def within_model_stability(run: dict[str, Any]) -> dict[str, Any]:
         if consensus.get("stability") == "unstable":
             unstable.append(entry["task_id"])
     if not ranges:
-        return {"tasks_with_replicates": 0}
+        return {"tasks_with_repeated_attempts": 0}
     return {
-        "tasks_with_replicates": len(ranges),
-        "mean_replicate_range": round(statistics.mean(ranges), 4),
-        "max_replicate_range": max(ranges),
-        "mean_replicate_stdev": round(statistics.mean(stdevs), 4),
+        "tasks_with_repeated_attempts": len(ranges),
+        "mean_attempt_range": round(statistics.mean(ranges), 4),
+        "max_attempt_range": max(ranges),
+        "mean_attempt_stdev": round(statistics.mean(stdevs), 4),
         "unstable_task_count": len(unstable),
         "unstable_share": round(len(unstable) / len(ranges), 4),
         "unstable_task_ids": unstable[:25],
@@ -130,7 +130,7 @@ def between_model_agreement(runs: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def weighting_sensitivity(run: dict[str, Any]) -> dict[str, Any]:
-    from .score_exposure import aggregate_tasks_to_occupation
+    from .exposure_runs import weighted_median
 
     by_occupation: dict[str, list[dict]] = defaultdict(list)
     for entry in run.get("tasks", []):
@@ -138,30 +138,42 @@ def weighting_sensitivity(run: dict[str, Any]) -> dict[str, Any]:
 
     diffs = []
     for psoc_code, entries in by_occupation.items():
-        unweighted = aggregate_tasks_to_occupation(entries, "technical_task_exposure", weighted=False)
-        weighted = aggregate_tasks_to_occupation(entries, "technical_task_exposure", weighted=True)
-        if unweighted is None or weighted is None:
+        pairs = []
+        for entry in entries:
+            value = entry.get("consensus", {}).get("technical_task_exposure", {}).get("median")
+            try:
+                weight = float(entry.get("task", {}).get("task_importance") or 0)
+            except (TypeError, ValueError):
+                weight = 0
+            if value is not None and weight > 0:
+                pairs.append((value, weight))
+        if not pairs:
             continue
-        diffs.append({"psoc_code": psoc_code, "unweighted": unweighted, "weighted": weighted,
-                      "difference": round(weighted - unweighted, 4)})
+        unweighted = statistics.median(value for value, _ in pairs)
+        weighted = weighted_median(
+            [value for value, _ in pairs], [weight for _, weight in pairs]
+        )
+        diffs.append({"psoc_code": psoc_code, "unweighted_median": unweighted,
+                      "importance_weighted_median": weighted,
+                      "category_shift": weighted - unweighted})
 
     if not diffs:
         return {"status": "not_possible",
                 "reason": "No occupation has both an unweighted and an importance-weighted aggregate."}
-    magnitudes = [abs(d["difference"]) for d in diffs]
+    magnitudes = [abs(d["category_shift"]) for d in diffs]
     return {
         "status": "computed",
         "occupations": len(diffs),
-        "mean_absolute_difference": round(statistics.mean(magnitudes), 4),
+        "median_absolute_category_shift": statistics.median(magnitudes),
         "max_absolute_difference": round(max(magnitudes), 4),
-        "largest_shifts": sorted(diffs, key=lambda d: -abs(d["difference"]))[:10],
+        "largest_shifts": sorted(diffs, key=lambda d: -abs(d["category_shift"]))[:10],
     }
 
 
 def crosswalk_quality_sensitivity(run: dict[str, Any]) -> dict[str, Any]:
     by_quality: dict[str, list[float]] = defaultdict(list)
     for entry in run.get("tasks", []):
-        score = entry["consensus"]["technical_task_exposure"]["score"]
+        score = entry["consensus"]["technical_task_exposure"].get("median")
         if score is None:
             continue
         by_quality[entry["task"].get("crosswalk_match_quality") or "unknown"].append(score)
@@ -170,11 +182,15 @@ def crosswalk_quality_sensitivity(run: dict[str, Any]) -> dict[str, Any]:
     return {
         "status": "computed",
         "by_quality": {
-            quality: {"tasks": len(values), "mean_score": round(statistics.mean(values), 4)}
+            quality: {
+                "tasks": len(values),
+                "median_score": statistics.median(values),
+                "distribution": {str(score): values.count(score) for score in sorted(set(values))},
+            }
             for quality, values in sorted(by_quality.items())
         },
         "interpretation": (
-            "A systematic difference in mean score across crosswalk quality bands "
+            "A systematic difference in median/category distribution across crosswalk quality bands "
             "means the measure is partly reporting mapping quality rather than task "
             "content, and the low-quality band should be suppressed."
         ),
@@ -213,7 +229,7 @@ def render_report(runs: list[dict[str, Any]]) -> str:
         add("")
         add("| Analysis | Method | Release gate |")
         add("| --- | --- | --- |")
-        add("| Within-model stability | Range and standard deviation across replicates of the same model and prompt | A task whose replicates span more than 1 point is reported unstable; an occupation where more than 25% of tasks are unstable is not published as a point score |")
+        add("| Within-model stability | Range and category agreement across repeated attempts with the same model and prompt | A task whose attempts span more than 1 point is reported unstable; an occupation where more than 25% of tasks are unstable is not published as a point score |")
         add("| Between-model agreement | Mean absolute difference and exact-agreement share across models | Reported; large disagreement is published rather than resolved by choosing a favourite |")
         add("| Prompt-wording sensitivity | Re-run under a variant prompt at the same rubric version | A dimension that moves materially on paraphrase is reported as prompt-sensitive |")
         add("| Task-weighting sensitivity | Unweighted vs importance-weighted aggregation | Both published; never averaged together |")
@@ -257,7 +273,7 @@ def render_report(runs: list[dict[str, Any]]) -> str:
         add("")
         add(f"- model: `{run['model_id']}` (provider `{run['model_provider']}`)")
         add(f"- rubric `{run['rubric_version']}`, prompt `{run['prompt_version']}`")
-        add(f"- temperature {run['temperature']}, replicates {run['run_count']}, seed {run.get('seed')}")
+        add(f"- temperature {run['temperature']}, repeated attempts {run.get('attempted_replicates', run.get('run_count'))}")
         add(f"- scored {run.get('task_count')} tasks on {run['scoring_date']}")
         add(f"- human review status: `{run.get('human_review_status')}`")
         add("")

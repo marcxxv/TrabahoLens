@@ -394,7 +394,8 @@ METRIC_DEFINITIONS: dict[str, MetricDefinition] = {
         ),
         required_source_id="psa_sof",
         expected_source_granularity="psoc_major_group",
-        expected_derivation_class="estimated",
+        # Calculated by this project from official survey-estimated counts.
+        expected_derivation_class="calculated",
         expected_source_authority="ph_official_statistical_authority",
         denominator="all OFWs",
         parser_id="psa_sof_occupation_table",
@@ -403,26 +404,6 @@ METRIC_DEFINITIONS: dict[str, MetricDefinition] = {
             "occupation who are OFWs, P(OFW | occupation) — that needs domestic "
             "employment in the same occupation as its denominator and a "
             "compatible universe. The two are not interchangeable."
-        ),
-    ),
-    "informal_employment_share": MetricDefinition(
-        metric_id="informal_employment_share",
-        metric_name="Informal employment share",
-        unit="share of employed persons",
-        definition=(
-            "Share of employed persons in the group holding informal employment, "
-            "under the definition used by the publishing PSA release."
-        ),
-        required_source_id="psa_informal",
-        expected_source_granularity="psoc_major_group",
-        expected_derivation_class="estimated",
-        expected_source_authority="ph_official_statistical_authority",
-        denominator="employed persons in the group",
-        parser_id="",
-        common_misreading=(
-            "'Informal sector' and 'informal employment' are different concepts "
-            "with different counts. The definition used must be quoted from the "
-            "release, not assumed."
         ),
     ),
     "onet_job_zone": MetricDefinition(

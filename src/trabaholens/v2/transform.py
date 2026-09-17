@@ -98,9 +98,6 @@ TRANSFORMATION_BY_METRIC = {
 
 #: Classification versions this project can reconcile without a correspondence
 #: table. Anything else must go through an explicit mapping, not an assumption.
-COMPATIBLE_PSOC_VERSIONS = {"PSOC 2012", "PSOC 2012 (2022 Updates)"}
-
-
 @dataclass
 class TransformOutcome:
     metric_id: str
@@ -114,12 +111,33 @@ class TransformOutcome:
     availability: str = "blocked_pending_source"
     uncertainty_lower: float | None = None
     uncertainty_upper: float | None = None
+    source_table: str = ""
+    geography: str = ""
+    population_scope: str = ""
+    source_code_version: str = ""
+    crosswalk_id: str = ""
 
 
-def _sum_for_share(rows: list[NormalisedRow], measure: str) -> float | None:
-    values = [r.value for r in rows if r.measure == measure and r.value is not None]
-    total = sum(values)
-    return total if total > 0 else None
+def _group_key(row: NormalisedRow) -> tuple[str, str, str, str]:
+    return (row.reference_period, row.geography, row.population_scope, row.source_code_version)
+
+
+def _crosswalk_target(row: NormalisedRow, crosswalk_rows: list[dict[str, Any]]) -> tuple[str, str, str]:
+    """Return (PSOC code, crosswalk id, refusal reason) for a non-PSOC row."""
+    matches = [
+        edge for edge in crosswalk_rows
+        if edge.get("source_code") == row.source_code
+        and edge.get("source_classification") == row.source_code_system
+        and edge.get("review_status") == "human_reviewed"
+        and edge.get("match_quality") in {"high", "medium"}
+        and edge.get("mapping_basis") not in {"title_similarity_only", "undocumented_heuristic"}
+    ]
+    if len(matches) != 1:
+        return "", "", (
+            f"Source code {row.source_code!r} in {row.source_code_system!r} has "
+            f"{len(matches)} accepted PSOC mappings; exactly one is required."
+        )
+    return matches[0]["psoc_code"], matches[0]["crosswalk_id"], ""
 
 
 def transform_rows(
@@ -128,6 +146,7 @@ def transform_rows(
     acquisition: AcquisitionRecord,
     canonical_codes: set[str],
     canonical_version: str,
+    crosswalk_rows: list[dict[str, Any]] | None = None,
 ) -> list[TransformOutcome]:
     """Apply the documented transformation for one metric.
 
@@ -145,17 +164,19 @@ def transform_rows(
         return outcomes
 
     relevant = [r for r in rows if r.measure == transformation.applies_to_measure]
-    denominator = (
-        _sum_for_share(relevant, transformation.applies_to_measure)
-        if metric_id == "ofw_distribution_share"
-        else None
-    )
+    crosswalk_rows = crosswalk_rows or []
+    ofw_groups: dict[tuple[str, str, str, str], list[NormalisedRow]] = {}
+    if metric_id == "ofw_distribution_share":
+        for item in relevant:
+            ofw_groups.setdefault(_group_key(item), []).append(item)
 
     for row in relevant:
         # Classification version must be known and compatible. "unknown" is a
         # refusal, not a default: silently applying 2022 codes to a table that
         # used an earlier version is the failure mode this guard exists for.
-        if row.source_code_version not in COMPATIBLE_PSOC_VERSIONS and row.source_code_system == "PSOC":
+        canonical_code = row.source_code
+        crosswalk_id = ""
+        if row.source_code_system == "PSOC" and row.source_code_version != canonical_version:
             outcomes.append(
                 TransformOutcome(
                     metric_id=metric_id,
@@ -173,14 +194,29 @@ def transform_rows(
             )
             continue
 
-        if row.source_code not in canonical_codes:
+        if row.source_code_system != "PSOC":
+            canonical_code, crosswalk_id, mapping_error = _crosswalk_target(row, crosswalk_rows)
+            if mapping_error:
+                outcomes.append(
+                    TransformOutcome(
+                        metric_id=metric_id, psoc_code=row.source_code, value=None,
+                        reason=mapping_error, availability="blocked_pending_source",
+                        normalised_row_id=row.normalised_row_id,
+                        source_table=row.source_table, geography=row.geography,
+                        population_scope=row.population_scope,
+                        source_code_version=row.source_code_version,
+                    )
+                )
+                continue
+
+        if canonical_code not in canonical_codes:
             outcomes.append(
                 TransformOutcome(
                     metric_id=metric_id,
-                    psoc_code=row.source_code,
+                    psoc_code=canonical_code or row.source_code,
                     value=None,
                     reason=(
-                        f"Source code {row.source_code!r} has no canonical PSOC unit. "
+                        f"Resolved code {canonical_code or row.source_code!r} has no canonical PSOC unit. "
                         "Recorded as unmatched rather than dropped."
                     ),
                     availability="blocked_pending_source",
@@ -233,13 +269,24 @@ def transform_rows(
             continue
 
         if metric_id == "ofw_distribution_share":
-            if not denominator:
+            peers = ofw_groups[_group_key(row)]
+            expected_major_codes = {code for code in canonical_codes if len(code) == 1}
+            present_codes = {peer.source_code for peer in peers}
+            complete = present_codes == expected_major_codes and all(
+                peer.value is not None and not peer.suppression_flag for peer in peers
+            )
+            denominator = sum(peer.value or 0 for peer in peers) if complete else 0
+            if not complete or denominator <= 0:
                 outcomes.append(
                     TransformOutcome(
                         metric_id=metric_id,
-                        psoc_code=row.source_code,
+                        psoc_code=canonical_code,
                         value=None,
-                        reason="Cannot compute a share: the all-OFW denominator is zero or absent.",
+                        reason=(
+                            "Cannot compute an OFW distribution: the source slice must contain "
+                            "exactly one unsuppressed row for every PSOC major group in the same "
+                            "period, geography, population universe and classification version."
+                        ),
                         availability="blocked_pending_source",
                         normalised_row_id=row.normalised_row_id,
                     )
@@ -252,7 +299,7 @@ def transform_rows(
         outcomes.append(
             TransformOutcome(
                 metric_id=metric_id,
-                psoc_code=row.source_code,
+                psoc_code=canonical_code,
                 value=value,
                 reason="Transformed and published.",
                 transformation_id=transformation.transformation_id,
@@ -262,6 +309,11 @@ def transform_rows(
                 suppression_status="not_suppressed",
                 uncertainty_lower=row.uncertainty_lower,
                 uncertainty_upper=row.uncertainty_upper,
+                source_table=row.source_table,
+                geography=row.geography,
+                population_scope=row.population_scope,
+                source_code_version=row.source_code_version,
+                crosswalk_id=crosswalk_id,
             )
         )
 

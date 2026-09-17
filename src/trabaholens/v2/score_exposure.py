@@ -3,8 +3,8 @@
 Differences from the v1 scorer, each answering a specific audit finding:
 
 * Scores **tasks**, not occupation titles, and aggregates upward.
-* Runs **N independent replicates** and randomises task order per replicate, so
-  ordering effects and instability are measurable rather than invisible.
+* Runs **N repeated scoring attempts** per task to measure run-to-run agreement;
+  these are not claimed to be statistically independent replicates.
 * Retains **every raw response** under ``data/exposure/runs/<run_id>/``.
 * Records complete provenance per score: provider, model id, snapshot, prompt
   version, rubric version, temperature, run count, aggregation method, task
@@ -22,7 +22,6 @@ import argparse
 import csv
 import json
 import os
-import random
 import re
 import statistics
 from datetime import datetime, timezone
@@ -39,10 +38,12 @@ from .exposure_runs import (
     ordinal_summary,
 )
 from .paths import (
+    CROSSWALK_CSV,
     EXPOSURE_PROMPT_DIR,
     EXPOSURE_RUBRIC_DIR,
     EXPOSURE_RUNS_DIR,
     MODEL_SCORES_CSV,
+    OCCUPATIONS_CSV,
     ensure_parent,
     rel,
 )
@@ -450,57 +451,6 @@ def compute_evidence_confidence(
 # Aggregation
 # ---------------------------------------------------------------------------
 
-def aggregate_replicates(values: list[int]) -> dict[str, Any]:
-    """Median plus retained disagreement."""
-    if not values:
-        return {"score": None, "n": 0, "stability": None, "range": None}
-    return {
-        "score": statistics.median(values),
-        "n": len(values),
-        "min": min(values),
-        "max": max(values),
-        "range": max(values) - min(values),
-        "stdev": round(statistics.pstdev(values), 4) if len(values) > 1 else 0.0,
-        # Stability is reported, not used to hide a disagreeing score.
-        "stability": (
-            "stable" if len(values) > 1 and max(values) - min(values) <= 1
-            else "unstable" if len(values) > 1
-            else "single_run_no_stability_measure"
-        ),
-        "values": values,
-    }
-
-
-def aggregate_tasks_to_occupation(task_scores: list[dict[str, Any]], dimension_key: str,
-                                  weighted: bool) -> float | None:
-    """Mean of task scores, optionally weighted by task importance.
-
-    Weighted and unweighted results are computed separately and published side
-    by side; neither is treated as the score.
-    """
-    pairs = []
-    for entry in task_scores:
-        value = entry["consensus"][dimension_key]["score"]
-        if value is None:
-            continue
-        weight = 1.0
-        if weighted:
-            try:
-                weight = float(entry["task"].get("task_importance") or 0) or 0.0
-            except ValueError:
-                weight = 0.0
-            if weight <= 0:
-                continue
-        pairs.append((value, weight))
-
-    if not pairs:
-        return None
-    total_weight = sum(weight for _, weight in pairs)
-    if total_weight <= 0:
-        return None
-    return round(sum(value * weight for value, weight in pairs) / total_weight, 4)
-
-
 # ---------------------------------------------------------------------------
 # Run
 # ---------------------------------------------------------------------------
@@ -606,11 +556,32 @@ def main() -> None:
     print("Previous runs are untouched; this run did not overwrite history.")
 
 
-def validate_task_inputs(tasks: list[dict[str, str]]) -> None:
+def validate_task_inputs(
+    tasks: list[dict[str, str]], *, canonical_codes: set[str] | None = None,
+    accepted_crosswalks: set[tuple[str, str, str]] | None = None,
+) -> None:
     """Reject malformed task input before a single model call is made."""
-    required = {"task_id", "task_statement", "psoc_code"}
+    required = {
+        "task_id", "task_statement", "psoc_code", "onet_soc_code", "crosswalk_id",
+        "crosswalk_match_type", "crosswalk_match_quality", "crosswalk_review_status",
+        "task_source_version",
+    }
     problems: list[str] = []
     seen: set[str] = set()
+
+    if canonical_codes is None:
+        with open(OCCUPATIONS_CSV, encoding="utf-8", newline="") as handle:
+            canonical_codes = {row["psoc_code"] for row in csv.DictReader(handle)}
+    if accepted_crosswalks is None:
+        with open(CROSSWALK_CSV, encoding="utf-8", newline="") as handle:
+            accepted_crosswalks = {
+                (row["crosswalk_id"], row["psoc_code"], row["source_code"])
+                for row in csv.DictReader(handle)
+                if row.get("source_classification") == "O*NET-SOC"
+                and row.get("review_status") == "human_reviewed"
+                and row.get("match_quality") in {"high", "medium"}
+                and row.get("mapping_basis") not in {"title_similarity_only", "undocumented_heuristic"}
+            }
 
     if not tasks:
         raise ScoringRefusal("Task file contains no rows.")
@@ -629,6 +600,20 @@ def validate_task_inputs(tasks: list[dict[str, str]]) -> None:
             seen.add(task_id)
         if not (task.get("task_statement") or "").strip():
             problems.append(f"row {index} ({task_id}): empty task_statement")
+        psoc_code = (task.get("psoc_code") or "").strip()
+        onet_code = (task.get("onet_soc_code") or "").strip()
+        crosswalk_id = (task.get("crosswalk_id") or "").strip()
+        if psoc_code and psoc_code not in canonical_codes:
+            problems.append(f"row {index} ({task_id}): unknown canonical PSOC code {psoc_code!r}")
+        if onet_code and (crosswalk_id, psoc_code, onet_code) not in accepted_crosswalks:
+            problems.append(
+                f"row {index} ({task_id}): no accepted human-reviewed crosswalk for "
+                f"{psoc_code!r} -> {onet_code!r} ({crosswalk_id!r})"
+            )
+        if (task.get("crosswalk_review_status") or "").strip() != "human_reviewed":
+            problems.append(
+                f"row {index} ({task_id}): crosswalk must be human_reviewed before scoring"
+            )
         if (task.get("crosswalk_match_type") or "").strip() == "no_defensible_match":
             problems.append(
                 f"row {index} ({task_id}): crosswalk match type is no_defensible_match; "
@@ -849,7 +834,9 @@ def write_occupation_scores(run_manifest: dict[str, Any]) -> None:
 
     ensure_parent(MODEL_SCORES_CSV)
     with open(MODEL_SCORES_CSV, "w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=MODEL_SCORES_COLUMNS, extrasaction="ignore")
+        writer = csv.DictWriter(
+            handle, fieldnames=MODEL_SCORES_COLUMNS, extrasaction="ignore", lineterminator="\n"
+        )
         writer.writeheader()
         writer.writerows(rows)
     print(f"{rel(MODEL_SCORES_CSV)}: {len(rows)} rows")

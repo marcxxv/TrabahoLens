@@ -1,7 +1,7 @@
 """Build the release manifest and the site payload.
 
 The payload is provenance-first: the interface cannot render a number without
-also receiving its estimate type, availability, source, reference period and
+also receiving its derivation class, source authority, availability, source, reference period and
 confidence grade, because they arrive in the same object. Making provenance
 structurally inseparable from the value is the point — a front-end cannot
 forget to show what it was never given separately.
@@ -39,6 +39,7 @@ from .paths import (
     rel,
 )
 from .build_canonical import pipeline_stage_reports
+from .acquisition_state import verify_all
 from .schema import (
     AVAILABILITY,
     CONFIDENCE_GRADES,
@@ -50,8 +51,8 @@ from .schema import (
 
 PAYLOAD_SCHEMA = "trabaholens-site-payload/2"
 METHODOLOGY_VERSION = "2.0.0"
-RUBRIC_VERSION = "0.1.0"
-PROMPT_VERSION = "0.1.0"
+RUBRIC_VERSION = "0.2.0"
+PROMPT_VERSION = "0.2.0"
 
 EXPOSURE_DISCLAIMER = (
     "Generative-AI task exposure indicates how much an occupation's tasks may be "
@@ -114,8 +115,10 @@ def build_metric_block(row: dict[str, str]) -> dict[str, Any]:
         ],
         "pipeline_status": row.get("pipeline_status", ""),
         "parser_id": row.get("parser_id", ""),
+        "parser_version": row.get("parser_version", ""),
         "normalised_row_id": row.get("normalised_row_id", ""),
         "transformation_id": row.get("transformation_id", ""),
+        "crosswalk_id": row.get("crosswalk_id", ""),
         "reference_period": row.get("reference_period", ""),
         "geography": row.get("geography", ""),
         "population_scope": row.get("population_scope", ""),
@@ -125,6 +128,7 @@ def build_metric_block(row: dict[str, str]) -> dict[str, Any]:
         "source_id": row.get("source_id", ""),
         "source_organization": row.get("source_organization", ""),
         "source_dataset": row.get("source_dataset", ""),
+        "source_table": row.get("source_table", ""),
         "source_url": row.get("source_url", ""),
         "source_file_hash": row.get("source_file_hash", ""),
         "retrieved_at": row.get("retrieved_at", ""),
@@ -318,6 +322,26 @@ def _discover_model_runs() -> list[dict[str, Any]]:
     return runs
 
 
+def derive_publication_state(observations: list[dict[str, str]]) -> dict[str, list[str]]:
+    """Derive metric state from values, not from the presence of blocked rows."""
+    published = sorted({
+        row["metric_id"] for row in observations
+        if row.get("availability") == "published" and (row.get("metric_value") or "").strip()
+    })
+    unrepresentable = sorted(
+        definition.metric_id
+        for definition in METRIC_DEFINITIONS.values()
+        if not any(row.get("metric_id") == definition.metric_id for row in observations)
+    )
+    blocked = sorted(set(METRIC_DEFINITIONS) - set(published) - set(unrepresentable))
+    return {
+        "metrics_defined": sorted(METRIC_DEFINITIONS),
+        "metrics_with_published_values": published,
+        "metrics_blocked_pending_source": blocked,
+        "metrics_not_representable_at_current_granularity": unrepresentable,
+    }
+
+
 def build_release_manifest(frozen_time: str | None) -> dict[str, Any]:
     registry = yaml.safe_load(SOURCE_REGISTRY_YAML.read_text(encoding="utf-8"))
     retrieval = (
@@ -326,15 +350,16 @@ def build_release_manifest(frozen_time: str | None) -> dict[str, Any]:
         else {"retrievals": []}
     )
 
-    latest: dict[str, dict] = {}
-    for entry in retrieval.get("retrievals", []):
-        latest[entry["source_id"]] = entry
+    source_ids = [source["source_id"] for source in registry["sources"]]
+    verified_acquisitions = verify_all(source_ids)
 
     source_versions = {}
     source_hashes = {}
     for source in registry["sources"]:
         sid = source["source_id"]
-        attempt = latest.get(sid, {})
+        attempts = [entry for entry in retrieval.get("retrievals", []) if entry.get("source_id") == sid]
+        attempt = attempts[-1] if attempts else {}
+        verified = verified_acquisitions[sid]
         source_versions[sid] = {
             "organization": source["organization"],
             "dataset": source["dataset"],
@@ -343,16 +368,53 @@ def build_release_manifest(frozen_time: str | None) -> dict[str, Any]:
             "last_attempt_result": attempt.get("status", "none"),
             "blocked_reason": source["retrieval"].get("blocked_reason", ""),
         }
-        source_hashes[sid] = attempt.get("sha256")
+        source_hashes[sid] = verified.sha256 if verified.acquired else None
 
     observations = read_csv(METRIC_OBSERVATIONS_CSV)
-    blocked = sorted({row["metric_id"] for row in observations if row["availability"] != "published"})
+    publication_state = derive_publication_state(observations)
 
-    unrepresentable = sorted(
-        definition.metric_id
-        for definition in METRIC_DEFINITIONS.values()
-        if not any(row["metric_id"] == definition.metric_id for row in observations)
-    )
+    source_pipeline_status = {}
+    classifications = read_csv(CLASSIFICATIONS_CSV)
+    for source in registry["sources"]:
+        sid = source["source_id"]
+        acquired = verified_acquisitions[sid].acquired
+        source_rows = [row for row in observations if row.get("source_id") == sid]
+        has_parser = any(
+            definition.required_source_id == sid and definition.parser_id
+            for definition in METRIC_DEFINITIONS.values()
+        ) or sid == "psa_psoc"
+        parsed = any(row.get("normalised_row_id") for row in source_rows)
+        transformed = any(
+            row.get("availability") == "published" and row.get("metric_value")
+            for row in source_rows
+        )
+        if sid == "psa_psoc":
+            parsed = any(row.get("verification_status") == "verified_against_source" for row in classifications)
+            transformed = parsed
+        if not has_parser:
+            source_pipeline_status[sid] = {
+                "retrieval": "implemented_verified_with_real_source" if acquired else "blocked_by_source_access",
+                "parsing": "designed_not_implemented",
+                "transformation": "designed_not_implemented",
+            }
+            continue
+        source_pipeline_status[sid] = {
+            "retrieval": "implemented_verified_with_real_source" if acquired else "blocked_by_source_access",
+            "parsing": (
+                "implemented_verified_with_real_source" if parsed
+                else "partially_implemented" if acquired
+                else "implemented_fixture_tested_only"
+            ),
+            "transformation": (
+                "implemented_verified_with_real_source" if transformed
+                else "partially_implemented" if acquired
+                else "implemented_fixture_tested_only"
+            ),
+        }
+
+    classification_versions = sorted({
+        row.get("psoc_version", "") for row in classifications if row.get("psoc_version")
+    })
 
     checksums = {}
     for path in (
@@ -378,18 +440,14 @@ def build_release_manifest(frozen_time: str | None) -> dict[str, Any]:
         "exposure_rubric_version": RUBRIC_VERSION,
         "prompt_version": PROMPT_VERSION,
         "crosswalk_version": "0.1.0",
-        "psoc_version": psoc.PSOC_VERSION,
+        "psoc_version": classification_versions[0] if len(classification_versions) == 1 else classification_versions,
         "source_versions": source_versions,
         "source_hashes": source_hashes,
         "canonical_table_checksums": checksums,
         "model_runs": _discover_model_runs(),
         "pipeline_stages": [report.as_dict() for report in pipeline_stage_reports()],
-        "publication_state": {
-            "metrics_defined": sorted(METRIC_DEFINITIONS),
-            "metrics_with_published_values": [],
-            "metrics_blocked_pending_source": blocked,
-            "metrics_not_representable_at_current_granularity": unrepresentable,
-        },
+        "source_pipeline_status": source_pipeline_status,
+        "publication_state": publication_state,
         "known_limitations": [
             "No metric in this release carries a value. Every PSA host, "
             "www.onetcenter.org and openrouter.ai returned HTTP 403 at this build "

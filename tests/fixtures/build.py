@@ -25,8 +25,15 @@ LFS_ROWS = [
 ]
 
 SOF_ROWS = [
+    ("0", "Armed Forces Occupations", "0", "FIXTURE 2024 October round", "PSOC 2012 (2022 Updates)"),
     ("1", "Managers", "10", "FIXTURE 2024 October round", "PSOC 2012 (2022 Updates)"),
     ("2", "Professionals", "30", "FIXTURE 2024 October round", "PSOC 2012 (2022 Updates)"),
+    ("3", "Technicians and Associate Professionals", "0", "FIXTURE 2024 October round", "PSOC 2012 (2022 Updates)"),
+    ("4", "Clerical Support Workers", "0", "FIXTURE 2024 October round", "PSOC 2012 (2022 Updates)"),
+    ("5", "Service and Sales Workers", "0", "FIXTURE 2024 October round", "PSOC 2012 (2022 Updates)"),
+    ("6", "Skilled Agricultural Forestry and Fishery Workers", "0", "FIXTURE 2024 October round", "PSOC 2012 (2022 Updates)"),
+    ("7", "Craft and Related Trades Workers", "0", "FIXTURE 2024 October round", "PSOC 2012 (2022 Updates)"),
+    ("8", "Plant and Machine Operators and Assemblers", "0", "FIXTURE 2024 October round", "PSOC 2012 (2022 Updates)"),
     ("9", "Elementary Occupations", "60", "FIXTURE 2024 October round", "PSOC 2012 (2022 Updates)"),
 ]
 

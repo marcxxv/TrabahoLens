@@ -3,7 +3,8 @@
 # Ordered as the data flows. Every target is safe to run repeatedly; none of
 # them invents a value when its input is missing — they fail or record the gap.
 
-PY := uv run python
+PY := PYTHONPATH=src uv run python
+PYTEST := PYTHONPATH=src uv run pytest
 
 .PHONY: help audit fetch-data validate-raw build-crosswalk build-metrics \
         build-release score-exposure sensitivity validate-release build-site \
@@ -61,14 +62,14 @@ validate-release:
 build-site: build-release validate-release
 
 test:
-	uv run pytest tests/ -q
+	$(PYTEST) tests/ -q
 
 # The rest of the suite proves validators reject bad input. This target proves
 # the opposite direction: that a correctly populated source actually reaches a
 # published value. On an empty production dataset every other check passes
 # trivially, so this is the one that shows the pipeline works.
 test-populated-pipeline:
-	uv run pytest tests/test_populated_pipeline.py -q
+	$(PYTEST) tests/test_populated_pipeline.py tests/test_final_remediation.py -q
 
 check:
 	$(PY) scripts/check.py

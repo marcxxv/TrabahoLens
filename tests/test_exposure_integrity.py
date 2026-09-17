@@ -33,8 +33,11 @@ TASKS = [
         "occupation_title": "FIXTURE occupation",
         "occupation_source": "ONET",
         "psoc_code": "25",
+        "onet_soc_code": "25-1011.00",
+        "crosswalk_id": "XW-FIXTURE-25",
         "crosswalk_match_type": "close",
         "crosswalk_match_quality": "medium",
+        "crosswalk_review_status": "human_reviewed",
         "task_importance": "3.5",
         "task_source_version": "31.0",
     }
@@ -326,23 +329,35 @@ def test_prohibited_inputs_are_refused_at_any_depth():
 def test_task_input_validation_rejects_bad_rows(mutation, expected):
     task = {**TASKS[0], **mutation}
     with pytest.raises(sx.ScoringRefusal, match=expected):
-        sx.validate_task_inputs([task])
+        sx.validate_task_inputs(
+            [task], canonical_codes={"25"},
+            accepted_crosswalks={("XW-FIXTURE-25", "25", "25-1011.00")},
+        )
 
 
 def test_duplicate_task_ids_are_rejected():
     with pytest.raises(sx.ScoringRefusal, match="duplicate task_id"):
-        sx.validate_task_inputs([TASKS[0], dict(TASKS[0])])
+        sx.validate_task_inputs(
+            [TASKS[0], dict(TASKS[0])], canonical_codes={"25"},
+            accepted_crosswalks={("XW-FIXTURE-25", "25", "25-1011.00")},
+        )
 
 
 def test_mixed_task_source_versions_are_rejected():
     a = {**TASKS[0], "task_source_version": "30.2"}
     b = {**TASKS[1], "task_source_version": "31.0"}
     with pytest.raises(sx.ScoringRefusal, match="mix task-source versions"):
-        sx.validate_task_inputs([a, b])
+        sx.validate_task_inputs(
+            [a, b], canonical_codes={"25"},
+            accepted_crosswalks={("XW-FIXTURE-25", "25", "25-1011.00")},
+        )
 
 
 def test_valid_task_rows_pass():
-    sx.validate_task_inputs(TASKS)
+    sx.validate_task_inputs(
+        TASKS, canonical_codes={"25"},
+        accepted_crosswalks={("XW-FIXTURE-25", "25", "25-1011.00")},
+    )
 
 
 # ---------------------------------------------------------------------------

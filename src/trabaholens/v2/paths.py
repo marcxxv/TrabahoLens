@@ -30,6 +30,7 @@ CLASSIFICATIONS_CSV = CANONICAL_DIR / "classifications.csv"
 OCCUPATIONS_CSV = CANONICAL_DIR / "occupations.csv"
 METRIC_OBSERVATIONS_CSV = CANONICAL_DIR / "metric_observations.csv"
 CROSSWALK_CSV = CANONICAL_DIR / "crosswalk_psoc_isco_soc.csv"
+REVIEWED_PSOC_ONET_CROSSWALK_CSV = DATA_DIR / "reference" / "reviewed_psoc_onet_crosswalk.csv"
 TRANSFORMATIONS_CSV = CANONICAL_DIR / "transformations.csv"
 MODEL_SCORES_CSV = CANONICAL_DIR / "model_scores.csv"
 

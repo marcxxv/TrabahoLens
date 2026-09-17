@@ -26,8 +26,8 @@ Every version held side by side, observations attached to their own version.
   assumed away.
 
 Either way, the rule that matters is enforced in code: an observation whose
-source used a version we cannot reconcile is **refused**, not silently
-renumbered. See ``transform.COMPATIBLE_PSOC_VERSIONS``.
+source used a version other than the canonical version is **refused** unless an
+explicit correspondence is supplied; it is never silently renumbered.
 
 ## What this importer has actually done
 

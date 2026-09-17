@@ -58,8 +58,12 @@ TASKS = [
         "occupation_title": "Test occupation",
         "occupation_source": "O*NET",
         "psoc_code": "25",
+        "onet_soc_code": "25-1011.00",
+        "crosswalk_id": "XW-FIXTURE-25",
         "crosswalk_match_type": "close",
         "crosswalk_match_quality": "medium",
+        "crosswalk_review_status": "human_reviewed",
+        "task_source_version": "31.0",
         "task_importance": "3.5",
     }
     for i in range(1, 4)
@@ -126,25 +130,6 @@ def test_single_attempt_reports_no_agreement_signal():
     assert result["range"] == 0
     # One attempt cannot evidence reproducibility, whatever its agreement reads.
     assert result["median"] == 3
-
-
-def test_weighted_and_unweighted_aggregation_stay_separate():
-    entries = [
-        {"task": {"task_importance": "5"}, "consensus": {"technical_task_exposure": {"score": 5}}},
-        {"task": {"task_importance": "1"}, "consensus": {"technical_task_exposure": {"score": 1}}},
-    ]
-    unweighted = sx.aggregate_tasks_to_occupation(entries, "technical_task_exposure", weighted=False)
-    weighted = sx.aggregate_tasks_to_occupation(entries, "technical_task_exposure", weighted=True)
-    assert unweighted == pytest.approx(3.0)
-    assert weighted == pytest.approx((5 * 5 + 1 * 1) / 6, abs=1e-4)
-    assert unweighted != weighted
-
-
-def test_missing_scores_do_not_become_zero():
-    entries = [
-        {"task": {"task_importance": "1"}, "consensus": {"technical_task_exposure": {"score": None}}},
-    ]
-    assert sx.aggregate_tasks_to_occupation(entries, "technical_task_exposure", weighted=False) is None
 
 
 def test_out_of_range_response_is_rejected():
