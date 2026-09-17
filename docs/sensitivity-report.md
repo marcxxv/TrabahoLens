@@ -24,7 +24,7 @@ with no model identifier recorded. They remain readable under
 
 | Analysis | Method | Release gate |
 | --- | --- | --- |
-| Within-model stability | Range and standard deviation across replicates of the same model and prompt | A task whose replicates span more than 1 point is reported unstable; an occupation where more than 25% of tasks are unstable is not published as a point score |
+| Within-model stability | Range and category agreement across repeated attempts with the same model and prompt | A task whose attempts span more than 1 point is reported unstable; an occupation where more than 25% of tasks are unstable is not published as a point score |
 | Between-model agreement | Mean absolute difference and exact-agreement share across models | Reported; large disagreement is published rather than resolved by choosing a favourite |
 | Prompt-wording sensitivity | Re-run under a variant prompt at the same rubric version | A dimension that moves materially on paraphrase is reported as prompt-sensitive |
 | Task-weighting sensitivity | Unweighted vs importance-weighted aggregation | Both published; never averaged together |

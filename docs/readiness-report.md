@@ -24,7 +24,7 @@ partially implemented · blocked · rejected.
 | Phase | Classification | Why |
 | --- | --- | --- |
 | **Phase 1 — credibility reset** | **Complete and verified** | This phase's deliverable is the removal of unsupported claims and the honest labelling of what remains. That is verifiable against the repository itself, and it is done: unsupported metrics withdrawn, two evidence axes shown separately, per-stage status displayed, disclaimer fixed, counts derived, no hazard framing, no hard-coded counts. It does not depend on primary-source access. |
-| **Phase 2 — Philippine-first data foundation** | **Implemented, fixture-tested only** | The pipeline runs end to end and a populated fixture publishes six observations with full provenance. No primary source has been retrieved, so no stage has seen real data. The PSOC classification is the ISCO-08 skeleton, unverified. Detailed occupations do not exist. |
+| **Phase 2 — Philippine-first data foundation** | **Partially implemented** | Hashing, source-shaped JSON-stat/O\*NET parsing, strict transformation, provenance and release validation are fixture-tested. But the exact PSA table profiles are still unidentified, no primary source has been processed, the authoritative PSOC classification is absent, and no reviewed PSOC↔O\*NET crosswalk exists. |
 | **Phase 3 — generative-AI task exposure** | **Partially implemented** | The rubric, prompt, harness, attempt accounting, ordinal aggregation and deterministic confidence are implemented and fixture-tested. Dimension C is **rejected** (removed, not deferred). The measure cannot run at all: it needs O\*NET task statements and a PSOC↔O\*NET crosswalk, and neither exists. |
 | **Phase 4 — Philippine AI Report integration** | **Not started, correctly** | Out of scope by instruction, and blocked on Phases 2 and 3 regardless. |
 
@@ -69,9 +69,9 @@ shares sum to 1.0.
 
 ### Which are estimated?
 
-**Four, by definition; none published.** `employment_count`, `wage_basic_pay`,
-`ofw_distribution_share` and `informal_employment_share` all derive from sample
-surveys and carry sampling error.
+**Two, by definition; none published.** `employment_count` and
+`wage_basic_pay` are sample-survey estimates and carry sampling error.
+`ofw_distribution_share` is calculated from SOF survey-estimated counts.
 
 This is the correction the review forced. The previous schema labelled these
 `official_statistic` on a single axis, which read as "directly observed". PSA
@@ -165,8 +165,10 @@ merely a matter of gaining access.
 
 ## What would change each verdict
 
-1. **Retrieve the sources.** `make fetch-data` from a permitted network. The
-   pipeline is written and fixture-proven; this is the single largest unblock.
+1. **Identify and retrieve the exact sources.** Run acquisition from a permitted
+   network only after pinning the LFS, OWS and SOF table endpoints and query
+   dimensions. The generic pipeline is source-shape fixture-tested; every
+   source-specific profile must still be exercised against real bytes.
 2. **Identify the specific tables.** Independent of network access and
    currently unknown for LFS, OWS and SOF.
 3. **Import the PSOC volume.** Unblocks detailed occupations, which three

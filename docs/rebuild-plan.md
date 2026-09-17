@@ -66,9 +66,8 @@ Legacy data is copied to `data/legacy/v1/` before anything is rewritten.
 * Rename "Risk Vector Explainer" → "Task Exposure Explainer"; replace all
   risk/automation/displacement vocabulary.
 * Replace the red/amber/green risk ramp with a sequential, non-alarm scale.
-* Every published field carries a visible `estimate_type` badge drawn from
-  Official statistic / Calculated statistic / Estimate / Proxy / Experimental
-  model-derived score, each with a plain-language tooltip.
+* Every published field carries separate visible `derivation_class` and
+  `source_authority` badges, each with a plain-language tooltip.
 * Fixed, always-visible exposure disclaimer beside the exposure layer.
 
 The treemap's core encoding (tile area ∝ employment) depends on fabricated
@@ -105,16 +104,16 @@ the release if an unverified row is published without that marker.
 
 ## Phase 3 — Generative-AI task exposure
 
-* Versioned rubric `data/exposure/rubric/rubric-v0.1.0.yaml`, 0–5 task scale
-  with explicit anchors; separate dimensions for technical task exposure,
-  human-interaction/physical-presence intensity, adoption friction and evidence
-  confidence. These are never combined into a single job-loss number.
-* Versioned prompt `data/exposure/prompts/prompt-v0.1.0.md`. The legacy
+* Versioned rubric `data/exposure/rubric/rubric-v0.2.0.yaml`, with separate
+  ordinal dimensions for technical task exposure and human-interaction or
+  physical-presence intensity. Adoption friction is removed; evidence
+  confidence is computed from provenance. Nothing is combined into a job-loss number.
+* Versioned prompt `data/exposure/prompts/prompt-v0.2.0.md`. The legacy
   prompt's "Expected average: ~3.5–4.5" line is removed — it anchored the score
   distribution. Employment, wages, OFW share and informality are removed from
   the scoring context; they are not evidence of technical task exposure.
-* `src/trabaholens/v2/score_exposure.py` runs N independent replicates with
-  randomised task order, records provider/model/snapshot/temperature/date, saves
+* `src/trabaholens/v2/score_exposure.py` runs repeated scoring attempts,
+  records provider/model/snapshot/temperature/date, saves
   raw responses under `data/exposure/runs/<run_id>/`, aggregates by median,
   retains disagreement and reports stability. Reruns write new run directories;
   historical results are never overwritten.

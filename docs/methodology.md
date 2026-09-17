@@ -70,7 +70,8 @@ into entities rather than flattened:
 | `model_scores.csv` | Released exposure scores with full model provenance |
 
 A metric observation carries its own `source_id`, `source_url`,
-`source_file_hash`, `retrieved_at`, `reference_period`, `estimate_type`,
+`source_file_hash`, `retrieved_at`, `reference_period`, `derivation_class`,
+`source_authority`,
 `confidence_grade`, `source_granularity`, `display_granularity` and
 `suppression_status`. The interface receives all of that in the same object as
 the value, so a front-end cannot render a number while forgetting its
@@ -422,10 +423,11 @@ LFS, OWS and SOF tables have not even been identified. See
 
 What the release does contain: the PSOC structure, the metric definitions, the
 source registry, the crosswalk framework, the validation rules, the interface,
-and 30 metric observations each carrying an empty value and an explicit
+and 20 metric observations each carrying an empty value and an explicit
 `blocked_pending_source` with its reason.
 
 That the pipeline works is demonstrated rather than asserted:
 `make test-populated-pipeline` drives synthetic sources through every stage and
-proves six observations reach the payload with full provenance, while fourteen
-mutation tests prove each specific corruption stops publication.
+proves populated observations reach the payload with full provenance. Separate
+source-shaped JSON-stat tests exercise multidimensional cell decoding, while
+mutation tests prove malformed inputs cannot publish.

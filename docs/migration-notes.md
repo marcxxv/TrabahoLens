@@ -71,15 +71,15 @@ profiler reads `GROUP_TOTALS` and `SOC_TO_PSOC_MAJOR` from them directly.
 | `jobs` | `employment_count`, blocked | v1 value was a hard-coded group total split by title keywords |
 | `pay` | `wage_basic_pay`, blocked | v1 value was a constant per category |
 | `outlook` | **gone, no successor** | v1 value was the literal `50`; no source for it exists |
-| `informal_share` | `informal_employment_share`, blocked | v1 value was a constant per category |
+| `informal_share` | **gone, no current core successor** | v1 value was a constant per category; no occupation-level Philippine source is identified |
 | `ofw_share` | `ofw_distribution_share`, blocked | **different quantity** — see below |
 | `education` | `onet_job_zone`, blocked | Retained but relabelled a US-derived proxy |
-| `exposure` (0–10) | four 0–5 dimensions, no score published | v1 was one unreplicated run under an anchored prompt |
+| `exposure` (0–10) | two 0–5 model-scored dimensions, no score published | v1 was one unreplicated run under an anchored prompt |
 | `exposure_rationale` | returns only with a model-derived badge | v1 displayed model text as explanation of fact |
 | `primary_risk_vector` | `ai_can_assist_with` / `remains_human_dependent` | Hazard vocabulary removed |
 | `category` | **gone** | An internal 22-bucket string that drove the wage and informality constants |
 | `source` | **gone** | Recorded which code branch ran, not where a number came from |
-| — | `estimate_type`, `availability`, `confidence_grade`, `source_granularity`, `display_granularity`, `source_url`, `source_file_hash`, `retrieved_at`, `reference_period` | New. Provenance now travels with every value |
+| — | `derivation_class`, `source_authority`, `availability`, `confidence_grade`, `source_granularity`, `display_granularity`, `source_url`, `source_file_hash`, `retrieved_at`, `reference_period` | New. Provenance now travels with every value |
 
 ### The OFW field is not a rename
 

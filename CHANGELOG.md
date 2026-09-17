@@ -15,6 +15,15 @@ Full detail: [`docs/changelog-v2.md`](docs/changelog-v2.md).
 Evidence: [`docs/audit/baseline-audit.md`](docs/audit/baseline-audit.md).
 Integration assessment: [`docs/readiness-report.md`](docs/readiness-report.md).
 
+### Final remediation — 2026-09-17
+
+Corrected multidimensional PXWeb decoding, row-local metadata, exact PSOC
+version matching, production PSOC import wiring, reviewed-crosswalk enforcement,
+canonical provenance retention, OFW slice denominators, duplicate blocking,
+derived release status, ordinal exposure analysis, and current documentation.
+Phase 2 remains partially implemented because no real primary source or reviewed
+PSOC↔O\*NET crosswalk has passed through the pipeline.
+
 ---
 
 ## Entries below describe v1 and are retained for the historical record

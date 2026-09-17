@@ -8,7 +8,7 @@ explains why, and what would change it.
 
 ## 1. No metric value is published
 
-Not one. `data/canonical/metric_observations.csv` contains 30 rows and all 30
+Not one. `data/canonical/metric_observations.csv` contains 20 rows and all 20
 have an empty `metric_value`.
 
 Every source the project needs was unreachable from the build environment. The
@@ -147,13 +147,12 @@ matters most: kasambahay, tricycle and jeepney driving, street vending,
 fisherfolk and barangay health work have no close O\*NET analogue. A confident
 score for those is a crosswalk failure, not a finding.
 
-### 5.4 Adoption friction is judgement, not measurement
+### 5.4 Adoption friction is not currently scored
 
-Dimension C of the exposure rubric asks how much regulation, liability,
-connectivity, device access, employer scale and informality would slow
-deployment. There is no dataset behind it. It is published as the most
-speculative of the four dimensions, and it is never folded into the technical
-exposure score.
+The retired dimension C asked the model to infer Philippine regulation,
+liability, connectivity, device access, employer scale and informality without
+verified Philippine evidence. It has been removed. A future contextual layer
+must be computed from actual Philippine evidence and reviewed independently.
 
 ### 5.5 The exposure measure cannot answer the question people ask
 
@@ -165,7 +164,7 @@ institutional capacity, and new work that does not exist yet.
 
 Publishing a task-exposure number next to an occupation invites the inference
 anyway. The interface resists it with a fixed disclaimer, non-hazard colouring,
-four separate dimensions instead of one index, and a validator that rejects
+separate task-exposure and human-interaction dimensions instead of one index, and a validator that rejects
 job-loss vocabulary. That reduces the risk; it does not eliminate it.
 
 ### 5.6 A survey design that is not yet honoured

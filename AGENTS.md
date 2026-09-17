@@ -34,7 +34,7 @@ profile suggests". A model's rationale is not a finding.
 
 ## Provenance
 
-Every published numeric value carries `estimate_type`, `availability`,
+Every published numeric value carries `derivation_class`, `source_authority`, `availability`,
 `confidence_grade`, `source_id`, `source_url`, `source_file_hash`,
 `retrieved_at`, `reference_period`, `source_granularity` and
 `display_granularity`. A value cannot be added without them; validation rejects
@@ -66,7 +66,7 @@ The scorer must not receive employment, wages, OFW share or informality. These
 are not evidence of what a model can do with a task. The harness refuses to send
 them.
 
-Runs need at least two replicates. Disagreement is published, not smoothed.
+Runs need at least two successful repeated attempts. Disagreement is published, not smoothed.
 Reruns write new directories; historical runs are never overwritten.
 
 ## Before you commit

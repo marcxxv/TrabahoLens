@@ -213,3 +213,43 @@ were reassessed and narrowed.
 The v1 script entry points had **already** been removed on the reviewed head,
 and v1 module `main()` functions already raised. What was missing was a test
 proving no production target invokes legacy metric generation or scoring. Added.
+
+---
+
+## Final adversarial-review remediation
+
+A second review of remediation head `79cc362` found fourteen remaining defects.
+The final remediation corrects them as follows:
+
+1. JSON-stat/PXWeb values are decoded across the full dimensional cube using
+   declared dimension order and sizes; every cell retains its own period.
+2. CSV classification version and period are row-local and are never carried
+   forward from a preceding row.
+3. PSOC versions require an exact canonical match unless an explicit mapping is
+   supplied.
+4. A complete, verified PSOC acquisition now replaces the fallback skeleton in
+   the normal production build.
+5. Non-PSOC observations resolve through the canonical crosswalk and require
+   exactly one accepted mapping.
+6. Exposure tasks require canonical PSOC and O\*NET foreign keys plus a
+   human-reviewed crosswalk.
+7. Source table, uncertainty bounds and crosswalk id now survive into canonical
+   observations and the site payload.
+8. OFW denominators are grouped by period, geography, universe and
+   classification version; incomplete distributions are refused.
+9. Multiple source rows resolving to one current metric/code block publication
+   instead of overwriting one another.
+10. Published and blocked metric lists are derived from actual observations.
+11. Per-source pipeline status distinguishes real-source, fixture-only,
+    partial and unimplemented paths; global status no longer upgrades every
+    parser after one unrelated retrieval.
+12. Obsolete mean-based occupation aggregation was removed from the active
+    exposure path; sensitivity reporting uses ordinal medians and distributions.
+13. Current documentation now uses the two-axis evidence schema, repeated-attempt
+    vocabulary and the two model-scored exposure dimensions.
+14. OFW distribution is labelled `calculated`, while its source remains an
+    official survey estimate.
+
+The production release still contains no primary-source metric values. These
+fixes make the pipeline fail safely and describe its partial status accurately;
+they do not turn fixtures into empirical validation.

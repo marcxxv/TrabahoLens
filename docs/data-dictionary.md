@@ -148,7 +148,7 @@ One row per (occupation unit, metric, reference period).
 | `reference_period` | Survey round or year. Required for any published value. |
 | `geography` | Coverage. |
 | `population_scope` | The denominator or universe. |
-| `estimate_type` | See above. |
+| `derivation_class`, `source_authority` | Independent axes describing how the value was produced and who published its source. |
 | `availability` | See above. |
 | `source_granularity` / `display_granularity` | See above. |
 | `source_id` | Must exist in the source registry. |
@@ -169,7 +169,6 @@ One row per (occupation unit, metric, reference period).
 | `employment_count` | Employed persons | persons | PSA LFS | PSOC major group |
 | `wage_basic_pay` | Average monthly basic pay, OWS establishments | PHP/month | PSA OWS | occupation |
 | `ofw_distribution_share` | Distribution of OFWs by major occupation group | share of all OFWs | PSA SOF | PSOC major group |
-| `informal_employment_share` | Informal employment share | share of employed persons | PSA | PSOC major group |
 | `onet_job_zone` | O\*NET Job Zone (US) | ordinal 1–5 | O\*NET | occupation |
 | `gen_ai_task_exposure` | Generative-AI technical task exposure | 0–5 rubric score | LLM scoring | occupation |
 
@@ -218,12 +217,12 @@ site payload under `metrics`.
 | `rubric_version`, `prompt_version` | Versioned artifacts under `data/exposure/`. |
 | `model_provider`, `model_id`, `model_release_or_snapshot` | Exactly which model. |
 | `scoring_date`, `temperature`, `run_count` | Run parameters. `run_count` must be ≥ 2. |
-| `aggregation_method` | `unweighted_mean` or `importance_weighted_mean`. Both published; never merged. |
+| `aggregation_method` | Ordinal median across tasks, with category distribution and IQR. |
 | `task_source`, `task_weighting` | Where the tasks came from and how they were weighted. |
 | `crosswalk_quality` | Quality of the mapping that brought the tasks across. |
 | `score`, `score_scale_min`, `score_scale_max` | The value and its scale. |
 | `uncertainty_or_stability` | Cross-run standard deviation. |
-| `run_disagreement_range` | Widest disagreement between replicates. Retained, not smoothed. |
+| `run_disagreement_range` | Widest disagreement between repeated attempts. Retained, not smoothed. |
 | `human_review_status` | Whether a person has reviewed it. |
 | `limitations` | Including the no-independent-validation statement. |
 | `raw_response_reference` | Path to the run record holding the raw responses. |
@@ -232,8 +231,8 @@ site payload under `metrics`.
 
 ## Site payload — `site/data.json`
 
-Top level: `schema`, `release`, `disclaimers`, `estimate_type_legend`,
-`confidence_grade_legend`, `availability_legend`, `metrics`, `counts`,
+Top level: `schema`, `release`, `disclaimers`, `derivation_class_legend`,
+`source_authority_legend`, `confidence_grade_legend`, `availability_legend`, `metrics`, `counts`,
 `occupations`.
 
 `counts` is **derived at build time** — `occupations`, `psoc_major_groups`,
@@ -248,7 +247,8 @@ Each `occupations[]` entry carries `occupation_id`, `psoc_code`,
 and an `exposure` array.
 
 Each `metrics` entry contains `value` (**`null` when unavailable**), `unit`,
-`estimate_type`, `estimate_type_label`, `availability`, `confidence_grade`,
+`derivation_class`, `derivation_class_label`, `source_authority`,
+`source_authority_label`, `availability`, `confidence_grade`,
 `reference_period`, `geography`, `population_scope`, `source_granularity`,
 `display_granularity`, `granularity_mismatch`, `source_id`,
 `source_organization`, `source_dataset`, `source_url`, `source_file_hash`,
@@ -269,7 +269,7 @@ render a number without having been handed what qualifies it.
 | `outlook` / `hiring_intensity` | **Removed** | Literal `50` on every row, attributed to PhilJobNet, which the repository never touched. |
 | `informal_share` | **Removed** | Constant per internal category; no source, no definition. |
 | `ofw_share` | **Replaced** | Was P(occupation\|OFW) published as P(OFW\|occupation). Replaced by `ofw_distribution_share`. |
-| `exposure` (0–10) | **Replaced** | Single unreplicated run under a distribution-anchoring prompt. Replaced by four separate 0–5 dimensions. |
+| `exposure` (0–10) | **Replaced** | Single unreplicated run under a distribution-anchoring prompt. Replaced by two separate model-scored 0–5 dimensions plus computed provenance confidence. |
 | `exposure_rationale` | **Removed as published fact** | Model text shown as explanation. Returns only under a model-derived badge and "the scoring model judged" framing. |
 | `primary_risk_vector` | **Removed** | Hazard vocabulary. Replaced by `ai_can_assist_with` / `remains_human_dependent`. |
 | `category` | **Removed** | An internal 22-bucket string that drove the wage and informality constants; not a classification. |
