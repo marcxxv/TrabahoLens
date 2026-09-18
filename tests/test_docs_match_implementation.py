@@ -191,3 +191,35 @@ def test_documented_paths_exist():
         if "runs/" not in m and "raw/" not in m and m not in vacated_by_migration
     ]
     assert not missing, f"docs reference paths that do not exist: {missing}"
+
+
+def test_dashboard_only_activates_source_backed_values():
+    """The visual layer must not turn an unavailable metric into decoration.
+
+    This is intentionally a static contract as well as a release-data check:
+    the dashboard filters on both ``published`` availability and a non-null
+    value, and all other metric tabs are rendered disabled.
+    """
+    html = (REPO_ROOT / "site" / "index.html").read_text(encoding="utf-8")
+    assert 'metric.availability === "published" && metric.value !== null' in html
+    assert "button.disabled = true" in html
+    assert "Unavailable means unavailable—not zero" in html
+
+    payload = _payload()
+    published_metric_ids = {
+        metric_id
+        for occupation in payload["occupations"]
+        for metric_id, metric in occupation["metrics"].items()
+        if metric["availability"] == "published" and metric["value"] is not None
+    }
+    assert published_metric_ids == {"employment_count"}
+
+
+def test_dashboard_has_no_embedded_employment_values():
+    """Published figures must come from data.json, never copied into markup."""
+    html = (REPO_ROOT / "site" / "index.html").read_text(encoding="utf-8")
+    payload = _payload()
+    for occupation in payload["occupations"]:
+        metric = occupation["metrics"].get("employment_count")
+        if metric and metric["value"] is not None:
+            assert str(metric["value"]) not in html

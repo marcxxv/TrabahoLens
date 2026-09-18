@@ -54,6 +54,15 @@
         }
       }
 
+      :root[data-theme="light"] {
+        --bg: #fbfcfd; --bg2: #ffffff; --bg3: #f2f4f7;
+        --fg: #1a1d23; --fg2: #545b68; --fg3: #79818f;
+        --line: #dfe3ea; --accent: #2f5fb8;
+        --ev-official: #1f6f9e; --ev-calculated: #2f7f71;
+        --ev-estimate: #8a7429; --ev-proxy: #6a5a91; --ev-model: #96542f;
+        --ev-none: #7a8292;
+      }
+
       html { color-scheme: dark light; }
 
       body {
@@ -118,6 +127,164 @@
       }
       .summary-cell .v { font-size: 22px; font-weight: 600; font-variant-numeric: tabular-nums; }
       .summary-cell .n { font-size: 12px; color: var(--fg3); margin-top: 3px; }
+
+      /* ── Dashboard ───────────────────────────────────────────────────── */
+      .topbar {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 16px; margin-bottom: 24px;
+      }
+      .brand { display: flex; align-items: center; gap: 10px; }
+      .brand-mark {
+        width: 32px; height: 32px; border: 1px solid var(--line); border-radius: 9px;
+        display: grid; place-items: center; background: var(--bg2); color: var(--accent);
+        font-weight: 700; font-size: 13px;
+      }
+      .brand h1 { margin: 0; }
+      .top-actions { display: flex; gap: 8px; }
+      .icon-btn, .control, .view-btn, .metric-tab, .drawer-close, .copy-btn {
+        appearance: none; border: 1px solid var(--line); color: var(--fg2);
+        background: var(--bg2); border-radius: 8px; font: inherit;
+      }
+      .icon-btn, .drawer-close, .copy-btn {
+        min-width: 38px; height: 38px; display: inline-grid; place-items: center;
+        cursor: pointer; padding: 0 10px;
+      }
+      .icon-btn:hover, .drawer-close:hover, .copy-btn:hover,
+      .view-btn:hover, .metric-tab:not([disabled]):hover { color: var(--fg); border-color: var(--fg3); }
+      :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+      .dashboard { margin-top: 28px; }
+      .dashboard-head {
+        display: flex; justify-content: space-between; align-items: end;
+        gap: 18px; margin-bottom: 14px;
+      }
+      .eyebrow {
+        color: var(--accent); text-transform: uppercase; letter-spacing: .08em;
+        font-weight: 700; font-size: 10px; margin-bottom: 5px;
+      }
+      .dashboard-title { font-size: clamp(21px, 3vw, 30px); line-height: 1.15; letter-spacing: -.025em; }
+      .dashboard-copy { color: var(--fg2); font-size: 13px; max-width: 62ch; margin-top: 6px; }
+      .freshness {
+        display: flex; align-items: center; gap: 7px; color: var(--fg2); font-size: 12px;
+        white-space: nowrap;
+      }
+      .freshness::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--ev-calculated); }
+
+      .metric-tabs { display: flex; gap: 7px; overflow-x: auto; padding: 2px 2px 10px; }
+      .metric-tab { padding: 8px 12px; cursor: pointer; white-space: nowrap; font-size: 12px; }
+      .metric-tab.active { color: var(--fg); background: var(--bg3); border-color: var(--accent); }
+      .metric-tab[disabled] { opacity: .58; cursor: not-allowed; }
+      .metric-tab .lock { margin-left: 5px; color: var(--fg3); }
+
+      .bento {
+        display: grid; grid-template-columns: repeat(12, 1fr); grid-auto-rows: minmax(92px, auto);
+        gap: 12px;
+      }
+      .bento-card {
+        background: var(--bg2); border: 1px solid var(--line); border-radius: 12px;
+        padding: 17px; overflow: hidden; position: relative;
+      }
+      .bento-card::after {
+        content: ""; position: absolute; inset: 0; pointer-events: none;
+        background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 7%, transparent), transparent 38%);
+      }
+      .bento-card > * { position: relative; z-index: 1; }
+      .chart-card { grid-column: span 8; grid-row: span 4; }
+      .insight-card { grid-column: span 4; }
+      .coverage-card { grid-column: span 4; }
+      .source-card { grid-column: span 4; grid-row: span 2; }
+      .unavailable-card { grid-column: span 8; grid-row: span 2; }
+      .card-label { color: var(--fg3); font-size: 10px; text-transform: uppercase; letter-spacing: .07em; }
+      .card-value { font-size: clamp(24px, 4vw, 38px); font-weight: 650; letter-spacing: -.04em; margin-top: 4px; }
+      .card-note { color: var(--fg2); font-size: 12px; line-height: 1.45; margin-top: 5px; }
+      .card-head { display: flex; align-items: start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+      .card-head h3 { font-size: 14px; font-weight: 600; }
+
+      .toolbar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+      .search-wrap { flex: 1 1 220px; position: relative; }
+      .search-wrap::before { content: "⌕"; position: absolute; left: 11px; top: 7px; color: var(--fg3); }
+      .control { min-height: 38px; padding: 8px 11px; font-size: 12.5px; }
+      .search-wrap input { width: 100%; padding-left: 31px; }
+      select.control { cursor: pointer; }
+      .view-switch { display: flex; gap: 4px; }
+      .view-btn { padding: 7px 10px; cursor: pointer; font-size: 12px; }
+      .view-btn.active { background: var(--bg3); color: var(--fg); }
+
+      .chart-list { display: grid; gap: 6px; }
+      .chart-row {
+        width: 100%; display: grid; grid-template-columns: minmax(130px, 1.3fr) minmax(170px, 2fr) 94px;
+        align-items: center; gap: 12px; padding: 7px 8px; margin: 0 -8px;
+        border: 0; border-radius: 7px; background: transparent; color: inherit;
+        font: inherit; text-align: left; cursor: pointer;
+      }
+      .chart-row:hover, .chart-row:focus-visible { background: var(--bg3); }
+      .chart-name { min-width: 0; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .chart-code { color: var(--fg3); font-variant-numeric: tabular-nums; margin-right: 6px; }
+      .bar-track { height: 9px; border-radius: 999px; background: var(--bg3); overflow: hidden; }
+      .bar-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--accent), var(--ev-calculated)); transform-origin: left; }
+      .chart-value { text-align: right; font-variant-numeric: tabular-nums; font-size: 12px; font-weight: 600; }
+      .chart-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+      .group-tile {
+        border: 1px solid var(--line); border-radius: 9px; background: var(--bg);
+        color: inherit; padding: 12px; text-align: left; cursor: pointer;
+      }
+      .group-tile:hover { border-color: var(--accent); transform: translateY(-1px); }
+      .group-tile .tile-top { display: flex; justify-content: space-between; gap: 8px; color: var(--fg3); font-size: 10px; }
+      .group-tile .tile-title { font-size: 12px; min-height: 38px; margin: 7px 0; }
+      .group-tile .tile-value { font-size: 18px; font-weight: 650; font-variant-numeric: tabular-nums; }
+      .mini-track { height: 4px; background: var(--bg3); border-radius: 999px; margin-top: 10px; overflow: hidden; }
+      .mini-track span { display: block; height: 100%; background: var(--accent); border-radius: inherit; }
+      .empty-state { padding: 24px; text-align: center; color: var(--fg2); font-size: 13px; }
+
+      .status-stack { display: grid; gap: 8px; margin-top: 11px; }
+      .status-pill {
+        display: flex; justify-content: space-between; gap: 12px; align-items: center;
+        border-top: 1px solid var(--line); padding-top: 8px; font-size: 11.5px;
+      }
+      .status-pill span:first-child { color: var(--fg2); }
+      .status-pill b { color: var(--ev-estimate); font-weight: 600; text-align: right; }
+      .source-seal { display: flex; align-items: center; gap: 10px; margin: 12px 0; }
+      .source-seal strong { display: block; font-size: 13px; }
+      .source-seal span { display: block; color: var(--fg3); font-size: 11px; }
+      .seal {
+        width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center;
+        border: 1px solid var(--ev-official); color: var(--ev-official); font-size: 10px; font-weight: 700;
+      }
+
+      .dashboard-foot { display: flex; justify-content: space-between; gap: 12px; margin-top: 12px; color: var(--fg3); font-size: 11px; }
+      .kbd { border: 1px solid var(--line); background: var(--bg2); border-radius: 4px; padding: 1px 5px; font-size: 10px; }
+
+      /* ── Group detail drawer ─────────────────────────────────────────── */
+      .drawer-backdrop {
+        position: fixed; inset: 0; z-index: 80; background: rgba(3, 5, 10, .62);
+        opacity: 0; visibility: hidden; transition: opacity .18s;
+      }
+      .drawer-backdrop.visible { opacity: 1; visibility: visible; }
+      .detail-drawer {
+        position: fixed; z-index: 81; top: 0; right: 0; height: 100dvh; width: min(470px, 100%);
+        background: var(--bg2); border-left: 1px solid var(--line); padding: 22px;
+        transform: translateX(102%); transition: transform .22s ease; overflow-y: auto;
+        box-shadow: -20px 0 50px rgba(0,0,0,.25);
+      }
+      .detail-drawer.visible { transform: translateX(0); }
+      .drawer-head { display: flex; justify-content: space-between; align-items: start; gap: 16px; }
+      .drawer-title { font-size: 22px; line-height: 1.25; margin-top: 4px; }
+      .drawer-number { font-size: 36px; font-weight: 650; letter-spacing: -.04em; margin: 24px 0 2px; }
+      .drawer-unit { color: var(--fg2); font-size: 12px; }
+      .rank-line { margin: 18px 0; padding: 12px 0; border-block: 1px solid var(--line); color: var(--fg2); font-size: 13px; }
+      .drawer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      .drawer-field { background: var(--bg3); border-radius: 8px; padding: 11px; min-width: 0; }
+      .drawer-field dt { color: var(--fg3); font-size: 9px; text-transform: uppercase; letter-spacing: .07em; }
+      .drawer-field dd { color: var(--fg2); font-size: 12px; margin-top: 3px; overflow-wrap: anywhere; }
+      .drawer-section { margin-top: 22px; }
+      .drawer-section h3 { font-size: 12px; margin-bottom: 7px; }
+      .drawer-section p { color: var(--fg2); font-size: 12.5px; }
+      .drawer-actions { display: flex; gap: 8px; margin-top: 18px; }
+      .copy-btn { width: auto; font-size: 12px; }
+
+      .skeleton-line { height: 12px; border-radius: 5px; background: var(--bg3); overflow: hidden; }
+      .skeleton-line::after { content: ""; display: block; width: 45%; height: 100%; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--fg) 10%, transparent), transparent); animation: shimmer 1.35s infinite; }
+      @keyframes shimmer { from { transform: translateX(-120%); } to { transform: translateX(300%); } }
 
       /* ── Evidence legend ─────────────────────────────────────────────── */
       section { margin-top: 36px; }
@@ -296,6 +463,23 @@
         .group > summary { flex-wrap: wrap; gap: 8px; }
         .group-count { margin-left: 0; width: 100%; }
         #tooltip { max-width: calc(100vw - 32px); }
+        .dashboard-head { align-items: start; flex-direction: column; }
+        .freshness { white-space: normal; }
+        .bento { grid-template-columns: 1fr; }
+        .chart-card, .insight-card, .coverage-card, .source-card, .unavailable-card { grid-column: 1; }
+        .chart-row { grid-template-columns: minmax(110px, 1.4fr) minmax(80px, 1fr) 76px; gap: 8px; }
+        .chart-grid { grid-template-columns: 1fr; }
+        .drawer-grid { grid-template-columns: 1fr; }
+        .dashboard-foot { flex-direction: column; }
+      }
+
+      @media (min-width: 641px) and (max-width: 900px) {
+        .chart-card, .unavailable-card { grid-column: span 12; }
+        .insight-card, .coverage-card, .source-card { grid-column: span 6; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
       }
 
       /* Belt and braces: no descendant may force a horizontal scrollbar. */
@@ -305,12 +489,111 @@
   <body>
     <div id="wrapper">
       <header>
-        <h1>TrabahoLens</h1>
-        <p class="subtitle">
-          Philippine occupational evidence ledger · organised by the Philippine
-          Standard Occupational Classification
-        </p>
+        <div class="topbar">
+          <div class="brand">
+            <div class="brand-mark" aria-hidden="true">TL</div>
+            <div>
+              <h1>TrabahoLens</h1>
+              <p class="subtitle">Philippine occupational evidence</p>
+            </div>
+          </div>
+          <div class="top-actions">
+            <button class="icon-btn" id="themeToggle" type="button" aria-label="Switch colour theme" title="Switch colour theme">◐</button>
+            <a class="icon-btn" href="#evidence" aria-label="View evidence and methods" title="Evidence and methods">i</a>
+          </div>
+        </div>
 
+      </header>
+
+      <main>
+      <section class="dashboard" aria-labelledby="dashboardTitle">
+        <div class="dashboard-head">
+          <div>
+            <div class="eyebrow">2024 annual snapshot</div>
+            <h2 class="dashboard-title" id="dashboardTitle">Employment across broad occupation groups</h2>
+            <p class="dashboard-copy">
+              Compare the ten PSOC major groups backed by the official PSA Labor Force Survey.
+              Select a group to inspect the exact source, transformation, and confidence record.
+            </p>
+          </div>
+          <div class="freshness">Verified source snapshot</div>
+        </div>
+
+        <div class="metric-tabs" id="metricTabs" aria-label="Dashboard metric"></div>
+
+        <div class="bento" aria-live="polite">
+          <article class="bento-card chart-card">
+            <div class="card-head">
+              <div>
+                <div class="card-label">Employment comparison</div>
+                <h3 id="chartHeading">Employed persons by major group</h3>
+              </div>
+              <div class="view-switch" aria-label="Chart display">
+                <button class="view-btn active" type="button" data-view="bars" aria-pressed="true">Bars</button>
+                <button class="view-btn" type="button" data-view="grid" aria-pressed="false">Cards</button>
+              </div>
+            </div>
+            <div class="toolbar">
+              <label class="search-wrap">
+                <span class="sr-only" style="position:absolute;left:-9999px">Search occupation groups</span>
+                <input class="control" id="groupSearch" type="search" placeholder="Search groups…" autocomplete="off" />
+              </label>
+              <select class="control" id="groupSort" aria-label="Sort occupation groups">
+                <option value="employment-desc">Most employed</option>
+                <option value="employment-asc">Least employed</option>
+                <option value="code">PSOC code</option>
+                <option value="name">Name</option>
+              </select>
+            </div>
+            <div id="employmentChart">
+              <div class="skeleton-line" style="width:100%"></div>
+            </div>
+            <div class="dashboard-foot">
+              <span id="filterStatus">Loading verified groups…</span>
+              <span><span class="kbd">/</span> search · <span class="kbd">Esc</span> clear or close</span>
+            </div>
+          </article>
+
+          <article class="bento-card insight-card">
+            <div class="card-label">Largest published group</div>
+            <div class="card-value" id="largestValue">—</div>
+            <div class="card-note" id="largestNote">Calculated from the ten published major-group values.</div>
+          </article>
+
+          <article class="bento-card coverage-card">
+            <div class="card-label">Published coverage</div>
+            <div class="card-value" id="coverageValue">—</div>
+            <div class="card-note">Major groups only. No detailed occupation is implied.</div>
+          </article>
+
+          <article class="bento-card source-card">
+            <div class="card-label">Source record</div>
+            <div class="source-seal">
+              <div class="seal">PSA</div>
+              <div><strong>Labor Force Survey</strong><span id="sourcePeriod">Reference period loading…</span></div>
+            </div>
+            <div class="status-stack">
+              <div class="status-pill"><span>Authority</span><b>Official Philippine statistics</b></div>
+              <div class="status-pill"><span>Derivation</span><b>Sample-survey estimate</b></div>
+              <div class="status-pill"><span>Confidence</span><b id="sourceConfidence">—</b></div>
+            </div>
+          </article>
+
+          <article class="bento-card unavailable-card">
+            <div class="card-head">
+              <div>
+                <div class="card-label">Known gaps</div>
+                <h3>Unavailable means unavailable—not zero</h3>
+              </div>
+            </div>
+            <p class="card-note">These product layers stay visible so their absence cannot be mistaken for a low value.</p>
+            <div class="status-stack" id="gapStack"></div>
+          </article>
+        </div>
+      </section>
+
+      <section aria-labelledby="releaseContextTitle">
+        <h2 id="releaseContextTitle">What this release can—and cannot—say</h2>
         <div class="lede">
           <p>
             TrabahoLens shows what is actually known about Philippine
@@ -350,11 +633,10 @@
         </div>
 
         <div class="notice" id="classificationNotice"></div>
-
         <div class="summary" id="summary"></div>
-      </header>
+      </section>
 
-      <section>
+      <section id="evidence">
         <h2>How a figure was produced</h2>
         <p class="section-note">
           The <b>derivation class</b> says how a number came to exist. Hover or
@@ -450,7 +732,35 @@
           drawn from it.
         </p>
       </footer>
+      </main>
     </div>
+
+    <div class="drawer-backdrop" id="drawerBackdrop"></div>
+    <aside class="detail-drawer" id="detailDrawer" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="drawerTitle">
+      <div class="drawer-head">
+        <div>
+          <div class="eyebrow" id="drawerCode">PSOC</div>
+          <h2 class="drawer-title" id="drawerTitle">Occupation group</h2>
+        </div>
+        <button class="drawer-close" id="drawerClose" type="button" aria-label="Close detail panel">×</button>
+      </div>
+      <div class="drawer-number" id="drawerValue">—</div>
+      <div class="drawer-unit" id="drawerUnit">employed persons</div>
+      <div class="rank-line" id="drawerRank"></div>
+      <dl class="drawer-grid" id="drawerGrid"></dl>
+      <div class="drawer-section">
+        <h3>What this number means</h3>
+        <p id="drawerDefinition"></p>
+      </div>
+      <div class="drawer-section">
+        <h3>Do not read it as</h3>
+        <p id="drawerMisread"></p>
+      </div>
+      <div class="drawer-actions">
+        <a class="copy-btn" id="drawerSource" href="#" target="_blank" rel="noopener">Open source ↗</a>
+        <button class="copy-btn" id="copyProvenance" type="button">Copy provenance</button>
+      </div>
+    </aside>
 
     <div id="tooltip" role="tooltip">
       <div class="tt-title"></div>
@@ -463,6 +773,271 @@
       // tables. A stale claim in the interface is therefore not possible.
 
       const tooltip = document.getElementById("tooltip");
+      let dashboardData = null;
+      let dashboardView = "bars";
+      let lastDrawerTrigger = null;
+
+      const storedTheme = localStorage.getItem("trabaholens-theme");
+      if (storedTheme === "light" || storedTheme === "dark") {
+        document.documentElement.dataset.theme = storedTheme;
+      }
+
+      document.getElementById("themeToggle").addEventListener("click", () => {
+        const current = document.documentElement.dataset.theme ||
+          (matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
+        const next = current === "dark" ? "light" : "dark";
+        document.documentElement.dataset.theme = next;
+        localStorage.setItem("trabaholens-theme", next);
+      });
+
+      function formatPersons(value, compact = false) {
+        if (!Number.isFinite(Number(value))) return "—";
+        return new Intl.NumberFormat("en-PH", compact
+          ? { notation: "compact", maximumFractionDigits: 1 }
+          : { maximumFractionDigits: 0 }
+        ).format(Number(value));
+      }
+
+      function publishedEmploymentGroups(data) {
+        return data.occupations
+          .filter((occupation) => occupation.level === "psoc_major_group")
+          .map((occupation) => ({
+            occupation,
+            metric: occupation.metrics.employment_count,
+          }))
+          .filter(({ metric }) => metric && metric.availability === "published" && metric.value !== null);
+      }
+
+      function renderMetricTabs(data) {
+        const host = document.getElementById("metricTabs");
+        host.replaceChildren();
+        for (const [id, definition] of Object.entries(data.metrics)) {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "metric-tab";
+          const published = data.occupations.some((o) =>
+            o.metrics[id] && o.metrics[id].availability === "published" && o.metrics[id].value !== null
+          );
+          button.appendChild(document.createTextNode(definition.name));
+          if (id === "employment_count" && published) {
+            button.classList.add("active");
+            button.setAttribute("aria-pressed", "true");
+          } else {
+            button.disabled = true;
+            button.title = "No defensible published values are available for this metric.";
+            button.appendChild(el("span", "lock", "· unavailable"));
+          }
+          host.appendChild(button);
+        }
+      }
+
+      function renderDashboardChart() {
+        if (!dashboardData) return;
+        const query = document.getElementById("groupSearch").value.trim().toLowerCase();
+        const sort = document.getElementById("groupSort").value;
+        let groups = publishedEmploymentGroups(dashboardData).filter(({ occupation }) =>
+          `${occupation.psoc_code} ${occupation.title}`.toLowerCase().includes(query)
+        );
+        groups.sort((a, b) => {
+          if (sort === "employment-asc") return Number(a.metric.value) - Number(b.metric.value);
+          if (sort === "code") return a.occupation.psoc_code.localeCompare(b.occupation.psoc_code, undefined, { numeric: true });
+          if (sort === "name") return a.occupation.title.localeCompare(b.occupation.title);
+          return Number(b.metric.value) - Number(a.metric.value);
+        });
+
+        const host = document.getElementById("employmentChart");
+        host.replaceChildren();
+        document.getElementById("filterStatus").textContent =
+          `${groups.length} verified major group${groups.length === 1 ? "" : "s"} shown`;
+        if (!groups.length) {
+          host.appendChild(el("div", "empty-state", "No occupation group matches that search."));
+          return;
+        }
+        const max = Math.max(...groups.map(({ metric }) => Number(metric.value)));
+        const container = el("div", dashboardView === "grid" ? "chart-grid" : "chart-list");
+        for (const { occupation, metric } of groups) {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.dataset.psocCode = occupation.psoc_code;
+          button.setAttribute("aria-label", `${occupation.title}: ${formatPersons(metric.value)} employed persons. Open provenance.`);
+          button.addEventListener("click", () => openGroupDrawer(occupation.psoc_code, button));
+          const width = Math.max(1.5, Number(metric.value) / max * 100);
+          if (dashboardView === "grid") {
+            button.className = "group-tile";
+            const top = el("div", "tile-top");
+            top.appendChild(el("span", null, `PSOC ${occupation.psoc_code}`));
+            top.appendChild(el("span", null, "Grade " + metric.confidence_grade));
+            button.appendChild(top);
+            button.appendChild(el("div", "tile-title", occupation.title));
+            button.appendChild(el("div", "tile-value", formatPersons(metric.value, true)));
+            const track = el("div", "mini-track");
+            const fill = document.createElement("span");
+            fill.style.width = `${width}%`;
+            track.appendChild(fill);
+            button.appendChild(track);
+          } else {
+            button.className = "chart-row";
+            const name = el("div", "chart-name");
+            name.appendChild(el("span", "chart-code", occupation.psoc_code));
+            name.appendChild(document.createTextNode(occupation.title));
+            button.appendChild(name);
+            const track = el("div", "bar-track");
+            const fill = el("div", "bar-fill");
+            fill.style.width = `${width}%`;
+            track.appendChild(fill);
+            button.appendChild(track);
+            button.appendChild(el("div", "chart-value", formatPersons(metric.value)));
+          }
+          button.addEventListener("mouseenter", (event) => showTooltip(
+            event,
+            occupation.title,
+            `${formatPersons(metric.value)} employed persons · ${metric.reference_period} · Grade ${metric.confidence_grade}`
+          ));
+          button.addEventListener("mousemove", positionTooltip);
+          button.addEventListener("mouseleave", hideTooltip);
+          container.appendChild(button);
+        }
+        host.appendChild(container);
+      }
+
+      function metricGapState(data, id) {
+        const candidates = data.occupations.map((o) => o.metrics[id]).filter(Boolean);
+        const metric = candidates[0];
+        if (metric) {
+          if (metric.availability === "blocked_pending_source") return "Source not acquired";
+          return metric.availability.replace(/_/g, " ");
+        }
+        return "No canonical detailed unit";
+      }
+
+      function renderDashboard(data) {
+        dashboardData = data;
+        renderMetricTabs(data);
+        const groups = publishedEmploymentGroups(data);
+        const largest = groups.reduce((best, item) =>
+          !best || Number(item.metric.value) > Number(best.metric.value) ? item : best, null
+        );
+        if (largest) {
+          document.getElementById("largestValue").textContent = formatPersons(largest.metric.value, true);
+          document.getElementById("largestNote").textContent =
+            `${largest.occupation.title} · ${formatPersons(largest.metric.value)} employed persons`;
+          document.getElementById("sourcePeriod").textContent = largest.metric.reference_period;
+          document.getElementById("sourceConfidence").textContent =
+            `Grade ${largest.metric.confidence_grade} · no interval published`;
+        }
+        const majors = data.occupations.filter((o) => o.level === "psoc_major_group");
+        document.getElementById("coverageValue").textContent = `${groups.length}/${majors.length}`;
+
+        const gaps = ["wage_basic_pay", "ofw_distribution_share", "onet_job_zone", "gen_ai_task_exposure"];
+        const gapHost = document.getElementById("gapStack");
+        gapHost.replaceChildren();
+        for (const id of gaps) {
+          const row = el("div", "status-pill");
+          row.appendChild(el("span", null, data.metrics[id].name));
+          row.appendChild(el("b", null, metricGapState(data, id)));
+          gapHost.appendChild(row);
+        }
+        renderDashboardChart();
+
+        const hashMatch = location.hash.match(/^#group-(\d)$/);
+        if (hashMatch && groups.some(({ occupation }) => occupation.psoc_code === hashMatch[1])) {
+          openGroupDrawer(hashMatch[1]);
+        }
+      }
+
+      function drawerField(label, value) {
+        const wrapper = el("div", "drawer-field");
+        wrapper.appendChild(el("dt", null, label));
+        wrapper.appendChild(el("dd", null, value || "—"));
+        return wrapper;
+      }
+
+      function openGroupDrawer(code, trigger) {
+        if (!dashboardData) return;
+        const groups = publishedEmploymentGroups(dashboardData)
+          .sort((a, b) => Number(b.metric.value) - Number(a.metric.value));
+        const index = groups.findIndex(({ occupation }) => occupation.psoc_code === String(code));
+        if (index < 0) return;
+        const { occupation, metric } = groups[index];
+        lastDrawerTrigger = trigger || document.activeElement;
+        document.getElementById("drawerCode").textContent = `PSOC ${occupation.psoc_code} · major group`;
+        document.getElementById("drawerTitle").textContent = occupation.title;
+        document.getElementById("drawerValue").textContent = formatPersons(metric.value);
+        document.getElementById("drawerUnit").textContent = `${metric.unit} · ${metric.reference_period}`;
+        document.getElementById("drawerRank").textContent =
+          `Ranked ${index + 1} of ${groups.length} published major groups by employed persons. This is a comparison, not a performance rating.`;
+        document.getElementById("drawerDefinition").textContent = dashboardData.metrics.employment_count.definition;
+        document.getElementById("drawerMisread").textContent = metric.common_misreading;
+        document.getElementById("drawerSource").href = metric.source_url;
+        const grid = document.getElementById("drawerGrid");
+        grid.replaceChildren(
+          drawerField("Source", metric.source_organization),
+          drawerField("Dataset", metric.source_dataset),
+          drawerField("Derivation", metric.derivation_class_label),
+          drawerField("Confidence", `Grade ${metric.confidence_grade}`),
+          drawerField("Population", metric.population_scope),
+          drawerField("Geography", metric.geography),
+          drawerField("Source granularity", metric.source_granularity.replace(/_/g, " ")),
+          drawerField("Transformation", metric.transformation_id),
+          drawerField("Crosswalk", metric.crosswalk_id),
+          drawerField("File hash", metric.source_file_hash),
+          drawerField("Retrieved", metric.retrieved_at),
+          drawerField("Parser", `${metric.parser_id} v${metric.parser_version}`)
+        );
+        document.getElementById("copyProvenance").dataset.code = occupation.psoc_code;
+        document.getElementById("detailDrawer").classList.add("visible");
+        document.getElementById("drawerBackdrop").classList.add("visible");
+        document.getElementById("detailDrawer").setAttribute("aria-hidden", "false");
+        history.replaceState(null, "", `#group-${occupation.psoc_code}`);
+        setTimeout(() => document.getElementById("drawerClose").focus(), 0);
+      }
+
+      function closeGroupDrawer() {
+        document.getElementById("detailDrawer").classList.remove("visible");
+        document.getElementById("drawerBackdrop").classList.remove("visible");
+        document.getElementById("detailDrawer").setAttribute("aria-hidden", "true");
+        if (location.hash.startsWith("#group-")) history.replaceState(null, "", location.pathname + location.search);
+        if (lastDrawerTrigger && lastDrawerTrigger.focus) lastDrawerTrigger.focus();
+      }
+
+      document.getElementById("groupSearch").addEventListener("input", renderDashboardChart);
+      document.getElementById("groupSort").addEventListener("change", renderDashboardChart);
+      document.querySelectorAll(".view-btn").forEach((button) => {
+        button.addEventListener("click", () => {
+          dashboardView = button.dataset.view;
+          document.querySelectorAll(".view-btn").forEach((candidate) => {
+            const active = candidate === button;
+            candidate.classList.toggle("active", active);
+            candidate.setAttribute("aria-pressed", String(active));
+          });
+          renderDashboardChart();
+        });
+      });
+      document.getElementById("drawerClose").addEventListener("click", closeGroupDrawer);
+      document.getElementById("drawerBackdrop").addEventListener("click", closeGroupDrawer);
+      document.getElementById("copyProvenance").addEventListener("click", async (event) => {
+        const code = event.currentTarget.dataset.code;
+        const item = publishedEmploymentGroups(dashboardData).find(({ occupation }) => occupation.psoc_code === code);
+        if (!item) return;
+        const { occupation, metric } = item;
+        const text = `${occupation.title} (PSOC ${code}): ${formatPersons(metric.value)} ${metric.unit}, ${metric.reference_period}. Source: ${metric.source_organization}, ${metric.source_dataset}. SHA-256: ${metric.source_file_hash}`;
+        await navigator.clipboard.writeText(text);
+        event.currentTarget.textContent = "Copied";
+        setTimeout(() => { event.currentTarget.textContent = "Copy provenance"; }, 1400);
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "/" && !/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) {
+          event.preventDefault();
+          document.getElementById("groupSearch").focus();
+        }
+        if (event.key === "Escape") {
+          if (document.getElementById("detailDrawer").classList.contains("visible")) closeGroupDrawer();
+          else {
+            document.getElementById("groupSearch").value = "";
+            renderDashboardChart();
+          }
+        }
+      });
 
       function showTooltip(event, title, body) {
         tooltip.querySelector(".tt-title").textContent = title;
@@ -777,6 +1352,7 @@
       fetch("data.json")
         .then((response) => response.json())
         .then((data) => {
+          renderDashboard(data);
           renderReleaseStatus(data);
           document.getElementById("disclaimerText").textContent = data.disclaimers.exposure;
           document.getElementById("classificationNotice").innerHTML =
