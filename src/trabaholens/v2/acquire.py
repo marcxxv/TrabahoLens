@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -82,8 +83,50 @@ def record(entry: dict[str, Any]) -> None:
     write_manifest(manifest)
 
 
-def fetch(source_id: str, url: str, destination: Path, timeout: int = 120) -> dict[str, Any]:
-    """Retrieve one URL, hash it, and record the outcome either way."""
+def _validate_download(path: Path, expected_format: str, content_type: str) -> None:
+    """Reject error pages, partial archives and mislabeled downloads.
+
+    An HTTP 200 only proves that the server returned *something*. PSA's CDN,
+    for example, can return an HTML bot-check page for an ``.xlsx`` URL. Such
+    bytes must never become a successful source snapshot.
+    """
+    if path.stat().st_size == 0:
+        raise ValueError("downloaded response is empty")
+    if "text/html" in content_type.lower():
+        raise ValueError("server returned HTML instead of the registered dataset")
+
+    if expected_format == "json":
+        with open(path, encoding="utf-8-sig") as handle:
+            payload = json.load(handle)
+        if not isinstance(payload, dict) or not (
+            "dimension" in payload or "dataset" in payload
+        ):
+            raise ValueError("response is JSON but not a PXWeb JSON-stat dataset")
+    elif expected_format in {"zip", "xlsx"}:
+        if not zipfile.is_zipfile(path):
+            raise ValueError(f"response is not a valid {expected_format} archive")
+        with zipfile.ZipFile(path) as archive:
+            corrupt_member = archive.testzip()
+            if corrupt_member:
+                raise ValueError(f"archive member {corrupt_member!r} failed CRC validation")
+            if expected_format == "xlsx":
+                names = set(archive.namelist())
+                required = {"[Content_Types].xml", "xl/workbook.xml"}
+                if not required.issubset(names):
+                    raise ValueError("archive is not an XLSX workbook")
+
+
+def fetch(
+    source_id: str,
+    url: str,
+    destination: Path,
+    timeout: int = 120,
+    *,
+    method: str = "GET",
+    json_body: dict[str, Any] | None = None,
+    expected_format: str = "",
+) -> dict[str, Any]:
+    """Retrieve one URL, validate and hash it, recording the outcome either way."""
     entry: dict[str, Any] = {
         "source_id": source_id,
         "url": url,
@@ -91,15 +134,21 @@ def fetch(source_id: str, url: str, destination: Path, timeout: int = 120) -> di
         "attempted_at": now_iso(),
     }
     try:
-        response = requests.get(url, stream=True, timeout=timeout)
+        response = requests.request(
+            method.upper(), url, json=json_body, stream=True, timeout=timeout
+        )
         entry["http_status"] = response.status_code
         response.raise_for_status()
 
         ensure_parent(destination)
-        with open(destination, "wb") as handle:
+        partial = destination.with_name(destination.name + ".part")
+        with open(partial, "wb") as handle:
             for chunk in response.iter_content(chunk_size=1 << 17):
                 if chunk:
                     handle.write(chunk)
+        content_type = response.headers.get("Content-Type", "")
+        _validate_download(partial, expected_format, content_type)
+        partial.replace(destination)
 
         entry.update(
             {
@@ -107,11 +156,16 @@ def fetch(source_id: str, url: str, destination: Path, timeout: int = 120) -> di
                 "bytes": destination.stat().st_size,
                 "sha256": sha256_file(destination),
                 "retrieved_at": now_iso(),
-                "content_type": response.headers.get("Content-Type", ""),
+                "content_type": content_type,
                 "last_modified": response.headers.get("Last-Modified", ""),
+                "request_method": method.upper(),
+                "expected_format": expected_format,
             }
         )
     except Exception as exc:
+        partial = destination.with_name(destination.name + ".part")
+        if partial.exists():
+            partial.unlink()
         entry.update(
             {
                 "status": "failed",
@@ -132,7 +186,8 @@ def fetch_registered(source_id: str) -> dict[str, Any]:
             "Register a source before acquiring it."
         )
 
-    url = entry.get("download_url") or entry.get("api_or_download") or ""
+    automated = entry.get("retrieval", {}).get("automated") or {}
+    url = automated.get("url", "")
     if not url.startswith("http"):
         return {
             "source_id": source_id,
@@ -145,8 +200,17 @@ def fetch_registered(source_id: str) -> dict[str, Any]:
             ),
         }
 
-    destination = RAW_DIR / source_id / Path(url).name
-    return fetch(source_id, url, destination)
+    filename = automated.get("destination_filename") or Path(url).name
+    destination = RAW_DIR / source_id / filename
+    return fetch(
+        source_id,
+        url,
+        destination,
+        timeout=int(automated.get("timeout_seconds", 120)),
+        method=automated.get("method", "GET"),
+        json_body=automated.get("json_body"),
+        expected_format=automated.get("expected_format", ""),
+    )
 
 
 def hash_existing_raw_files() -> list[dict[str, Any]]:

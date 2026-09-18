@@ -410,24 +410,21 @@ argued in `src/trabaholens/v2/sources/psoc_importer.py`.
 
 ## 9. What this release publishes
 
-**No metric values.** Every PSA host, `www.onetcenter.org` and `openrouter.ai`
-returned HTTP 403 at the build environment's egress proxy, and
-`OPENROUTER_API_KEY` is unset. Dated attempts are in
-`data/sources/retrieval-manifest.json`.
+The release publishes ten 2024 annual LFS employment estimates, one for each
+PSOC major group. PSA matrix 1B3FEMP4 is queried for one annual slice, stored as
+a hash-verified JSON-stat snapshot, normalized from thousands to persons, and
+reconciled through an explicit PSOC 2012-to-2022 major-group correspondence.
 
-It would be inaccurate to say only the bytes are missing. Parsing,
-classification reconciliation and transformation now exist and are covered by
-tests, but **no stage has processed a real primary source**, and the specific
-LFS, OWS and SOF tables have not even been identified. See
+The other ten canonical observation rows remain empty and explicit. O*NET 31.0
+is retrieved and parser-verified but produces no Philippine value without an
+accepted crosswalk. The exact SOF table is identified but its workbook is
+CDN-blocked; current OWS tables do not satisfy the registered wage definition;
+the detailed PSOC API requires a token. See
 [`readiness-report.md`](readiness-report.md) for the per-phase classification.
 
-What the release does contain: the PSOC structure, the metric definitions, the
-source registry, the crosswalk framework, the validation rules, the interface,
-and 20 metric observations each carrying an empty value and an explicit
-`blocked_pending_source` with its reason.
-
 That the pipeline works is demonstrated rather than asserted:
-`make test-populated-pipeline` drives synthetic sources through every stage and
-proves populated observations reach the payload with full provenance. Separate
-source-shaped JSON-stat tests exercise multidimensional cell decoding, while
-mutation tests prove malformed inputs cannot publish.
+`make test-populated-pipeline` continues to drive controlled fixtures through
+every stage, while the production LFS path now proves a real populated
+observation reaches the payload with full provenance. Separate JSON-stat tests
+exercise both official wrapper variants, positional categories and unit
+normalization; mutation tests prove malformed inputs cannot publish.

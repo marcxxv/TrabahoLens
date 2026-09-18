@@ -7,11 +7,11 @@ completion in ways an independent review caught — see
 **Question:** is TrabahoLens ready to become the workforce layer of Philippine
 AI Report?
 
-**Answer: no.** Unchanged from the previous report, but for a more precisely
-stated reason. The previous report said the methodology was ready and only the
-data was missing. That was wrong: parsing, classification reconciliation and
-source-to-observation construction did not exist either. They exist now and are
-fixture-tested, and **no stage has processed a real primary source**.
+**Answer: not yet.** The first real workforce statistic now runs end to end:
+the pinned 2024 annual PSA LFS table produces ten PSOC-major employment
+estimates with hashes and complete provenance. O*NET 31.0 is also retrieved and
+validated, but cannot yield Philippine observations without a reviewed
+crosswalk. Detailed PSOC, wages, OFW distribution and exposure remain blocked.
 
 ---
 
@@ -24,8 +24,8 @@ partially implemented · blocked · rejected.
 | Phase | Classification | Why |
 | --- | --- | --- |
 | **Phase 1 — credibility reset** | **Complete and verified** | This phase's deliverable is the removal of unsupported claims and the honest labelling of what remains. That is verifiable against the repository itself, and it is done: unsupported metrics withdrawn, two evidence axes shown separately, per-stage status displayed, disclaimer fixed, counts derived, no hazard framing, no hard-coded counts. It does not depend on primary-source access. |
-| **Phase 2 — Philippine-first data foundation** | **Partially implemented** | Hashing, source-shaped JSON-stat/O\*NET parsing, strict transformation, provenance and release validation are fixture-tested. But the exact PSA table profiles are still unidentified, no primary source has been processed, the authoritative PSOC classification is absent, and no reviewed PSOC↔O\*NET crosswalk exists. |
-| **Phase 3 — generative-AI task exposure** | **Partially implemented** | The rubric, prompt, harness, attempt accounting, ordinal aggregation and deterministic confidence are implemented and fixture-tested. Dimension C is **rejected** (removed, not deferred). The measure cannot run at all: it needs O\*NET task statements and a PSOC↔O\*NET crosswalk, and neither exists. |
+| **Phase 2 — Philippine-first data foundation** | **Partially implemented, real-source verified for LFS** | Acquisition, hashing, JSON-stat parsing, unit normalization, version reconciliation, transformation and release publication are exercised against PSA matrix 1B3FEMP4. O*NET 31.0 is also hash-verified. The authoritative detailed PSOC list, a suitable OWS table, and the SOF workbook remain unavailable. |
+| **Phase 3 — generative-AI task exposure** | **Partially implemented** | The rubric, prompt, harness, attempt accounting, ordinal aggregation and deterministic confidence are fixture-tested. O*NET task data now exist locally, but no accepted PSOC↔O*NET crosswalk or completed scoring run exists. Dimension C remains **rejected**. |
 | **Phase 4 — Philippine AI Report integration** | **Not started, correctly** | Out of scope by instruction, and blocked on Phases 2 and 3 regardless. |
 
 ### Per-stage detail
@@ -36,15 +36,15 @@ rendered in the interface.
 | Stage | Status |
 | --- | --- |
 | Source registry | implemented, verified with real source |
-| Retrieval | blocked by source access |
-| Raw snapshot | blocked by source access |
-| Hash verification | implemented, fixture-tested only |
-| Format validation | implemented, fixture-tested only |
-| Parsing | implemented, fixture-tested only |
-| Normalised source table | implemented, fixture-tested only |
+| Retrieval | partially implemented — LFS and O*NET retrieved; other sources blocked |
+| Raw snapshot | partially implemented — two verified snapshots |
+| Hash verification | implemented, verified with real sources |
+| Format validation | implemented, verified with real sources |
+| Parsing | partially implemented — LFS and O*NET real-source verified |
+| Normalised source table | partially implemented |
 | Classification reconciliation | partially implemented |
-| Transformation | implemented, fixture-tested only |
-| Canonical observation | implemented, fixture-tested only |
+| Transformation | partially implemented — LFS real-source verified |
+| Canonical observation | partially implemented — ten published LFS rows |
 | Release validation | implemented, verified with real source |
 | Site payload | implemented, verified with real source |
 
@@ -57,9 +57,9 @@ against the actual committed artifacts — not that they have seen survey data.
 
 ### Which data are official?
 
-**None.** No source has been retrieved. Four metrics are *defined* to come from
-the Philippine Statistics Authority, which is a source-authority claim, not a
-derivation claim — see the next answer.
+**Ten official PSA estimates are published:** 2024 annual employed persons for
+each PSOC major group. They remain `estimated`, not directly observed, because
+LFS is a sample survey. No wage, OFW, O*NET or exposure value is published.
 
 ### Which are calculated?
 
@@ -69,8 +69,9 @@ shares sum to 1.0.
 
 ### Which are estimated?
 
-**Two, by definition; none published.** `employment_count` and
-`wage_basic_pay` are sample-survey estimates and carry sampling error.
+**Two by definition; one published.** `employment_count` is now published for
+ten major groups. `wage_basic_pay` remains unavailable. The LFS table does not
+publish sampling-error bounds, so the employment rows receive confidence B.
 `ofw_distribution_share` is calculated from SOF survey-estimated counts.
 
 This is the correction the review forced. The previous schema labelled these
@@ -129,15 +130,11 @@ From the rebuild, in this remediation:
 
 ### What source access remains unavailable?
 
-Every source. `psa.gov.ph`, `openstat.psa.gov.ph`, `www.onetcenter.org` and
-`openrouter.ai` all return HTTP 403 at this environment's egress proxy. Dated
-attempts are in `data/sources/retrieval-manifest.json`.
-
-Additionally, and independent of the network: the specific LFS, OWS and SOF
-**tables** have not been identified. The registry entries point at PXWeb API
-directories and landing pages, now flagged as such. Identifying the tables is
-work that must happen before those metrics are implementable, and it is not
-merely a matter of gaining access.
+The detailed PSOC API requires a personal PSA token. The exact SOF 2024 Table 2
+is identified, but its XLSX returns a CDN verification response to automated
+retrieval. OpenRouter still lacks a usable run/key. OWS is reachable, but the
+reviewed tables do not supply the registered coded-occupation average-basic-pay
+metric. LFS and O*NET are now reachable and retrieved.
 
 ### What still requires independent expert validation?
 
@@ -149,38 +146,34 @@ merely a matter of gaining access.
 4. Metric definitions and denominators, particularly the OFW conditional and the
    informality concept.
 5. The crosswalk — every edge is `machine_proposed`; none is `human_reviewed`.
-6. Licensing — a good-faith reading, not reviewed by counsel. The PSA CC BY 4.0
-   statement is recorded from documentation and **has not been confirmed against
-   the live page**.
+6. Licensing — the PSA site-wide CC BY 4.0 notice was confirmed, but this
+   remains a good-faith reading not reviewed by counsel; dataset-specific
+   exceptions must still be checked.
 
 ### Is the branch suitable for merge, production deployment, or Philippine AI Report integration?
 
 | | Verdict |
 | --- | --- |
-| **Merge to `main`** | **Defensible, with one condition.** The branch is strictly more honest than `main`, which still publishes fabricated employment, wages and hiring intensity. Merging would replace false numbers with no numbers and a documented account of why. The condition: whoever merges must accept that the public site will show no metric values until sources are retrieved. That is a product decision, not a technical one. |
-| **Production deployment** | **No.** Not because the code is unsafe, but because there is nothing to deploy *for*. A public page with zero metric values is a statement of intent; deploy it only if that statement is the intended product. |
-| **Philippine AI Report integration** | **No.** Blocked on all of: real primary-source data, an identified table per metric, a verified PSOC classification, a reviewed crosswalk, and at least one completed exposure run with its validation battery. |
+| **Merge to `main`** | **Technically defensible after review.** The branch replaces fabricated v1 values with ten traceable PSA LFS estimates and explicit gaps. It should still be reviewed as a data release, not merged as routine UI work. |
+| **Production deployment** | **Not yet recommended.** Employment is real and traceable, but the classification is aggregate/unverified below major level and four of five metrics have no published values. |
+| **Philippine AI Report integration** | **No.** One primary metric is real, but integration still lacks a verified detailed PSOC classification, sufficient source coverage, a reviewed crosswalk, and a completed exposure run with its validation battery. |
 
 ---
 
 ## What would change each verdict
 
-1. **Identify and retrieve the exact sources.** Run acquisition from a permitted
-   network only after pinning the LFS, OWS and SOF table endpoints and query
-   dimensions. The generic pipeline is source-shape fixture-tested; every
-   source-specific profile must still be exercised against real bytes.
-2. **Identify the specific tables.** Independent of network access and
-   currently unknown for LFS, OWS and SOF.
-3. **Import the PSOC volume.** Unblocks detailed occupations, which three
-   metrics need in order to have any unit to attach to.
-4. **Retrieve the correspondences.** PSOC↔ISCO-08, ISCO-08↔SOC, SOC↔O\*NET.
+1. **Finish exact-source ingestion.** LFS is complete. Acquire and parse SOF
+   2024 Table 2; keep OWS unavailable unless a table matching the metric appears.
+2. **Obtain a PSOC API token and import the full 2022 classification.** This
+   unblocks detailed occupations, which three metrics need as canonical units.
+3. **Retrieve the correspondences.** PSOC↔ISCO-08, ISCO-08↔SOC, SOC↔O\*NET.
    Without them the exposure measure cannot be task-based, and a non-task-based
    version would be v1 again.
-5. **Human review.** Classification, crosswalk and rubric.
+4. **Human review.** Classification, crosswalk and rubric.
 
-Items 1–3 alone would produce a real workforce layer: fewer metrics than v1,
+Items 1–2 produce the core workforce layer: fewer metrics than v1,
 broader occupational groups, visible gaps, every number traceable. Items 4–5
-gate the exposure layer specifically, and it should be integrated last and
+Items 3–4 gate the exposure layer specifically, and it should be integrated last and
 labelled experimental wherever it appears.
 
 ## The recommendation, unchanged

@@ -447,6 +447,19 @@ def check_observations_do_not_use_rejected_crosswalks(observations, crosswalk) -
     ]
 
 
+def check_observation_crosswalk_references(observations, crosswalk) -> list[Failure]:
+    """Every provenance mapping id on an observation must resolve to a governed edge."""
+    known = {row["crosswalk_id"] for row in crosswalk}
+    return [
+        Failure(
+            "crosswalk_reference",
+            f"{row.get('observation_id')}: unknown crosswalk {row.get('crosswalk_id')!r}",
+        )
+        for row in observations
+        if row.get("crosswalk_id") and row["crosswalk_id"] not in known
+    ]
+
+
 def check_model_scores(scores) -> list[Failure]:
     failures: list[Failure] = []
     required = [
@@ -690,6 +703,7 @@ def run_all() -> list[Failure]:
     failures += check_no_double_counting(observations)
     failures += check_group_total_reconciliation(observations)
     failures += check_crosswalk(crosswalk)
+    failures += check_observation_crosswalk_references(observations, crosswalk)
     failures += check_observations_do_not_use_rejected_crosswalks(observations, crosswalk)
     failures += check_model_scores(scores)
     failures += check_language([SITE_INDEX_HTML, SITE_DATA_JSON])

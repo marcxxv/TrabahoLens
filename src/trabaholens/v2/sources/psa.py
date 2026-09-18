@@ -1,6 +1,6 @@
 """Parsers for PSA statistical tables.
 
-PSA OpenSTAT serves PXWeb JSON-stat2. These parsers read that structure, plus a
+PSA OpenSTAT serves PXWeb JSON-stat and JSON-stat2. These parsers read both structures, plus a
 simple CSV form for tables downloaded by hand.
 
 Every parser records the **source's own** occupational code and classification
@@ -28,7 +28,20 @@ from .base import (
 )
 
 # Values PSA uses to mark a cell it will not publish.
-SUPPRESSION_MARKERS = {"..", "...", "-", "*", "n.a.", "na", "s"}
+SUPPRESSION_MARKERS = {".", "..", "...", "-", "*", "n.a.", "na", "s"}
+
+PSOC_MAJOR_LABEL_TO_CODE = {
+    "Managers": "1",
+    "Professionals": "2",
+    "Technicians and Associate Professionals": "3",
+    "Clerical Support Workers": "4",
+    "Service and Sales Workers": "5",
+    "Skilled Agricultural Forestry and Fishery Workers": "6",
+    "Craft and Related Trades Workers": "7",
+    "Plant and Machine Operators and Assemblers": "8",
+    "Elementary Occupations": "9",
+    "Armed Forces Occupations": "0",
+}
 
 
 def _classification_version(metadata: dict) -> str:
@@ -41,9 +54,9 @@ def _classification_version(metadata: dict) -> str:
     # Most specific first: the 2022 update must not be read as plain 2012.
     if "psoc 2022" in haystack or "2022 update" in haystack:
         return "PSOC 2012 (2022 Updates)"
-    if "psoc 2012" in haystack:
+    if "psoc 2012" in haystack or "2012 psoc" in haystack:
         return "PSOC 2012"
-    if "psoc 1992" in haystack:
+    if "psoc 1992" in haystack or "1992 psoc" in haystack:
         return "PSOC 1992"
     return "unknown"
 
@@ -66,15 +79,18 @@ def _parse_number(raw) -> tuple[float | None, str]:
 class _PxWebCsvParser(SourceParser):
     """Shared behaviour for PSA tables held as JSON-stat2 or flat CSV.
 
-    Accepting both matters in practice: OpenSTAT serves JSON-stat2, but several
+    Accepting both matters in practice: OpenSTAT serves JSON-stat variants, but several
     PSA releases are only available as a spreadsheet a person downloads, and a
     manual acquisition should be no less traceable than an automated one.
     """
 
     measure: str = ""
+    parser_version = "0.2.0"
     unit: str = ""
     population_scope: str = ""
     expected_source_table: str = ""
+    json_value_factor: float = 1.0
+    json_source_unit: str = ""
 
     def validate_format(self, path: Path) -> None:
         if not path.exists():
@@ -155,11 +171,21 @@ class _PxWebCsvParser(SourceParser):
         return result
 
     def _parse_jsonstat(self, path: Path) -> ParseResult:
-        payload = json.loads(path.read_text(encoding="utf-8"))
+        wrapper = json.loads(path.read_text(encoding="utf-8-sig"))
+        # PXWeb's ``json-stat`` format wraps the dataset, whereas
+        # ``json-stat2`` places the cube at the root. Both are official output
+        # formats and validation has always claimed to accept both.
+        payload = wrapper.get("dataset", wrapper)
         result = ParseResult(parser_id=self.parser_id, parser_version=self.parser_version)
 
-        dimension = payload.get("dimension", {})
-        version = _classification_version(payload)
+        dimension_block = payload.get("dimension", {})
+        # JSON-stat 1.x stores id/size/role inside ``dimension``; JSON-stat2
+        # stores them beside it. Keep only actual category dimensions here.
+        dimension = {
+            key: value for key, value in dimension_block.items()
+            if isinstance(value, dict) and "category" in value
+        }
+        version = _classification_version(wrapper)
         occupation_key = next(
             (key for key in dimension if "occupation" in key.lower() or "psoc" in key.lower()),
             None,
@@ -171,8 +197,8 @@ class _PxWebCsvParser(SourceParser):
             )
             return result
 
-        dimension_ids = payload.get("id") or list(dimension)
-        sizes = payload.get("size") or [
+        dimension_ids = payload.get("id") or dimension_block.get("id") or list(dimension)
+        sizes = payload.get("size") or dimension_block.get("size") or [
             len(_ordered_category_codes(dimension[key])) for key in dimension_ids
         ]
         if len(dimension_ids) != len(sizes):
@@ -199,32 +225,47 @@ class _PxWebCsvParser(SourceParser):
         if not isinstance(values, (list, dict)):
             raise FormatValidationError(f"{path}: json-stat value must be an array or sparse object")
 
-        time_key = next((key for key in dimension if "time" in key.lower() or "year" in key.lower()), None)
+        temporal_keys = [
+            key for key in dimension_ids
+            if any(token in key.lower() for token in ("time", "year", "month", "quarter", "period"))
+        ]
         occupation_position = dimension_ids.index(occupation_key)
-        time_position = dimension_ids.index(time_key) if time_key else None
 
         # JSON-stat flattens a multidimensional cube in row-major order (the
         # final dimension changes fastest). Iterate the full Cartesian product
         # so each value keeps its own occupation, period and source slice.
         for flat_index, coordinates in enumerate(itertools.product(*ordered_codes)):
-            code = coordinates[occupation_position]
+            raw_code = coordinates[occupation_position]
+            occupation_label = _category_label(dimension[occupation_key], raw_code)
+            code = self._normalise_occupation_code(raw_code, occupation_label)
+            if not code:
+                continue
             raw = values[flat_index] if isinstance(values, list) else values.get(str(flat_index))
             value, flag = _parse_number(raw)
-            period = _category_label(dimension[time_key], coordinates[time_position]) if time_key else ""
+            if value is not None:
+                value *= self.json_value_factor
+            period = " ".join(
+                _category_label(dimension[key], coordinates[dimension_ids.index(key)])
+                for key in temporal_keys
+            )
             slice_parts = []
             for key, category_code in zip(dimension_ids, coordinates):
-                if key in {occupation_key, time_key}:
+                if key == occupation_key or key in temporal_keys:
                     continue
                 slice_parts.append(f"{key}={_category_label(dimension[key], category_code)}")
+            if self.json_source_unit:
+                slice_parts.append(
+                    f"source unit={self.json_source_unit}; normalized to {self.unit}"
+                )
             result.rows.append(
                 NormalisedRow(
                     normalised_row_id=f"{self.parser_id}:{flat_index}",
                     source_id=self.source_id,
-                    source_table=self.expected_source_table or path.name,
+                    source_table=payload.get("label") or self.expected_source_table or path.name,
                     source_code=str(code),
                     source_code_system="PSOC",
                     source_code_version=version,
-                    source_label=_category_label(dimension[occupation_key], code),
+                    source_label=occupation_label,
                     measure=self.measure,
                     value=value,
                     unit=self.unit,
@@ -236,6 +277,9 @@ class _PxWebCsvParser(SourceParser):
                 )
             )
         return result
+
+    def _normalise_occupation_code(self, raw_code: str, label: str) -> str:
+        return str(raw_code)
 
 
 def _ordered_category_codes(dimension_entry: dict) -> list[str]:
@@ -261,6 +305,18 @@ class PsaLfsOccupationParser(_PxWebCsvParser):
     unit = "persons"
     population_scope = "employed persons 15 years and over"
     expected_source_table = "LFS employment by occupation"
+    # OpenSTAT matrix 1B3FEMP4 declares UNITS="In thousands" in its PX
+    # metadata. Canonical employment_count is persons, so normalization is
+    # explicit and test-covered.
+    json_value_factor = 1000.0
+    json_source_unit = "thousand persons"
+
+    def _normalise_occupation_code(self, raw_code: str, label: str) -> str:
+        # Category keys in this matrix are positional: "0" means Total and
+        # "10" means Armed Forces, so treating them as PSOC codes would turn
+        # Total into Armed Forces. Resolve only exact official major-group
+        # labels; do not use fuzzy/title-similarity matching.
+        return PSOC_MAJOR_LABEL_TO_CODE.get(label, "")
 
 
 @register

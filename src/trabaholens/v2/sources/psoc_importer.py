@@ -31,10 +31,10 @@ explicit correspondence is supplied; it is never silently renumbered.
 
 ## What this importer has actually done
 
-Nothing, against the real source. ``psa.gov.ph`` is unreachable from this
-environment, so the authoritative volume could not be retrieved, hashed or
-parsed. The importer is implemented and fixture-tested; the production
-classification rows remain the ISCO-08-aligned skeleton marked
+Nothing, against the real source. The official classification API is identified
+but requires a personal token, so the authoritative code list has not been
+retrieved, hashed or parsed. The importer is implemented and fixture-tested;
+the production classification rows remain the ISCO-08-aligned skeleton marked
 ``unverified_pending_source``.
 
 Detailed groups are deliberately **not** transcribed from secondary material.

@@ -158,6 +158,9 @@ MATCH_QUALITY = {"high", "medium", "low", "none"}
 MAPPING_BASIS = {
     # The classifications are documented as corresponding.
     "published_correspondence",
+    # The official update notes explicitly preserve the relevant structural
+    # level while enumerating changes below it.
+    "official_update_structure",
     # Structural derivation: PSOC 2012 is built on ISCO-08, so the major and
     # sub-major group skeletons correspond by construction.
     "structural_derivation",
@@ -170,7 +173,7 @@ MAPPING_BASIS = {
     "undocumented_heuristic",
 }
 
-REVIEW_STATUS = {"unreviewed", "machine_proposed", "human_reviewed", "rejected"}
+REVIEW_STATUS = {"unreviewed", "machine_proposed", "source_verified", "human_reviewed", "rejected"}
 
 # --------------------------------------------------------------------------
 # Table column orders

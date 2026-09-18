@@ -46,6 +46,46 @@
       "status": "failed",
       "error": "ProxyError: HTTPSConnectionPool(host='www.onetcenter.org', port=443): Max retries exceeded with url: /dl_files/database/db_30_2_text.zip (Caused by ProxyError('Unable to connect to proxy', OSError('Tunnel connection failed: 403 Forbidden')))",
       "sha256": null
+    },
+    {
+      "source_id": "psa_lfs",
+      "url": "https://openstat.psa.gov.ph/PXWeb/api/v1/en/DB/1B/LFS/0121B3FEMP4.px",
+      "destination": "data/raw/psa_lfs/lfs_employment_by_major_occupation_2024_annual.json",
+      "attempted_at": "2026-09-18T03:33:44Z",
+      "http_status": 200,
+      "status": "retrieved",
+      "bytes": 1192,
+      "sha256": "9cb88db30ecab0520cf5e8678f046b1cdb62a20ce834fa4db5c8abf856292b86",
+      "retrieved_at": "2026-09-18T03:33:45Z",
+      "content_type": "application/json; charset=utf-8",
+      "last_modified": "",
+      "request_method": "POST",
+      "expected_format": "json"
+    },
+    {
+      "source_id": "psa_sof",
+      "url": "https://psa.gov.ph/system/files/iesd/TABLE%202.%20Percent%20Distribution%20of%20Overseas%20Filipino%20Workers%20and%20Overseas%20Contract%20Workers%20by%20Sex%2C%20Age%20Group%2C%20Major%20Occupation%2C%20and%20Region%20with%20Measures%20of%20Precision%202024.xlsx",
+      "destination": "data/raw/psa_sof/sof_2024_table_2_major_occupation.xlsx",
+      "attempted_at": "2026-09-18T03:33:45Z",
+      "http_status": 403,
+      "status": "failed",
+      "error": "HTTPError: 403 Client Error: Forbidden for url: https://psa.gov.ph/system/files/iesd/TABLE%202.%20Percent%20Distribution%20of%20Overseas%20Filipino%20Workers%20and%20Overseas%20Contract%20Workers%20by%20Sex%2C%20Age%20Group%2C%20Major%20Occupation%2C%20and%20Region%20with%20Measures%20of%20Precision%202024.xlsx",
+      "sha256": null
+    },
+    {
+      "source_id": "onet",
+      "url": "https://www.onetcenter.org/dl_files/database/db_31_0_text.zip",
+      "destination": "data/raw/onet/db_31_0_text.zip",
+      "attempted_at": "2026-09-18T03:33:45Z",
+      "http_status": 200,
+      "status": "retrieved",
+      "bytes": 13183034,
+      "sha256": "6883548adf5fde64cf6f801b35d15519c9225f2732c3cab0e281c652d16b23a9",
+      "retrieved_at": "2026-09-18T03:34:26Z",
+      "content_type": "application/zip",
+      "last_modified": "Sun, 30 Aug 2026 08:36:25 GMT",
+      "request_method": "GET",
+      "expected_format": "zip"
     }
   ]
 }

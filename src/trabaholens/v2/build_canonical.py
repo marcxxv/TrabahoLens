@@ -35,6 +35,7 @@ from .paths import (
     METRIC_OBSERVATIONS_CSV,
     MODEL_SCORES_CSV,
     OCCUPATIONS_CSV,
+    PSOC_VERSION_CORRESPONDENCE_CSV,
     REVIEWED_PSOC_ONET_CROSSWALK_CSV,
     TRANSFORMATIONS_CSV,
     ensure_parent,
@@ -180,7 +181,9 @@ def build_occupations(classifications: list[dict[str, Any]]) -> list[dict[str, A
 # ---------------------------------------------------------------------------
 
 def build_metric_observations(
-    occupations: list[dict[str, Any]], crosswalk_rows: list[dict[str, Any]] | None = None
+    occupations: list[dict[str, Any]],
+    crosswalk_rows: list[dict[str, Any]] | None = None,
+    version_correspondence_rows: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     """One row per (unit, metric) the project intends to publish.
 
@@ -221,6 +224,7 @@ def build_metric_observations(
                     canonical_codes,
                     canonical_version,
                     crosswalk_rows=crosswalk_rows or [],
+                    version_correspondence_rows=version_correspondence_rows or [],
                 )
                 outcomes_by_code = collapse_outcomes_by_code(outcomes, definition.metric_id)
                 parse_note = (
@@ -347,13 +351,14 @@ def pipeline_stage_reports() -> list[StageReport]:
     required_ids = {d.required_source_id for d in METRIC_DEFINITIONS.values() if d.parser_id} | {"psa_psoc"}
     required = [acquisitions[sid] for sid in required_ids if sid in acquisitions]
     all_acquired = bool(required) and all(record.acquired for record in required)
+    any_acquired = any(record.acquired for record in required)
 
     acquired_status = (
-        StageStatus.VERIFIED_REAL_SOURCE if all_acquired else StageStatus.BLOCKED_BY_SOURCE_ACCESS
+        StageStatus.VERIFIED_REAL_SOURCE if all_acquired
+        else StageStatus.PARTIALLY_IMPLEMENTED if any_acquired
+        else StageStatus.BLOCKED_BY_SOURCE_ACCESS
     )
-    downstream = (
-        StageStatus.VERIFIED_REAL_SOURCE if all_acquired else StageStatus.FIXTURE_TESTED_ONLY
-    )
+    downstream = StageStatus.VERIFIED_REAL_SOURCE if any_acquired else StageStatus.FIXTURE_TESTED_ONLY
 
     return [
         StageReport(Stage.SOURCE_REGISTRY, StageStatus.VERIFIED_REAL_SOURCE,
@@ -371,21 +376,21 @@ def pipeline_stage_reports() -> list[StageReport]:
         StageReport(Stage.FORMAT_VALIDATION, downstream,
                     "Each parser validates the snapshot's shape before reading rows.",
                     evidence="src/trabaholens/v2/sources/"),
-        StageReport(Stage.PARSING, downstream,
-                    "Parsers implemented for LFS, OWS, SOF and four O*NET files.",
+        StageReport(Stage.PARSING, StageStatus.PARTIALLY_IMPLEMENTED if any_acquired and not all_acquired else downstream,
+                    "LFS and O*NET parsers have processed real snapshots; OWS and SOF remain unverified against real files.",
                     evidence="src/trabaholens/v2/sources/",
                     blockers=() if all_acquired else ("At least one source-specific parser has not processed its real source.",)),
-        StageReport(Stage.NORMALISED_SOURCE_TABLE, downstream,
+        StageReport(Stage.NORMALISED_SOURCE_TABLE, StageStatus.PARTIALLY_IMPLEMENTED if any_acquired and not all_acquired else downstream,
                     "Parsers emit normalised rows carrying the source's own codes and version."),
         StageReport(Stage.CLASSIFICATION_RECONCILIATION, StageStatus.PARTIALLY_IMPLEMENTED,
                     "Version compatibility is enforced and unmatched codes are reported, but the "
                     "PSOC minor and unit group lists are absent, so only aggregate codes reconcile.",
                     blockers=("PSOC 2012 (2022 Updates) volume not retrievable.",)),
-        StageReport(Stage.TRANSFORMATION, downstream,
-                    "Documented transformations for employment, wages, OFW distribution and Job Zone.",
+        StageReport(Stage.TRANSFORMATION, StageStatus.PARTIALLY_IMPLEMENTED if any_acquired and not all_acquired else downstream,
+                    "The employment transformation is verified with real LFS data; wage, OFW and Job Zone remain blocked.",
                     evidence="src/trabaholens/v2/transform.py"),
-        StageReport(Stage.CANONICAL_OBSERVATION, downstream,
-                    "Observations carry derivation class, source authority, hash, parser and transformation."),
+        StageReport(Stage.CANONICAL_OBSERVATION, StageStatus.PARTIALLY_IMPLEMENTED if any_acquired and not all_acquired else downstream,
+                    "Ten LFS major-group observations carry full provenance; other planned observations remain blocked."),
         StageReport(Stage.RELEASE_VALIDATION, StageStatus.VERIFIED_REAL_SOURCE,
                     "Validators run on every build and are each tested against a violating fixture.",
                     evidence="src/trabaholens/v2/validate.py"),
@@ -398,9 +403,26 @@ def pipeline_stage_reports() -> list[StageReport]:
 # Crosswalks
 # ---------------------------------------------------------------------------
 
-def build_crosswalk(classifications: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def build_crosswalk(
+    classifications: list[dict[str, Any]],
+    version_correspondence_rows: list[dict[str, Any]] | None = None,
+) -> list[dict[str, Any]]:
     """PSOC to ISCO-08, plus the v1 SOC heuristic recorded as rejected."""
     rows: list[dict[str, Any]] = []
+
+    for edge in version_correspondence_rows or []:
+        rows.append({
+            "crosswalk_id": edge["correspondence_id"],
+            "psoc_code": edge["target_code"],
+            "psoc_version": edge["target_version"],
+            "source_code": edge["source_code"],
+            "source_classification": edge["source_version"],
+            "match_type": "exact",
+            "match_quality": "high",
+            "mapping_basis": edge["mapping_basis"],
+            "review_status": edge["review_status"],
+            "notes": f"{edge.get('notes', '')} Source: {edge.get('source_url', '')}",
+        })
 
     # PSOC 2012 adopts the ISCO-08 structure at major and sub-major level, so
     # the correspondence is structural rather than a judgement about titles.
@@ -610,8 +632,12 @@ def build_transformations() -> list[dict[str, Any]]:
 def main() -> None:
     classifications = build_classifications()
     occupations = build_occupations(classifications)
-    crosswalk = build_crosswalk(classifications)
-    observations = build_metric_observations(occupations, crosswalk)
+    with open(PSOC_VERSION_CORRESPONDENCE_CSV, encoding="utf-8", newline="") as handle:
+        version_correspondence = list(csv.DictReader(handle))
+    crosswalk = build_crosswalk(classifications, version_correspondence)
+    observations = build_metric_observations(
+        occupations, crosswalk, version_correspondence
+    )
     transformations = build_transformations()
 
     write_table(CLASSIFICATIONS_CSV, CLASSIFICATIONS_COLUMNS, classifications)

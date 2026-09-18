@@ -204,6 +204,12 @@ def test_observation_through_a_rejected_crosswalk_is_refused():
     assert any(f.check == "rejected_crosswalk" for f in failures)
 
 
+def test_observation_crosswalk_id_must_exist():
+    rows = [observation(crosswalk_id="XW-MISSING")]
+    failures = validate.check_observation_crosswalk_references(rows, [])
+    assert any(f.check == "crosswalk_reference" for f in failures)
+
+
 # ---------------------------------------------------------------------------
 # Model score provenance — all 11 fields were absent in v1
 # ---------------------------------------------------------------------------

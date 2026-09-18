@@ -59,16 +59,19 @@ def test_source_count_stated_in_docs_is_correct():
 def test_observation_count_stated_in_limitations_is_correct():
     rows = list(csv.DictReader(METRIC_OBSERVATIONS_CSV.open(encoding="utf-8")))
     text = (REPO_ROOT / "docs" / "limitations.md").read_text(encoding="utf-8")
-    match = re.search(r"contains (\d+) rows and all \d+\s+have an empty", text)
-    assert match, "limitations.md no longer states the observation count"
+    match = re.search(r"contains (\d+) rows: (\w+) published", text)
+    assert match, "limitations.md no longer states observation and publication counts"
     assert int(match.group(1)) == len(rows)
-    assert all(not (row["metric_value"] or "").strip() for row in rows)
+    words = {"zero": 0, "ten": 10}
+    assert words[match.group(2)] == sum(bool((row["metric_value"] or "").strip()) for row in rows)
 
 
-def test_claim_that_no_value_is_published_holds():
-    """Every document says this release publishes nothing. Verify it."""
+def test_published_value_count_matches_payload():
     payload = _payload()
-    assert payload["counts"]["published_values"] == 0
+    canonical = list(csv.DictReader(METRIC_OBSERVATIONS_CSV.open(encoding="utf-8")))
+    published = [row for row in canonical if (row["metric_value"] or "").strip()]
+    assert payload["counts"]["published_values"] == len(published)
+    assert {row["metric_id"] for row in published} == {"employment_count"}
     assert payload["counts"]["exposure_scores"] == 0
     values = [
         metric["value"]
@@ -76,7 +79,7 @@ def test_claim_that_no_value_is_published_holds():
         for metric in entry["metrics"].values()
     ]
     assert values, "no metrics in the payload at all — the claim is vacuous"
-    assert all(value is None for value in values)
+    assert sum(value is not None for value in values) == len(published)
 
 
 def test_classification_unit_count_in_payload_matches_the_canonical_table():

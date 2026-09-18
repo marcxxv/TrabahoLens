@@ -9,8 +9,9 @@ Keeping this stage separate matters: a parse failure and a transformation
 failure have different causes and different fixes, and collapsing them is how a
 pipeline starts guessing.
 
-None of these parsers has processed its real source. Every one is fixture-tested
-only, because no source could be retrieved in this environment.
+The LFS and O*NET parsers have processed hash-verified real sources. Other
+parsers remain fixture-tested only because their exact source is unavailable or
+does not satisfy the registered metric definition.
 """
 
 from .base import (

@@ -135,12 +135,14 @@ dataset is empty, so validating it alone would prove nothing.
 
 ## Known state of this release
 
-**No metric value is published.** Every PSA host, `www.onetcenter.org` and
-`openrouter.ai` returned HTTP 403 at the build environment's egress proxy, and
-no API key was available. The dated attempts are in the retrieval manifest.
+**Ten LFS employment estimates are published.** PSA matrix 1B3FEMP4 and O*NET
+31.0 were retrieved and hash-verified. Only the 2024 annual LFS major-group
+values pass all publication gates; O*NET remains blocked by the absent reviewed
+crosswalk.
 
-**No exposure score is published.** The harness requires task evidence that
-could not be retrieved. The v1 scores are not carried forward.
+**No exposure score is published.** Task evidence is present, but the harness
+still requires an accepted PSOC-to-O*NET mapping and a completed repeated model
+run. The v1 scores are not carried forward.
 
 **The PSOC list is unverified.** Entered from ISCO-08-aligned documentation;
 every row marked `unverified_pending_source`.

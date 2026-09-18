@@ -42,9 +42,34 @@ def test_pxweb_jsonstat_decodes_every_multidimensional_cell(tmp_path):
 
     rows = PsaLfsOccupationParser().run(path).rows
     assert [(row.source_code, row.reference_period, row.value) for row in rows] == [
-        ("1", "2023", 10), ("1", "2024", 11),
-        ("2", "2023", 20), ("2", "2024", 21),
+        ("1", "2023", 10000), ("1", "2024", 11000),
+        ("2", "2023", 20000), ("2", "2024", 21000),
     ]
+
+
+def test_pxweb_jsonstat1_wrapper_and_positional_major_codes(tmp_path):
+    path = tmp_path / "lfs.json"
+    path.write_text(json.dumps({"dataset": {
+        "label": "LFS major occupation (2012 PSOC Code)",
+        "id": ["Year", "Month", "Major Occupation Group (2012 PSOC Code)"],
+        "size": [1, 1, 3],
+        "dimension": {
+            "Year": {"category": {"index": {"8": 0}, "label": {"8": "2024"}}},
+            "Month": {"category": {"index": {"12": 0}, "label": {"12": "Annual"}}},
+            "Major Occupation Group (2012 PSOC Code)": {"category": {
+                "index": {"0": 0, "1": 1, "10": 2},
+                "label": {"0": "Total", "1": "Managers", "10": "Armed Forces Occupations"},
+            }},
+        },
+        "value": [100, 12.5, 0.5],
+    }}), encoding="utf-8")
+
+    rows = PsaLfsOccupationParser().run(path).rows
+    assert [(row.source_code, row.reference_period, row.value) for row in rows] == [
+        ("1", "2024 Annual", 12500),
+        ("0", "2024 Annual", 500),
+    ]
+    assert all("normalized to persons" in row.notes for row in rows)
 
 
 def test_csv_metadata_is_not_carried_forward(tmp_path):
@@ -87,6 +112,26 @@ def test_psoc_versions_require_exact_match():
     )[0]
     assert outcome.value is None
     assert "not reconcilable" in outcome.reason
+
+
+def test_psoc_version_change_requires_and_uses_explicit_correspondence():
+    row = NormalisedRow(
+        normalised_row_id="fixture:1", source_id="psa_lfs", source_table="LFS fixture",
+        source_code="1", source_code_system="PSOC", source_code_version="PSOC 2012",
+        source_label="Managers", measure="employed_persons", value=10, unit="persons",
+        reference_period="2024", geography="Philippines", population_scope="employed persons",
+    )
+    correspondence = [{
+        "correspondence_id": "PSOCVER-1", "source_version": "PSOC 2012",
+        "target_version": CANONICAL_VERSION, "source_code": "1", "target_code": "1",
+        "mapping_basis": "official_update_structure", "review_status": "source_verified",
+    }]
+    outcome = transform_rows(
+        "employment_count", [row], ACQUIRED, MAJOR_CODES, CANONICAL_VERSION,
+        version_correspondence_rows=correspondence,
+    )[0]
+    assert outcome.value == 10
+    assert outcome.crosswalk_id == "PSOCVER-1"
 
 
 def test_ofw_denominators_are_period_specific_and_require_complete_distribution():

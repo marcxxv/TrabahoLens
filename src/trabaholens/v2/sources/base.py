@@ -100,7 +100,8 @@ class SourceParser(abc.ABC):
     source_id: str = ""
     #: Classification system and version the source's own codes are in.
     source_code_system: str = ""
-    #: Real-source status. Every parser here is fixture-tested only.
+    #: Default status; release reporting derives per-source real-run status from
+    #: verified snapshots and canonical outputs.
     status: StageStatus = StageStatus.FIXTURE_TESTED_ONLY
 
     @abc.abstractmethod

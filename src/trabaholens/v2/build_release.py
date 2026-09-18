@@ -216,8 +216,8 @@ def build_payload(release: dict[str, Any]) -> dict[str, Any]:
             "exposure": EXPOSURE_DISCLAIMER,
             "classification_verification": (
                 "The PSOC 2012 code list in this release was entered from "
-                "classification documentation, not from the PSA volume, which could "
-                "not be retrieved. Every classification row is marked "
+                "classification documentation, not from the token-gated official "
+                "PSA API. Every classification row is marked "
                 "unverified_pending_source."
             ),
         },
@@ -449,20 +449,24 @@ def build_release_manifest(frozen_time: str | None) -> dict[str, Any]:
         "source_pipeline_status": source_pipeline_status,
         "publication_state": publication_state,
         "known_limitations": [
-            "No metric in this release carries a value. Every PSA host, "
-            "www.onetcenter.org and openrouter.ai returned HTTP 403 at this build "
-            "environment's egress proxy, so no source could be retrieved. See "
-            "data/sources/retrieval-manifest.json for the dated attempts.",
+            "This release publishes only the ten 2024 annual LFS major-group "
+            "employment estimates. It does not publish wages, OFW distribution, "
+            "O*NET Job Zone or generative-AI task exposure.",
             "The PSOC 2012 code list was entered from classification documentation "
             "rather than the PSA volume. Every classification row is marked "
-            "unverified_pending_source and must be diffed against the PSA volume.",
+            "unverified_pending_source. The official PSOC API is identified but "
+            "requires a token; it must be imported and diffed before detailed use.",
             "The canonical table holds PSOC major and sub-major groups only. Minor "
             "and unit groups are absent rather than guessed, so occupation-level "
             "metrics (wages, O*NET Job Zone, task exposure) have no unit to attach "
             "to yet.",
+            "O*NET 31.0 is retrieved and hash-verified, but no O*NET-derived value "
+            "is published because no accepted PSOC-to-O*NET correspondence exists.",
+            "The exact SOF 2024 occupation table is identified, but its XLSX is "
+            "blocked by the publisher's CDN in automated retrieval. The current OWS "
+            "tables do not satisfy the defined coded-occupation basic-pay metric.",
             "No generative-AI task exposure score is published. The scoring harness "
-            "requires task evidence that could not be retrieved and a provider that "
-            "could not be reached.",
+            "still requires a reviewed PSOC-to-O*NET mapping and a completed model run.",
             "The v1 exposure scores are not carried forward and are not a fallback.",
             "This experimental exposure score has not yet undergone independent "
             "labour-economist validation.",

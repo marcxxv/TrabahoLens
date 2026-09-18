@@ -388,6 +388,9 @@ def test_release_manifest_derives_rather_than_hardcodes():
 
     assert manifest["model_runs"] == _discover_model_runs()
     state = manifest["publication_state"]
-    assert state["metrics_with_published_values"] == [], (
-        "the manifest claims published metrics while the canonical table has none"
-    )
+    observations = list(csv.DictReader(METRIC_OBSERVATIONS_CSV.open(encoding="utf-8")))
+    expected = sorted({
+        row["metric_id"] for row in observations
+        if row.get("availability") == "published" and (row.get("metric_value") or "").strip()
+    })
+    assert state["metrics_with_published_values"] == expected

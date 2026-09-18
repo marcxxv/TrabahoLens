@@ -12,7 +12,11 @@ completeness, and continuity with current headline figures. Where evidence is
 unavailable the metric is marked unavailable or blocked. No value is invented to
 keep the interface populated.
 
-## Environment constraint discovered during inspection
+## Environment constraint discovered during the original inspection
+
+> Historical note: this constraint no longer describes the current remediation
+> environment. The later pass retrieved PSA LFS and O*NET 31.0; see
+> `docs/source-coverage.md` and the retrieval manifest for current state.
 
 Outbound HTTPS from this build environment is restricted by network policy. The
 following hosts returned `403` at the egress proxy and could **not** be reached:

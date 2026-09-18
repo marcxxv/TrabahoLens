@@ -4,7 +4,7 @@
     "release_id": "v2.0.0-pre",
     "release_date": "2026-09-14T00:00:00Z",
     "generated_at": "2026-09-14T00:00:00Z",
-    "code_commit": "79cc3625586173b9c8d18344e06f6df21c785c51",
+    "code_commit": "ea8bad494b8af46fbfa0496956d12cd9d42094d8",
     "code_commit_note": "The commit the build ran at. It necessarily precedes the commit that records it, because committing this manifest moves HEAD. Treat it as 'generated from this input state', not as a self-describing id. `make check-stale` excludes it for the same reason.",
     "schema_version": "2.0.0",
     "methodology_version": "2.0.0",
@@ -16,50 +16,50 @@
       "psa_psoc": {
         "organization": "Philippine Statistics Authority",
         "dataset": "2022 Updates to the 2012 Philippine Standard Occupational Classification (PSOC)",
-        "declared_status": "not_retrieved",
+        "declared_status": "blocked_requires_token",
         "last_attempt": "2026-09-14T17:16:46Z",
         "last_attempt_result": "failed",
-        "blocked_reason": "psa.gov.ph is unreachable from the build environment (HTTP 403 at the egress proxy). See docs/limitations.md."
+        "blocked_reason": "The official PSA classification API requires a personal access token. No token is stored in the repository or available to this build."
       },
       "psa_lfs": {
         "organization": "Philippine Statistics Authority",
         "dataset": "Labor Force Survey (LFS)",
-        "declared_status": "blocked",
-        "last_attempt": "2026-09-14T17:16:46Z",
-        "last_attempt_result": "failed",
-        "blocked_reason": "openstat.psa.gov.ph is unreachable from the build environment (HTTP 403 at the egress proxy)."
+        "declared_status": "identified_automated",
+        "last_attempt": "2026-09-18T03:33:44Z",
+        "last_attempt_result": "retrieved",
+        "blocked_reason": "Retrieval is now configured. Publication still requires hash verification, successful parsing, and the explicit PSOC 2012-to-2022 major-group correspondence; registry status alone grants nothing."
       },
       "psa_ows": {
         "organization": "Philippine Statistics Authority",
         "dataset": "Occupational Wages Survey (OWS)",
-        "declared_status": "blocked",
+        "declared_status": "blocked_no_matching_table",
         "last_attempt": "2026-09-14T17:16:46Z",
         "last_attempt_result": "failed",
-        "blocked_reason": "psa.gov.ph and openstat.psa.gov.ph unreachable from the build environment (HTTP 403)."
+        "blocked_reason": "Reachability is no longer the blocker. The reviewed official tables do not provide average monthly basic pay by coded occupation at the scope this metric promises."
       },
       "psa_sof": {
         "organization": "Philippine Statistics Authority",
         "dataset": "Survey on Overseas Filipinos (SOF)",
-        "declared_status": "blocked",
-        "last_attempt": "2026-09-14T17:16:47Z",
+        "declared_status": "blocked_by_cdn",
+        "last_attempt": "2026-09-18T03:33:45Z",
         "last_attempt_result": "failed",
-        "blocked_reason": "psa.gov.ph unreachable from the build environment (HTTP 403)."
+        "blocked_reason": "The exact XLSX is identified, but automated requests currently receive a Cloudflare HTML verification page. Acquisition validation rejects it."
       },
       "psa_informal": {
         "organization": "Philippine Statistics Authority",
         "dataset": "Informal sector / informal employment statistics",
-        "declared_status": "blocked",
+        "declared_status": "blocked_no_source_identified",
         "last_attempt": "never",
         "last_attempt_result": "none",
-        "blocked_reason": "psa.gov.ph unreachable from the build environment (HTTP 403)."
+        "blocked_reason": "No occupation-level official table has been identified. Access is not the relevant blocker until a dataset and concept are specified."
       },
       "onet": {
         "organization": "U.S. Department of Labor, O*NET Resource Center",
         "dataset": "O*NET Database",
-        "declared_status": "blocked",
-        "last_attempt": "2026-09-14T17:16:47Z",
-        "last_attempt_result": "failed",
-        "blocked_reason": "www.onetcenter.org is unreachable from the build environment (HTTP 403 at the egress proxy)."
+        "declared_status": "identified_automated",
+        "last_attempt": "2026-09-18T03:33:45Z",
+        "last_attempt_result": "retrieved",
+        "blocked_reason": "Retrieval is configured and reachable. O*NET-derived values remain blocked until an accepted PSOC-to-O*NET correspondence exists."
       },
       "philjobnet": {
         "organization": "Department of Labor and Employment / PhilJobNet",
@@ -96,11 +96,11 @@
     },
     "source_hashes": {
       "psa_psoc": null,
-      "psa_lfs": null,
+      "psa_lfs": "9cb88db30ecab0520cf5e8678f046b1cdb62a20ce834fa4db5c8abf856292b86",
       "psa_ows": null,
       "psa_sof": null,
       "psa_informal": null,
-      "onet": null,
+      "onet": "6883548adf5fde64cf6f801b35d15519c9225f2732c3cab0e281c652d16b23a9",
       "philjobnet": null,
       "ibpap": null,
       "dmw": null,
@@ -109,8 +109,8 @@
     "canonical_table_checksums": {
       "data/canonical/classifications.csv": "3ab1117303fa3e4a81d600fb8db1f7e282c9d73cb280333d416005a8a5a4dbaf",
       "data/canonical/occupations.csv": "c5ed92d0aba512409ed6054ca438df4d4781ed99ba764154fdd629677333ac98",
-      "data/canonical/metric_observations.csv": "ee8612aab9fc4e57fd844526f0e69b26b2f0aacea6be3e1df6a88169fbaaa894",
-      "data/canonical/crosswalk_psoc_isco_soc.csv": "602e568e5f44a30fcb4301e4444c5ff6e64ab952169d49432c28ef81564f34f7",
+      "data/canonical/metric_observations.csv": "9f8caab9e4c8284d3e7663bd634039048fb13e51d874a66c5ba59ff68b955869",
+      "data/canonical/crosswalk_psoc_isco_soc.csv": "d6f21b0f2f12e91683e4d6d4118f799f17783b78a19bb458c1f210ca33b6935d",
       "data/canonical/transformations.csv": "b166a6beed23800ac4a224c3eb2bbb46884787171f4dd0e690f9dd4184a40868",
       "data/canonical/model_scores.csv": "0892fc0e7909988a008eefc12c1e89a86417b324928c4cf93440c563d506d617"
     },
@@ -126,8 +126,8 @@
       },
       {
         "stage": "retrieval",
-        "status": "blocked_by_source_access",
-        "status_meaning": "Cannot proceed because the source cannot be retrieved in this environment.",
+        "status": "partially_implemented",
+        "status_meaning": "Some of the stage exists; named parts are missing.",
         "detail": "Retrieval attempts are recorded with timestamps and outcomes.",
         "evidence": "data/sources/retrieval-manifest.json",
         "blockers": [
@@ -136,33 +136,33 @@
       },
       {
         "stage": "raw_snapshot",
-        "status": "blocked_by_source_access",
-        "status_meaning": "Cannot proceed because the source cannot be retrieved in this environment.",
+        "status": "partially_implemented",
+        "status_meaning": "Some of the stage exists; named parts are missing.",
         "detail": "Raw snapshots are written under data/raw/ (gitignored) when retrieval succeeds.",
         "evidence": "",
         "blockers": []
       },
       {
         "stage": "hash_verification",
-        "status": "implemented_fixture_tested_only",
-        "status_meaning": "Implemented and covered by tests, but only against a synthetic fixture. It has never processed the real source.",
+        "status": "implemented_verified_with_real_source",
+        "status_meaning": "Implemented, and exercised end to end against the real primary source.",
         "detail": "SHA-256 recorded at retrieval and re-checked against the file before parsing.",
         "evidence": "src/trabaholens/v2/acquisition_state.py",
         "blockers": []
       },
       {
         "stage": "format_validation",
-        "status": "implemented_fixture_tested_only",
-        "status_meaning": "Implemented and covered by tests, but only against a synthetic fixture. It has never processed the real source.",
+        "status": "implemented_verified_with_real_source",
+        "status_meaning": "Implemented, and exercised end to end against the real primary source.",
         "detail": "Each parser validates the snapshot's shape before reading rows.",
         "evidence": "src/trabaholens/v2/sources/",
         "blockers": []
       },
       {
         "stage": "parsing",
-        "status": "implemented_fixture_tested_only",
-        "status_meaning": "Implemented and covered by tests, but only against a synthetic fixture. It has never processed the real source.",
-        "detail": "Parsers implemented for LFS, OWS, SOF and four O*NET files.",
+        "status": "partially_implemented",
+        "status_meaning": "Some of the stage exists; named parts are missing.",
+        "detail": "LFS and O*NET parsers have processed real snapshots; OWS and SOF remain unverified against real files.",
         "evidence": "src/trabaholens/v2/sources/",
         "blockers": [
           "At least one source-specific parser has not processed its real source."
@@ -170,8 +170,8 @@
       },
       {
         "stage": "normalised_source_table",
-        "status": "implemented_fixture_tested_only",
-        "status_meaning": "Implemented and covered by tests, but only against a synthetic fixture. It has never processed the real source.",
+        "status": "partially_implemented",
+        "status_meaning": "Some of the stage exists; named parts are missing.",
         "detail": "Parsers emit normalised rows carrying the source's own codes and version.",
         "evidence": "",
         "blockers": []
@@ -188,17 +188,17 @@
       },
       {
         "stage": "transformation",
-        "status": "implemented_fixture_tested_only",
-        "status_meaning": "Implemented and covered by tests, but only against a synthetic fixture. It has never processed the real source.",
-        "detail": "Documented transformations for employment, wages, OFW distribution and Job Zone.",
+        "status": "partially_implemented",
+        "status_meaning": "Some of the stage exists; named parts are missing.",
+        "detail": "The employment transformation is verified with real LFS data; wage, OFW and Job Zone remain blocked.",
         "evidence": "src/trabaholens/v2/transform.py",
         "blockers": []
       },
       {
         "stage": "canonical_observation",
-        "status": "implemented_fixture_tested_only",
-        "status_meaning": "Implemented and covered by tests, but only against a synthetic fixture. It has never processed the real source.",
-        "detail": "Observations carry derivation class, source authority, hash, parser and transformation.",
+        "status": "partially_implemented",
+        "status_meaning": "Some of the stage exists; named parts are missing.",
+        "detail": "Ten LFS major-group observations carry full provenance; other planned observations remain blocked.",
         "evidence": "",
         "blockers": []
       },
@@ -226,9 +226,9 @@
         "transformation": "implemented_fixture_tested_only"
       },
       "psa_lfs": {
-        "retrieval": "blocked_by_source_access",
-        "parsing": "implemented_fixture_tested_only",
-        "transformation": "implemented_fixture_tested_only"
+        "retrieval": "implemented_verified_with_real_source",
+        "parsing": "implemented_verified_with_real_source",
+        "transformation": "implemented_verified_with_real_source"
       },
       "psa_ows": {
         "retrieval": "blocked_by_source_access",
@@ -246,9 +246,9 @@
         "transformation": "designed_not_implemented"
       },
       "onet": {
-        "retrieval": "blocked_by_source_access",
-        "parsing": "implemented_fixture_tested_only",
-        "transformation": "implemented_fixture_tested_only"
+        "retrieval": "implemented_verified_with_real_source",
+        "parsing": "partially_implemented",
+        "transformation": "partially_implemented"
       },
       "philjobnet": {
         "retrieval": "blocked_by_source_access",
@@ -279,9 +279,10 @@
         "onet_job_zone",
         "wage_basic_pay"
       ],
-      "metrics_with_published_values": [],
+      "metrics_with_published_values": [
+        "employment_count"
+      ],
       "metrics_blocked_pending_source": [
-        "employment_count",
         "ofw_distribution_share"
       ],
       "metrics_not_representable_at_current_granularity": [
@@ -291,10 +292,12 @@
       ]
     },
     "known_limitations": [
-      "No metric in this release carries a value. Every PSA host, www.onetcenter.org and openrouter.ai returned HTTP 403 at this build environment's egress proxy, so no source could be retrieved. See data/sources/retrieval-manifest.json for the dated attempts.",
-      "The PSOC 2012 code list was entered from classification documentation rather than the PSA volume. Every classification row is marked unverified_pending_source and must be diffed against the PSA volume.",
+      "This release publishes only the ten 2024 annual LFS major-group employment estimates. It does not publish wages, OFW distribution, O*NET Job Zone or generative-AI task exposure.",
+      "The PSOC 2012 code list was entered from classification documentation rather than the PSA volume. Every classification row is marked unverified_pending_source. The official PSOC API is identified but requires a token; it must be imported and diffed before detailed use.",
       "The canonical table holds PSOC major and sub-major groups only. Minor and unit groups are absent rather than guessed, so occupation-level metrics (wages, O*NET Job Zone, task exposure) have no unit to attach to yet.",
-      "No generative-AI task exposure score is published. The scoring harness requires task evidence that could not be retrieved and a provider that could not be reached.",
+      "O*NET 31.0 is retrieved and hash-verified, but no O*NET-derived value is published because no accepted PSOC-to-O*NET correspondence exists.",
+      "The exact SOF 2024 occupation table is identified, but its XLSX is blocked by the publisher's CDN in automated retrieval. The current OWS tables do not satisfy the defined coded-occupation basic-pay metric.",
+      "No generative-AI task exposure score is published. The scoring harness still requires a reviewed PSOC-to-O*NET mapping and a completed model run.",
       "The v1 exposure scores are not carried forward and are not a fallback.",
       "This experimental exposure score has not yet undergone independent labour-economist validation.",
       "No component of this release has been reviewed by a Philippine labour statistician."
@@ -302,7 +305,7 @@
   },
   "disclaimers": {
     "exposure": "Generative-AI task exposure indicates how much an occupation's tasks may be affected or assisted by generative AI. It is not an estimate of automation, displacement, layoffs, or future employment.",
-    "classification_verification": "The PSOC 2012 code list in this release was entered from classification documentation, not from the PSA volume, which could not be retrieved. Every classification row is marked unverified_pending_source."
+    "classification_verification": "The PSOC 2012 code list in this release was entered from classification documentation, not from the token-gated official PSA API. Every classification row is marked unverified_pending_source."
   },
   "derivation_class_legend": {
     "directly_observed": {
@@ -431,8 +434,8 @@
     "detailed_occupations": 0,
     "metrics_defined": 5,
     "metric_observations": 20,
-    "published_values": 0,
-    "units_with_at_least_one_published_value": 0,
+    "published_values": 10,
+    "units_with_at_least_one_published_value": 10,
     "exposure_scores": 0,
     "vocabulary_note": "psoc_classification_units counts groups in the classification, not measured occupations. detailed_occupations counts non-aggregate units, which is currently zero: PSOC minor and unit groups have not been retrieved."
   },
@@ -450,41 +453,42 @@
       "verification_status": "unverified_pending_source",
       "metrics": {
         "employment_count": {
-          "value": null,
+          "value": 94441,
           "unit": "persons",
           "derivation_class": "estimated",
           "derivation_class_label": "Estimated",
           "source_authority": "ph_official_statistical_authority",
           "source_authority_label": "Philippine official statistical authority",
-          "availability": "blocked_pending_source",
-          "confidence_grade": "D",
+          "availability": "published",
+          "confidence_grade": "B",
           "confidence_reasons": [
-            "No value yet: source not acquired, parsed and transformed."
+            "Sample-survey estimate.",
+            "Source did not publish sampling error."
           ],
-          "pipeline_status": "blocked_by_source_access",
+          "pipeline_status": "implemented_verified_with_real_source",
           "parser_id": "psa_lfs_occupation_table",
-          "parser_version": "0.1.0",
-          "normalised_row_id": "",
-          "transformation_id": "",
-          "crosswalk_id": "",
-          "reference_period": "",
+          "parser_version": "0.2.0",
+          "normalised_row_id": "psa_lfs_occupation_table:10",
+          "transformation_id": "T-010-lfs-employment",
+          "crosswalk_id": "PSOCVER-2012-2022-0",
+          "reference_period": "2024 Annual",
           "geography": "Philippines",
-          "population_scope": "n/a (a count)",
+          "population_scope": "employed persons 15 years and over",
           "source_granularity": "psoc_major_group",
           "display_granularity": "psoc_major_group",
           "granularity_mismatch": false,
           "source_id": "psa_lfs",
           "source_organization": "Philippine Statistics Authority",
           "source_dataset": "Labor Force Survey (LFS)",
-          "source_table": "",
-          "source_url": "https://openstat.psa.gov.ph/PXWeb/pxweb/en/DB/DB__1B__LFS/",
-          "source_file_hash": "",
-          "retrieved_at": "",
+          "source_table": "Number of Employed Persons by Major Occupation Group (2012 PSOC Code): April 2016 to July 2026 by Year, Month and Major Occupation Group (2012 PSOC Code)",
+          "source_url": "https://openstat.psa.gov.ph/PXWeb/api/v1/en/DB/1B/LFS/0121B3FEMP4.px",
+          "source_file_hash": "9cb88db30ecab0520cf5e8678f046b1cdb62a20ce834fa4db5c8abf856292b86",
+          "retrieved_at": "2026-09-18T03:33:45Z",
           "uncertainty_lower": null,
           "uncertainty_upper": null,
-          "suppression_status": "no_value_yet",
+          "suppression_status": "not_suppressed",
           "common_misreading": "Not the number of jobs, and not additive with any finer occupation list drawn from a different classification.",
-          "notes": "No successful retrieval recorded in the manifest. openstat.psa.gov.ph is unreachable from the build environment (HTTP 403 at the egress proxy). Common misreading to avoid: Not the number of jobs, and not additive with any finer occupation list drawn from a different classification."
+          "notes": "Transformed and published. Retrieval is now configured. Publication still requires hash verification, successful parsing, and the explicit PSOC 2012-to-2022 major-group correspondence; registry status alone grants nothing. Common misreading to avoid: Not the number of jobs, and not additive with any finer occupation list drawn from a different classification."
         },
         "ofw_distribution_share": {
           "value": null,
@@ -500,7 +504,7 @@
           ],
           "pipeline_status": "blocked_by_source_access",
           "parser_id": "psa_sof_occupation_table",
-          "parser_version": "0.1.0",
+          "parser_version": "0.2.0",
           "normalised_row_id": "",
           "transformation_id": "",
           "crosswalk_id": "",
@@ -521,7 +525,7 @@
           "uncertainty_upper": null,
           "suppression_status": "no_value_yet",
           "common_misreading": "This is P(occupation | OFW). It is NOT the share of workers in an occupation who are OFWs, P(OFW | occupation) — that needs domestic employment in the same occupation as its denominator and a compatible universe. The two are not interchangeable.",
-          "notes": "No successful retrieval recorded in the manifest. psa.gov.ph unreachable from the build environment (HTTP 403). Common misreading to avoid: This is P(occupation | OFW). It is NOT the share of workers in an occupation who are OFWs, P(OFW | occupation) — that needs domestic employment in the same occupation as its denominator and a compatible universe. The two are not interchangeable."
+          "notes": "No successful retrieval recorded in the manifest. The exact XLSX is identified, but automated requests currently receive a Cloudflare HTML verification page. Acquisition validation rejects it. Common misreading to avoid: This is P(occupation | OFW). It is NOT the share of workers in an occupation who are OFWs, P(OFW | occupation) — that needs domestic employment in the same occupation as its denominator and a compatible universe. The two are not interchangeable."
         }
       },
       "exposure": []
@@ -581,41 +585,42 @@
       "verification_status": "unverified_pending_source",
       "metrics": {
         "employment_count": {
-          "value": null,
+          "value": 1678303,
           "unit": "persons",
           "derivation_class": "estimated",
           "derivation_class_label": "Estimated",
           "source_authority": "ph_official_statistical_authority",
           "source_authority_label": "Philippine official statistical authority",
-          "availability": "blocked_pending_source",
-          "confidence_grade": "D",
+          "availability": "published",
+          "confidence_grade": "B",
           "confidence_reasons": [
-            "No value yet: source not acquired, parsed and transformed."
+            "Sample-survey estimate.",
+            "Source did not publish sampling error."
           ],
-          "pipeline_status": "blocked_by_source_access",
+          "pipeline_status": "implemented_verified_with_real_source",
           "parser_id": "psa_lfs_occupation_table",
-          "parser_version": "0.1.0",
-          "normalised_row_id": "",
-          "transformation_id": "",
-          "crosswalk_id": "",
-          "reference_period": "",
+          "parser_version": "0.2.0",
+          "normalised_row_id": "psa_lfs_occupation_table:1",
+          "transformation_id": "T-010-lfs-employment",
+          "crosswalk_id": "PSOCVER-2012-2022-1",
+          "reference_period": "2024 Annual",
           "geography": "Philippines",
-          "population_scope": "n/a (a count)",
+          "population_scope": "employed persons 15 years and over",
           "source_granularity": "psoc_major_group",
           "display_granularity": "psoc_major_group",
           "granularity_mismatch": false,
           "source_id": "psa_lfs",
           "source_organization": "Philippine Statistics Authority",
           "source_dataset": "Labor Force Survey (LFS)",
-          "source_table": "",
-          "source_url": "https://openstat.psa.gov.ph/PXWeb/pxweb/en/DB/DB__1B__LFS/",
-          "source_file_hash": "",
-          "retrieved_at": "",
+          "source_table": "Number of Employed Persons by Major Occupation Group (2012 PSOC Code): April 2016 to July 2026 by Year, Month and Major Occupation Group (2012 PSOC Code)",
+          "source_url": "https://openstat.psa.gov.ph/PXWeb/api/v1/en/DB/1B/LFS/0121B3FEMP4.px",
+          "source_file_hash": "9cb88db30ecab0520cf5e8678f046b1cdb62a20ce834fa4db5c8abf856292b86",
+          "retrieved_at": "2026-09-18T03:33:45Z",
           "uncertainty_lower": null,
           "uncertainty_upper": null,
-          "suppression_status": "no_value_yet",
+          "suppression_status": "not_suppressed",
           "common_misreading": "Not the number of jobs, and not additive with any finer occupation list drawn from a different classification.",
-          "notes": "No successful retrieval recorded in the manifest. openstat.psa.gov.ph is unreachable from the build environment (HTTP 403 at the egress proxy). Common misreading to avoid: Not the number of jobs, and not additive with any finer occupation list drawn from a different classification."
+          "notes": "Transformed and published. Retrieval is now configured. Publication still requires hash verification, successful parsing, and the explicit PSOC 2012-to-2022 major-group correspondence; registry status alone grants nothing. Common misreading to avoid: Not the number of jobs, and not additive with any finer occupation list drawn from a different classification."
         },
         "ofw_distribution_share": {
           "value": null,
@@ -631,7 +636,7 @@
           ],
           "pipeline_status": "blocked_by_source_access",
           "parser_id": "psa_sof_occupation_table",
-          "parser_version": "0.1.0",
+          "parser_version": "0.2.0",
           "normalised_row_id": "",
           "transformation_id": "",
           "crosswalk_id": "",
@@ -652,7 +657,7 @@
           "uncertainty_upper": null,
           "suppression_status": "no_value_yet",
           "common_misreading": "This is P(occupation | OFW). It is NOT the share of workers in an occupation who are OFWs, P(OFW | occupation) — that needs domestic employment in the same occupation as its denominator and a compatible universe. The two are not interchangeable.",
-          "notes": "No successful retrieval recorded in the manifest. psa.gov.ph unreachable from the build environment (HTTP 403). Common misreading to avoid: This is P(occupation | OFW). It is NOT the share of workers in an occupation who are OFWs, P(OFW | occupation) — that needs domestic employment in the same occupation as its denominator and a compatible universe. The two are not interchangeable."
+          "notes": "No successful retrieval recorded in the manifest. The exact XLSX is identified, but automated requests currently receive a Cloudflare HTML verification page. Acquisition validation rejects it. Common misreading to avoid: This is P(occupation | OFW). It is NOT the share of workers in an occupation who are OFWs, P(OFW | occupation) — that needs domestic employment in the same occupation as its denominator and a compatible universe. The two are not interchangeable."
         }
       },
       "exposure": []
@@ -726,41 +731,42 @@
       "verification_status": "unverified_pending_source",
       "metrics": {
         "employment_count": {
-          "value": null,
+          "value": 2771278,
           "unit": "persons",
           "derivation_class": "estimated",
           "derivation_class_label": "Estimated",
           "source_authority": "ph_official_statistical_authority",
           "source_authority_label": "Philippine official statistical authority",
-          "availability": "blocked_pending_source",
-          "confidence_grade": "D",
+          "availability": "published",
+          "confidence_grade": "B",
           "confidence_reasons": [
-            "No value yet: source not acquired, parsed and transformed."
+            "Sample-survey estimate.",
+            "Source did not publish sampling error."
           ],
-          "pipeline_status": "blocked_by_source_access",
+          "pipeline_status": "implemented_verified_with_real_source",
           "parser_id": "psa_lfs_occupation_table",
-          "parser_version": "0.1.0",
-          "normalised_row_id": "",
-          "transformation_id": "",
-          "crosswalk_id": "",
-          "reference_period": "",
+          "parser_version": "0.2.0",
+          "normalised_row_id": "psa_lfs_occupation_table:2",
+          "transformation_id": "T-010-lfs-employment",
+          "crosswalk_id": "PSOCVER-2012-2022-2",
+          "reference_period": "2024 Annual",
           "geography": "Philippines",
-          "population_scope": "n/a (a count)",
+          "population_scope": "employed persons 15 years and over",
           "source_granularity": "psoc_major_group",
           "display_granularity": "psoc_major_group",
           "granularity_mismatch": false,
           "source_id": "psa_lfs",
           "source_organization": "Philippine Statistics Authority",
           "source_dataset": "Labor Force Survey (LFS)",
-          "source_table": "",
-          "source_url": "https://openstat.psa.gov.ph/PXWeb/pxweb/en/DB/DB__1B__LFS/",
-          "source_file_hash": "",
-          "retrieved_at": "",
+          "source_table": "Number of Employed Persons by Major Occupation Group (2012 PSOC Code): April 2016 to July 2026 by Year, Month and Major Occupation Group (2012 PSOC Code)",
+          "source_url": "https://openstat.psa.gov.ph/PXWeb/api/v1/en/DB/1B/LFS/0121B3FEMP4.px",
+          "source_file_hash": "9cb88db30ecab0520cf5e8678f046b1cdb62a20ce834fa4db5c8abf856292b86",
+          "retrieved_at": "2026-09-18T03:33:45Z",
           "uncertainty_lower": null,
           "uncertainty_upper": null,
-          "suppression_status": "no_value_yet",
+          "suppression_status": "not_suppressed",
           "common_misreading": "Not the number of jobs, and not additive with any finer occupation list drawn from a different classification.",
-          "notes": "No successful retrieval recorded in the manifest. openstat.psa.gov.ph is unreachable from the build environment (HTTP 403 at the egress proxy). Common misreading to avoid: Not the number of jobs, and not additive with any finer occupation list drawn from a different classification."
+          "notes": "Transformed and published. Retrieval is now configured. Publication still requires hash verification, successful parsing, and the explicit PSOC 2012-to-2022 major-group correspondence; registry status alone grants nothing. Common misreading to avoid: Not the number of jobs, and not additive with any finer occupation list drawn from a different classification."
         },
         "ofw_distribution_share": {
           "value": null,
@@ -776,7 +782,7 @@
           ],
           "pipeline_status": "blocked_by_source_access",
           "parser_id": "psa_sof_occupation_table",
-          "parser_version": "0.1.0",
+          "parser_version": "0.2.0",
           "normalised_row_id": "",
           "transformation_id": "",
           "crosswalk_id": "",
@@ -797,7 +803,7 @@
           "uncertainty_upper": null,
           "suppression_status": "no_value_yet",
           "common_misreading": "This is P(occupation | OFW). It is NOT the share of workers in an occupation who are OFWs, P(OFW | occupation) — that needs domestic employment in the same occupation as its denominator and a compatible universe. The two are not interchangeable.",
-          "notes": "No successful retrieval recorded in the manifest. psa.gov.ph unreachable from the build environment (HTTP 403). Common misreading to avoid: This is P(occupation | OFW). It is NOT the share of workers in an occupation who are OFWs, P(OFW | occupation) — that needs domestic employment in the same occupation as its denominator and a compatible universe. The two are not interchangeable."
+          "notes": "No successful retrieval recorded in the manifest. The exact XLSX is identified, but automated requests currently receive a Cloudflare HTML verification page. Acquisition validation rejects it. Common misreading to avoid: This is P(occupation | OFW). It is NOT the share of workers in an occupation who are OFWs, P(OFW | occupation) — that needs domestic employment in the same occupation as its denominator and a compatible universe. The two are not interchangeable."
         }
       },
       "exposure": []
@@ -899,41 +905,42 @@
       "verification_status": "unverified_pending_source",
       "metrics": {
         "employment_count": {
-          "value": null,
+          "value": 1991202,
           "unit": "persons",
           "derivation_class": "estimated",
           "derivation_class_label": "Estimated",
           "source_authority": "ph_official_statistical_authority",
           "source_authority_label": "Philippine official statistical authority",
-          "availability": "blocked_pending_source",
-          "confidence_grade": "D",
+          "availability": "published",
+          "confidence_grade": "B",
           "confidence_reasons": [
-            "No value yet: source not acquired, parsed and transformed."
+            "Sample-survey estimate.",
+            "Source did not publish sampling error."
           ],
-          "pipeline_status": "blocked_by_source_access",
+          "pipeline_status": "implemented_verified_with_real_source",
           "parser_id": "psa_lfs_occupation_table",
-          "parser_version": "0.1.0",
-          "normalised_row_id": "",
-          "transformation_id": "",
-          "crosswalk_id": "",
-          "reference_period": "",
+          "parser_version": "0.2.0",
+          "normalised_row_id": "psa_lfs_occupation_table:3",
+          "transformation_id": "T-010-lfs-employment",
+          "crosswalk_id": "PSOCVER-2012-2022-3",
+          "reference_period": "2024 Annual",
           "geography": "Philippines",
-          "population_scope": "n/a (a count)",
+          "population_scope": "employed persons 15 years and over",
           "source_granularity": "psoc_major_group",
           "display_granularity": "psoc_major_group",
           "granularity_mismatch": false,
           "source_id": "psa_lfs",
           "source_organization": "Philippine Statistics Authority",
           "source_dataset": "Labor Force Survey (LFS)",
-          "source_table": "",
-          "source_url": "https://openstat.psa.gov.ph/PXWeb/pxweb/en/DB/DB__1B__LFS/",
-          "source_file_hash": "",
-          "retrieved_at": "",
+          "source_table": "Number of Employed Persons by Major Occupation Group (2012 PSOC Code): April 2016 to July 2026 by Year, Month and Major Occupation Group (2012 PSOC Code)",
+          "source_url": "https://openstat.psa.gov.ph/PXWeb/api/v1/en/DB/1B/LFS/0121B3FEMP4.px",
+          "source_file_hash": "9cb88db30ecab0520cf5e8678f046b1cdb62a20ce834fa4db5c8abf856292b86",
+          "retrieved_at": "2026-09-18T03:33:45Z",
           "uncertainty_lower": null,
           "uncertainty_upper": null,
-          "suppression_status": "no_value_yet",
+          "suppression_status": "not_suppressed",
           "common_misreading": "Not the number of jobs, and not additive with any finer occupation list drawn from a different classification.",
-          "notes": "No successful retrieval recorded in the manifest. openstat.psa.gov.ph is unreachable from the build environment (HTTP 403 at the egress proxy). Common misreading to avoid: Not the number of jobs, and not additive with any finer occupation list drawn from a different classification."
+          "notes": "Transformed and published. Retrieval is now configured. Publication still requires hash verification, successful parsing, and the explicit PSOC 2012-to-2022 major-group correspondence; registry status alone grants nothing. Common misreading to avoid: Not the number of jobs, and not additive with any finer occupation list drawn from a different classification."
         },
         "ofw_distribution_share": {
           "value": null,
@@ -949,7 +956,7 @@
           ],
           "pipeline_status": "blocked_by_source_access",
           "parser_id": "psa_sof_occupation_table",
-          "parser_version": "0.1.0",
+          "parser_version": "0.2.0",
           "normalised_row_id": "",
           "transformation_id": "",
           "crosswalk_id": "",
@@ -970,7 +977,7 @@
           "uncertainty_upper": null,
           "suppression_status": "no_value_yet",
           "common_misreading": "This is P(occupation | OFW). It is NOT the share of workers in an occupation who are OFWs, P(OFW | occupation) — that needs domestic employment in the same occupation as its denominator and a compatible universe. The two are not interchangeable.",
-          "notes": "No successful retrieval recorded in the manifest. psa.gov.ph unreachable from the build environment (HTTP 403). Common misreading to avoid: This is P(occupation | OFW). It is NOT the share of workers in an occupation who are OFWs, P(OFW | occupation) — that needs domestic employment in the same occupation as its denominator and a compatible universe. The two are not interchangeable."
+          "notes": "No successful retrieval recorded in the manifest. The exact XLSX is identified, but automated requests currently receive a Cloudflare HTML verification page. Acquisition validation rejects it. Common misreading to avoid: This is P(occupation | OFW). It is NOT the share of workers in an occupation who are OFWs, P(OFW | occupation) — that needs domestic employment in the same occupation as its denominator and a compatible universe. The two are not interchangeable."
         }
       },
       "exposure": []
@@ -1058,41 +1065,42 @@
       "verification_status": "unverified_pending_source",
       "metrics": {
         "employment_count": {
-          "value": null,
+          "value": 3850582,
           "unit": "persons",
           "derivation_class": "estimated",
           "derivation_class_label": "Estimated",
           "source_authority": "ph_official_statistical_authority",
           "source_authority_label": "Philippine official statistical authority",
-          "availability": "blocked_pending_source",
-          "confidence_grade": "D",
+          "availability": "published",
+          "confidence_grade": "B",
           "confidence_reasons": [
-            "No value yet: source not acquired, parsed and transformed."
+            "Sample-survey estimate.",
+            "Source did not publish sampling error."
           ],
-          "pipeline_status": "blocked_by_source_access",
+          "pipeline_status": "implemented_verified_with_real_source",
           "parser_id": "psa_lfs_occupation_table",
-          "parser_version": "0.1.0",
-          "normalised_row_id": "",
-          "transformation_id": "",
-          "crosswalk_id": "",
-          "reference_period": "",
+          "parser_version": "0.2.0",
+          "normalised_row_id": "psa_lfs_occupation_table:4",
+          "transformation_id": "T-010-lfs-employment",
+          "crosswalk_id": "PSOCVER-2012-2022-4",
+          "reference_period": "2024 Annual",
           "geography": "Philippines",
-          "population_scope": "n/a (a count)",
+          "population_scope": "employed persons 15 years and over",
           "source_granularity": "psoc_major_group",
           "display_granularity": "psoc_major_group",
           "granularity_mismatch": false,
           "source_id": "psa_lfs",
           "source_organization": "Philippine Statistics Authority",
           "source_dataset": "Labor Force Survey (LFS)",
-          "source_table": "",
-          "source_url": "https://openstat.psa.gov.ph/PXWeb/pxweb/en/DB/DB__1B__LFS/",
-          "source_file_hash": "",
-          "retrieved_at": "",
+          "source_table": "Number of Employed Persons by Major Occupation Group (2012 PSOC Code): April 2016 to July 2026 by Year, Month and Major Occupation Group (2012 PSOC Code)",
+          "source_url": "https://openstat.psa.gov.ph/PXWeb/api/v1/en/DB/1B/LFS/0121B3FEMP4.px",
+          "source_file_hash": "9cb88db30ecab0520cf5e8678f046b1cdb62a20ce834fa4db5c8abf856292b86",
+          "retrieved_at": "2026-09-18T03:33:45Z",
           "uncertainty_lower": null,
           "uncertainty_upper": null,
-          "suppression_status": "no_value_yet",
+          "suppression_status": "not_suppressed",
           "common_misreading": "Not the number of jobs, and not additive with any finer occupation list drawn from a different classification.",
-          "notes": "No successful retrieval recorded in the manifest. openstat.psa.gov.ph is unreachable from the build environment (HTTP 403 at the egress proxy). Common misreading to avoid: Not the number of jobs, and not additive with any finer occupation list drawn from a different classification."
+          "notes": "Transformed and published. Retrieval is now configured. Publication still requires hash verification, successful parsing, and the explicit PSOC 2012-to-2022 major-group correspondence; registry status alone grants nothing. Common misreading to avoid: Not the number of jobs, and not additive with any finer occupation list drawn from a different classification."
         },
         "ofw_distribution_share": {
           "value": null,
@@ -1108,7 +1116,7 @@
           ],
           "pipeline_status": "blocked_by_source_access",
           "parser_id": "psa_sof_occupation_table",
-          "parser_version": "0.1.0",
+          "parser_version": "0.2.0",
           "normalised_row_id": "",
           "transformation_id": "",
           "crosswalk_id": "",
@@ -1129,7 +1137,7 @@
           "uncertainty_upper": null,
           "suppression_status": "no_value_yet",
           "common_misreading": "This is P(occupation | OFW). It is NOT the share of workers in an occupation who are OFWs, P(OFW | occupation) — that needs domestic employment in the same occupation as its denominator and a compatible universe. The two are not interchangeable.",
-          "notes": "No successful retrieval recorded in the manifest. psa.gov.ph unreachable from the build environment (HTTP 403). Common misreading to avoid: This is P(occupation | OFW). It is NOT the share of workers in an occupation who are OFWs, P(OFW | occupation) — that needs domestic employment in the same occupation as its denominator and a compatible universe. The two are not interchangeable."
+          "notes": "No successful retrieval recorded in the manifest. The exact XLSX is identified, but automated requests currently receive a Cloudflare HTML verification page. Acquisition validation rejects it. Common misreading to avoid: This is P(occupation | OFW). It is NOT the share of workers in an occupation who are OFWs, P(OFW | occupation) — that needs domestic employment in the same occupation as its denominator and a compatible universe. The two are not interchangeable."
         }
       },
       "exposure": []
@@ -1203,41 +1211,42 @@
       "verification_status": "unverified_pending_source",
       "metrics": {
         "employment_count": {
-          "value": null,
+          "value": 11882667,
           "unit": "persons",
           "derivation_class": "estimated",
           "derivation_class_label": "Estimated",
           "source_authority": "ph_official_statistical_authority",
           "source_authority_label": "Philippine official statistical authority",
-          "availability": "blocked_pending_source",
-          "confidence_grade": "D",
+          "availability": "published",
+          "confidence_grade": "B",
           "confidence_reasons": [
-            "No value yet: source not acquired, parsed and transformed."
+            "Sample-survey estimate.",
+            "Source did not publish sampling error."
           ],
-          "pipeline_status": "blocked_by_source_access",
+          "pipeline_status": "implemented_verified_with_real_source",
           "parser_id": "psa_lfs_occupation_table",
-          "parser_version": "0.1.0",
-          "normalised_row_id": "",
-          "transformation_id": "",
-          "crosswalk_id": "",
-          "reference_period": "",
+          "parser_version": "0.2.0",
+          "normalised_row_id": "psa_lfs_occupation_table:5",
+          "transformation_id": "T-010-lfs-employment",
+          "crosswalk_id": "PSOCVER-2012-2022-5",
+          "reference_period": "2024 Annual",
           "geography": "Philippines",
-          "population_scope": "n/a (a count)",
+          "population_scope": "employed persons 15 years and over",
           "source_granularity": "psoc_major_group",
           "display_granularity": "psoc_major_group",
           "granularity_mismatch": false,
           "source_id": "psa_lfs",
           "source_organization": "Philippine Statistics Authority",
           "source_dataset": "Labor Force Survey (LFS)",
-          "source_table": "",
-          "source_url": "https://openstat.psa.gov.ph/PXWeb/pxweb/en/DB/DB__1B__LFS/",
-          "source_file_hash": "",
-          "retrieved_at": "",
+          "source_table": "Number of Employed Persons by Major Occupation Group (2012 PSOC Code): April 2016 to July 2026 by Year, Month and Major Occupation Group (2012 PSOC Code)",
+          "source_url": "https://openstat.psa.gov.ph/PXWeb/api/v1/en/DB/1B/LFS/0121B3FEMP4.px",
+          "source_file_hash": "9cb88db30ecab0520cf5e8678f046b1cdb62a20ce834fa4db5c8abf856292b86",
+          "retrieved_at": "2026-09-18T03:33:45Z",
           "uncertainty_lower": null,
           "uncertainty_upper": null,
-          "suppression_status": "no_value_yet",
+          "suppression_status": "not_suppressed",
           "common_misreading": "Not the number of jobs, and not additive with any finer occupation list drawn from a different classification.",
-          "notes": "No successful retrieval recorded in the manifest. openstat.psa.gov.ph is unreachable from the build environment (HTTP 403 at the egress proxy). Common misreading to avoid: Not the number of jobs, and not additive with any finer occupation list drawn from a different classification."
+          "notes": "Transformed and published. Retrieval is now configured. Publication still requires hash verification, successful parsing, and the explicit PSOC 2012-to-2022 major-group correspondence; registry status alone grants nothing. Common misreading to avoid: Not the number of jobs, and not additive with any finer occupation list drawn from a different classification."
         },
         "ofw_distribution_share": {
           "value": null,
@@ -1253,7 +1262,7 @@
           ],
           "pipeline_status": "blocked_by_source_access",
           "parser_id": "psa_sof_occupation_table",
-          "parser_version": "0.1.0",
+          "parser_version": "0.2.0",
           "normalised_row_id": "",
           "transformation_id": "",
           "crosswalk_id": "",
@@ -1274,7 +1283,7 @@
           "uncertainty_upper": null,
           "suppression_status": "no_value_yet",
           "common_misreading": "This is P(occupation | OFW). It is NOT the share of workers in an occupation who are OFWs, P(OFW | occupation) — that needs domestic employment in the same occupation as its denominator and a compatible universe. The two are not interchangeable.",
-          "notes": "No successful retrieval recorded in the manifest. psa.gov.ph unreachable from the build environment (HTTP 403). Common misreading to avoid: This is P(occupation | OFW). It is NOT the share of workers in an occupation who are OFWs, P(OFW | occupation) — that needs domestic employment in the same occupation as its denominator and a compatible universe. The two are not interchangeable."
+          "notes": "No successful retrieval recorded in the manifest. The exact XLSX is identified, but automated requests currently receive a Cloudflare HTML verification page. Acquisition validation rejects it. Common misreading to avoid: This is P(occupation | OFW). It is NOT the share of workers in an occupation who are OFWs, P(OFW | occupation) — that needs domestic employment in the same occupation as its denominator and a compatible universe. The two are not interchangeable."
         }
       },
       "exposure": []
@@ -1348,41 +1357,42 @@
       "verification_status": "unverified_pending_source",
       "metrics": {
         "employment_count": {
-          "value": null,
+          "value": 5422282,
           "unit": "persons",
           "derivation_class": "estimated",
           "derivation_class_label": "Estimated",
           "source_authority": "ph_official_statistical_authority",
           "source_authority_label": "Philippine official statistical authority",
-          "availability": "blocked_pending_source",
-          "confidence_grade": "D",
+          "availability": "published",
+          "confidence_grade": "B",
           "confidence_reasons": [
-            "No value yet: source not acquired, parsed and transformed."
+            "Sample-survey estimate.",
+            "Source did not publish sampling error."
           ],
-          "pipeline_status": "blocked_by_source_access",
+          "pipeline_status": "implemented_verified_with_real_source",
           "parser_id": "psa_lfs_occupation_table",
-          "parser_version": "0.1.0",
-          "normalised_row_id": "",
-          "transformation_id": "",
-          "crosswalk_id": "",
-          "reference_period": "",
+          "parser_version": "0.2.0",
+          "normalised_row_id": "psa_lfs_occupation_table:6",
+          "transformation_id": "T-010-lfs-employment",
+          "crosswalk_id": "PSOCVER-2012-2022-6",
+          "reference_period": "2024 Annual",
           "geography": "Philippines",
-          "population_scope": "n/a (a count)",
+          "population_scope": "employed persons 15 years and over",
           "source_granularity": "psoc_major_group",
           "display_granularity": "psoc_major_group",
           "granularity_mismatch": false,
           "source_id": "psa_lfs",
           "source_organization": "Philippine Statistics Authority",
           "source_dataset": "Labor Force Survey (LFS)",
-          "source_table": "",
-          "source_url": "https://openstat.psa.gov.ph/PXWeb/pxweb/en/DB/DB__1B__LFS/",
-          "source_file_hash": "",
-          "retrieved_at": "",
+          "source_table": "Number of Employed Persons by Major Occupation Group (2012 PSOC Code): April 2016 to July 2026 by Year, Month and Major Occupation Group (2012 PSOC Code)",
+          "source_url": "https://openstat.psa.gov.ph/PXWeb/api/v1/en/DB/1B/LFS/0121B3FEMP4.px",
+          "source_file_hash": "9cb88db30ecab0520cf5e8678f046b1cdb62a20ce834fa4db5c8abf856292b86",
+          "retrieved_at": "2026-09-18T03:33:45Z",
           "uncertainty_lower": null,
           "uncertainty_upper": null,
-          "suppression_status": "no_value_yet",
+          "suppression_status": "not_suppressed",
           "common_misreading": "Not the number of jobs, and not additive with any finer occupation list drawn from a different classification.",
-          "notes": "No successful retrieval recorded in the manifest. openstat.psa.gov.ph is unreachable from the build environment (HTTP 403 at the egress proxy). Common misreading to avoid: Not the number of jobs, and not additive with any finer occupation list drawn from a different classification."
+          "notes": "Transformed and published. Retrieval is now configured. Publication still requires hash verification, successful parsing, and the explicit PSOC 2012-to-2022 major-group correspondence; registry status alone grants nothing. Common misreading to avoid: Not the number of jobs, and not additive with any finer occupation list drawn from a different classification."
         },
         "ofw_distribution_share": {
           "value": null,
@@ -1398,7 +1408,7 @@
           ],
           "pipeline_status": "blocked_by_source_access",
           "parser_id": "psa_sof_occupation_table",
-          "parser_version": "0.1.0",
+          "parser_version": "0.2.0",
           "normalised_row_id": "",
           "transformation_id": "",
           "crosswalk_id": "",
@@ -1419,7 +1429,7 @@
           "uncertainty_upper": null,
           "suppression_status": "no_value_yet",
           "common_misreading": "This is P(occupation | OFW). It is NOT the share of workers in an occupation who are OFWs, P(OFW | occupation) — that needs domestic employment in the same occupation as its denominator and a compatible universe. The two are not interchangeable.",
-          "notes": "No successful retrieval recorded in the manifest. psa.gov.ph unreachable from the build environment (HTTP 403). Common misreading to avoid: This is P(occupation | OFW). It is NOT the share of workers in an occupation who are OFWs, P(OFW | occupation) — that needs domestic employment in the same occupation as its denominator and a compatible universe. The two are not interchangeable."
+          "notes": "No successful retrieval recorded in the manifest. The exact XLSX is identified, but automated requests currently receive a Cloudflare HTML verification page. Acquisition validation rejects it. Common misreading to avoid: This is P(occupation | OFW). It is NOT the share of workers in an occupation who are OFWs, P(OFW | occupation) — that needs domestic employment in the same occupation as its denominator and a compatible universe. The two are not interchangeable."
         }
       },
       "exposure": []
@@ -1479,41 +1489,42 @@
       "verification_status": "unverified_pending_source",
       "metrics": {
         "employment_count": {
-          "value": null,
+          "value": 3488663,
           "unit": "persons",
           "derivation_class": "estimated",
           "derivation_class_label": "Estimated",
           "source_authority": "ph_official_statistical_authority",
           "source_authority_label": "Philippine official statistical authority",
-          "availability": "blocked_pending_source",
-          "confidence_grade": "D",
+          "availability": "published",
+          "confidence_grade": "B",
           "confidence_reasons": [
-            "No value yet: source not acquired, parsed and transformed."
+            "Sample-survey estimate.",
+            "Source did not publish sampling error."
           ],
-          "pipeline_status": "blocked_by_source_access",
+          "pipeline_status": "implemented_verified_with_real_source",
           "parser_id": "psa_lfs_occupation_table",
-          "parser_version": "0.1.0",
-          "normalised_row_id": "",
-          "transformation_id": "",
-          "crosswalk_id": "",
-          "reference_period": "",
+          "parser_version": "0.2.0",
+          "normalised_row_id": "psa_lfs_occupation_table:7",
+          "transformation_id": "T-010-lfs-employment",
+          "crosswalk_id": "PSOCVER-2012-2022-7",
+          "reference_period": "2024 Annual",
           "geography": "Philippines",
-          "population_scope": "n/a (a count)",
+          "population_scope": "employed persons 15 years and over",
           "source_granularity": "psoc_major_group",
           "display_granularity": "psoc_major_group",
           "granularity_mismatch": false,
           "source_id": "psa_lfs",
           "source_organization": "Philippine Statistics Authority",
           "source_dataset": "Labor Force Survey (LFS)",
-          "source_table": "",
-          "source_url": "https://openstat.psa.gov.ph/PXWeb/pxweb/en/DB/DB__1B__LFS/",
-          "source_file_hash": "",
-          "retrieved_at": "",
+          "source_table": "Number of Employed Persons by Major Occupation Group (2012 PSOC Code): April 2016 to July 2026 by Year, Month and Major Occupation Group (2012 PSOC Code)",
+          "source_url": "https://openstat.psa.gov.ph/PXWeb/api/v1/en/DB/1B/LFS/0121B3FEMP4.px",
+          "source_file_hash": "9cb88db30ecab0520cf5e8678f046b1cdb62a20ce834fa4db5c8abf856292b86",
+          "retrieved_at": "2026-09-18T03:33:45Z",
           "uncertainty_lower": null,
           "uncertainty_upper": null,
-          "suppression_status": "no_value_yet",
+          "suppression_status": "not_suppressed",
           "common_misreading": "Not the number of jobs, and not additive with any finer occupation list drawn from a different classification.",
-          "notes": "No successful retrieval recorded in the manifest. openstat.psa.gov.ph is unreachable from the build environment (HTTP 403 at the egress proxy). Common misreading to avoid: Not the number of jobs, and not additive with any finer occupation list drawn from a different classification."
+          "notes": "Transformed and published. Retrieval is now configured. Publication still requires hash verification, successful parsing, and the explicit PSOC 2012-to-2022 major-group correspondence; registry status alone grants nothing. Common misreading to avoid: Not the number of jobs, and not additive with any finer occupation list drawn from a different classification."
         },
         "ofw_distribution_share": {
           "value": null,
@@ -1529,7 +1540,7 @@
           ],
           "pipeline_status": "blocked_by_source_access",
           "parser_id": "psa_sof_occupation_table",
-          "parser_version": "0.1.0",
+          "parser_version": "0.2.0",
           "normalised_row_id": "",
           "transformation_id": "",
           "crosswalk_id": "",
@@ -1550,7 +1561,7 @@
           "uncertainty_upper": null,
           "suppression_status": "no_value_yet",
           "common_misreading": "This is P(occupation | OFW). It is NOT the share of workers in an occupation who are OFWs, P(OFW | occupation) — that needs domestic employment in the same occupation as its denominator and a compatible universe. The two are not interchangeable.",
-          "notes": "No successful retrieval recorded in the manifest. psa.gov.ph unreachable from the build environment (HTTP 403). Common misreading to avoid: This is P(occupation | OFW). It is NOT the share of workers in an occupation who are OFWs, P(OFW | occupation) — that needs domestic employment in the same occupation as its denominator and a compatible universe. The two are not interchangeable."
+          "notes": "No successful retrieval recorded in the manifest. The exact XLSX is identified, but automated requests currently receive a Cloudflare HTML verification page. Acquisition validation rejects it. Common misreading to avoid: This is P(occupation | OFW). It is NOT the share of workers in an occupation who are OFWs, P(OFW | occupation) — that needs domestic employment in the same occupation as its denominator and a compatible universe. The two are not interchangeable."
         }
       },
       "exposure": []
@@ -1638,41 +1649,42 @@
       "verification_status": "unverified_pending_source",
       "metrics": {
         "employment_count": {
-          "value": null,
+          "value": 4282006,
           "unit": "persons",
           "derivation_class": "estimated",
           "derivation_class_label": "Estimated",
           "source_authority": "ph_official_statistical_authority",
           "source_authority_label": "Philippine official statistical authority",
-          "availability": "blocked_pending_source",
-          "confidence_grade": "D",
+          "availability": "published",
+          "confidence_grade": "B",
           "confidence_reasons": [
-            "No value yet: source not acquired, parsed and transformed."
+            "Sample-survey estimate.",
+            "Source did not publish sampling error."
           ],
-          "pipeline_status": "blocked_by_source_access",
+          "pipeline_status": "implemented_verified_with_real_source",
           "parser_id": "psa_lfs_occupation_table",
-          "parser_version": "0.1.0",
-          "normalised_row_id": "",
-          "transformation_id": "",
-          "crosswalk_id": "",
-          "reference_period": "",
+          "parser_version": "0.2.0",
+          "normalised_row_id": "psa_lfs_occupation_table:8",
+          "transformation_id": "T-010-lfs-employment",
+          "crosswalk_id": "PSOCVER-2012-2022-8",
+          "reference_period": "2024 Annual",
           "geography": "Philippines",
-          "population_scope": "n/a (a count)",
+          "population_scope": "employed persons 15 years and over",
           "source_granularity": "psoc_major_group",
           "display_granularity": "psoc_major_group",
           "granularity_mismatch": false,
           "source_id": "psa_lfs",
           "source_organization": "Philippine Statistics Authority",
           "source_dataset": "Labor Force Survey (LFS)",
-          "source_table": "",
-          "source_url": "https://openstat.psa.gov.ph/PXWeb/pxweb/en/DB/DB__1B__LFS/",
-          "source_file_hash": "",
-          "retrieved_at": "",
+          "source_table": "Number of Employed Persons by Major Occupation Group (2012 PSOC Code): April 2016 to July 2026 by Year, Month and Major Occupation Group (2012 PSOC Code)",
+          "source_url": "https://openstat.psa.gov.ph/PXWeb/api/v1/en/DB/1B/LFS/0121B3FEMP4.px",
+          "source_file_hash": "9cb88db30ecab0520cf5e8678f046b1cdb62a20ce834fa4db5c8abf856292b86",
+          "retrieved_at": "2026-09-18T03:33:45Z",
           "uncertainty_lower": null,
           "uncertainty_upper": null,
-          "suppression_status": "no_value_yet",
+          "suppression_status": "not_suppressed",
           "common_misreading": "Not the number of jobs, and not additive with any finer occupation list drawn from a different classification.",
-          "notes": "No successful retrieval recorded in the manifest. openstat.psa.gov.ph is unreachable from the build environment (HTTP 403 at the egress proxy). Common misreading to avoid: Not the number of jobs, and not additive with any finer occupation list drawn from a different classification."
+          "notes": "Transformed and published. Retrieval is now configured. Publication still requires hash verification, successful parsing, and the explicit PSOC 2012-to-2022 major-group correspondence; registry status alone grants nothing. Common misreading to avoid: Not the number of jobs, and not additive with any finer occupation list drawn from a different classification."
         },
         "ofw_distribution_share": {
           "value": null,
@@ -1688,7 +1700,7 @@
           ],
           "pipeline_status": "blocked_by_source_access",
           "parser_id": "psa_sof_occupation_table",
-          "parser_version": "0.1.0",
+          "parser_version": "0.2.0",
           "normalised_row_id": "",
           "transformation_id": "",
           "crosswalk_id": "",
@@ -1709,7 +1721,7 @@
           "uncertainty_upper": null,
           "suppression_status": "no_value_yet",
           "common_misreading": "This is P(occupation | OFW). It is NOT the share of workers in an occupation who are OFWs, P(OFW | occupation) — that needs domestic employment in the same occupation as its denominator and a compatible universe. The two are not interchangeable.",
-          "notes": "No successful retrieval recorded in the manifest. psa.gov.ph unreachable from the build environment (HTTP 403). Common misreading to avoid: This is P(occupation | OFW). It is NOT the share of workers in an occupation who are OFWs, P(OFW | occupation) — that needs domestic employment in the same occupation as its denominator and a compatible universe. The two are not interchangeable."
+          "notes": "No successful retrieval recorded in the manifest. The exact XLSX is identified, but automated requests currently receive a Cloudflare HTML verification page. Acquisition validation rejects it. Common misreading to avoid: This is P(occupation | OFW). It is NOT the share of workers in an occupation who are OFWs, P(OFW | occupation) — that needs domestic employment in the same occupation as its denominator and a compatible universe. The two are not interchangeable."
         }
       },
       "exposure": []
@@ -1769,41 +1781,42 @@
       "verification_status": "unverified_pending_source",
       "metrics": {
         "employment_count": {
-          "value": null,
+          "value": 13380033,
           "unit": "persons",
           "derivation_class": "estimated",
           "derivation_class_label": "Estimated",
           "source_authority": "ph_official_statistical_authority",
           "source_authority_label": "Philippine official statistical authority",
-          "availability": "blocked_pending_source",
-          "confidence_grade": "D",
+          "availability": "published",
+          "confidence_grade": "B",
           "confidence_reasons": [
-            "No value yet: source not acquired, parsed and transformed."
+            "Sample-survey estimate.",
+            "Source did not publish sampling error."
           ],
-          "pipeline_status": "blocked_by_source_access",
+          "pipeline_status": "implemented_verified_with_real_source",
           "parser_id": "psa_lfs_occupation_table",
-          "parser_version": "0.1.0",
-          "normalised_row_id": "",
-          "transformation_id": "",
-          "crosswalk_id": "",
-          "reference_period": "",
+          "parser_version": "0.2.0",
+          "normalised_row_id": "psa_lfs_occupation_table:9",
+          "transformation_id": "T-010-lfs-employment",
+          "crosswalk_id": "PSOCVER-2012-2022-9",
+          "reference_period": "2024 Annual",
           "geography": "Philippines",
-          "population_scope": "n/a (a count)",
+          "population_scope": "employed persons 15 years and over",
           "source_granularity": "psoc_major_group",
           "display_granularity": "psoc_major_group",
           "granularity_mismatch": false,
           "source_id": "psa_lfs",
           "source_organization": "Philippine Statistics Authority",
           "source_dataset": "Labor Force Survey (LFS)",
-          "source_table": "",
-          "source_url": "https://openstat.psa.gov.ph/PXWeb/pxweb/en/DB/DB__1B__LFS/",
-          "source_file_hash": "",
-          "retrieved_at": "",
+          "source_table": "Number of Employed Persons by Major Occupation Group (2012 PSOC Code): April 2016 to July 2026 by Year, Month and Major Occupation Group (2012 PSOC Code)",
+          "source_url": "https://openstat.psa.gov.ph/PXWeb/api/v1/en/DB/1B/LFS/0121B3FEMP4.px",
+          "source_file_hash": "9cb88db30ecab0520cf5e8678f046b1cdb62a20ce834fa4db5c8abf856292b86",
+          "retrieved_at": "2026-09-18T03:33:45Z",
           "uncertainty_lower": null,
           "uncertainty_upper": null,
-          "suppression_status": "no_value_yet",
+          "suppression_status": "not_suppressed",
           "common_misreading": "Not the number of jobs, and not additive with any finer occupation list drawn from a different classification.",
-          "notes": "No successful retrieval recorded in the manifest. openstat.psa.gov.ph is unreachable from the build environment (HTTP 403 at the egress proxy). Common misreading to avoid: Not the number of jobs, and not additive with any finer occupation list drawn from a different classification."
+          "notes": "Transformed and published. Retrieval is now configured. Publication still requires hash verification, successful parsing, and the explicit PSOC 2012-to-2022 major-group correspondence; registry status alone grants nothing. Common misreading to avoid: Not the number of jobs, and not additive with any finer occupation list drawn from a different classification."
         },
         "ofw_distribution_share": {
           "value": null,
@@ -1819,7 +1832,7 @@
           ],
           "pipeline_status": "blocked_by_source_access",
           "parser_id": "psa_sof_occupation_table",
-          "parser_version": "0.1.0",
+          "parser_version": "0.2.0",
           "normalised_row_id": "",
           "transformation_id": "",
           "crosswalk_id": "",
@@ -1840,7 +1853,7 @@
           "uncertainty_upper": null,
           "suppression_status": "no_value_yet",
           "common_misreading": "This is P(occupation | OFW). It is NOT the share of workers in an occupation who are OFWs, P(OFW | occupation) — that needs domestic employment in the same occupation as its denominator and a compatible universe. The two are not interchangeable.",
-          "notes": "No successful retrieval recorded in the manifest. psa.gov.ph unreachable from the build environment (HTTP 403). Common misreading to avoid: This is P(occupation | OFW). It is NOT the share of workers in an occupation who are OFWs, P(OFW | occupation) — that needs domestic employment in the same occupation as its denominator and a compatible universe. The two are not interchangeable."
+          "notes": "No successful retrieval recorded in the manifest. The exact XLSX is identified, but automated requests currently receive a Cloudflare HTML verification page. Acquisition validation rejects it. Common misreading to avoid: This is P(occupation | OFW). It is NOT the share of workers in an occupation who are OFWs, P(OFW | occupation) — that needs domestic employment in the same occupation as its denominator and a compatible universe. The two are not interchangeable."
         }
       },
       "exposure": []

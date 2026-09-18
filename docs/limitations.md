@@ -1,49 +1,42 @@
 # Limitations
 
-**The short version.** This release publishes no numbers. It publishes the
-structure, the rules and the honest account of what is missing. Everything below
-explains why, and what would change it.
+**The short version.** This release publishes ten 2024 annual PSA LFS employment
+estimates at PSOC major-group level. Every other metric remains unavailable.
 
 ---
 
-## 1. No metric value is published
+## 1. Only major-group employment is published
 
-Not one. `data/canonical/metric_observations.csv` contains 20 rows and all 20
-have an empty `metric_value`.
-
-Every source the project needs was unreachable from the build environment. The
-attempts are recorded, with timestamps, in
+`data/canonical/metric_observations.csv` contains 20 rows: ten published LFS
+employment estimates and ten blocked SOF rows. Attempts and hashes are recorded in
 `data/sources/retrieval-manifest.json`:
 
 | Host | Source | Result |
 | --- | --- | --- |
-| `psa.gov.ph` | PSOC 2012 volume, SOF | HTTP 403 at the egress proxy |
-| `openstat.psa.gov.ph` | LFS, OWS | HTTP 403 at the egress proxy |
-| `www.onetcenter.org` | O\*NET 30.2 | HTTP 403 at the egress proxy |
+| PSA classification API | PSOC 2022 code list | token required |
+| `openstat.psa.gov.ph` | LFS 2024 annual occupation table | retrieved, validated and published |
+| `psa.gov.ph` | SOF 2024 Table 2 | exact XLSX identified; CDN blocks automation |
+| `www.onetcenter.org` | O\*NET 31.0 | retrieved and hash-verified; no accepted PH crosswalk |
 | `openrouter.ai` | Exposure scoring | HTTP 403 at the egress proxy |
 
 `OPENROUTER_API_KEY` is also unset.
 
-**What would change it.** Run `make fetch-data` from a network that permits
-these hosts — but that alone is not sufficient, and the previous version of this
-document was wrong to imply it was.
-
-It previously said "only the bytes are missing". That was false. Parsing,
-classification reconciliation, estimation and source-to-observation construction
-did not exist. They exist now and are covered by tests, but **no stage has ever
-processed a real primary source**. Precisely:
+The LFS path now exercises retrieval, hash verification, JSON-stat parsing,
+conversion from thousands to persons, explicit PSOC-version correspondence,
+canonical observation construction and release validation against real bytes.
 
 | Stage | State |
 | --- | --- |
 | Source registry | verified against the real artifacts |
-| Retrieval, raw snapshot | blocked by source access |
-| Hash verification, format validation, parsing, normalisation, transformation, canonical observation | implemented, **fixture-tested only** |
+| Retrieval, raw snapshot | partial — LFS and O*NET complete |
+| Hash verification and format validation | verified with real LFS and O*NET sources |
+| Parsing, normalisation, transformation, canonical observation | real-source verified for LFS; partial overall |
 | Classification reconciliation | partially implemented — no minor or unit groups |
 | Release validation, site payload | verified, running on every build |
 
-There is also work that network access would not solve: **the specific LFS, OWS
-and SOF tables have not been identified.** The registry entries point at PXWeb
-API directories and landing pages, now flagged as such.
+The remaining gaps are not interchangeable network failures: PSOC needs a token,
+SOF needs a browser/manual acquisition plus an XLSX parser, and current OWS
+tables do not match the registered wage definition.
 
 **Why nothing was substituted.** The alternative was to keep v1's numbers while
 improving the machinery around them. That would have produced a more impressive
@@ -97,9 +90,8 @@ The harness is built, guarded and tested against a stub client. It has never
 run against a real model, because:
 
 1. The provider is unreachable and no API key is set.
-2. It requires **task statements**, and O\*NET could not be retrieved. Scoring
-   titles instead is precisely the v1 defect; the harness raises rather than
-   degrade to it.
+2. O\*NET task statements are retrieved, but no accepted PSOC-to-O\*NET
+   correspondence exists. Scoring titles instead remains prohibited.
 
 The v1 scores are not a fallback and are not carried forward.
 

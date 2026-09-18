@@ -4,10 +4,9 @@ Every registered source audited against its primary source, as required by
 finding 15. Regenerate the machine-readable form with `make build-release`
 (`pipeline_stages` and `source_versions` in `data/release/manifest.json`).
 
-**No source has been retrieved in this environment.** Every host returned HTTP
-403 at the egress proxy. The audit below is therefore of the *registry entries*
-— their titles, URLs, universes, exclusions and licensing — not of retrieved
-data.
+Two official sources are retrieved and hash-verified: PSA LFS matrix 1B3FEMP4
+and O*NET 31.0. Other rows below distinguish access, table suitability and
+classification/crosswalk blockers.
 
 ---
 
@@ -15,9 +14,9 @@ data.
 
 | Source | Problem found | Correction |
 | --- | --- | --- |
-| `psa_lfs` | `download_url` pointed at the PXWeb **API directory** `.../DB/DB__1B__LFS/`, which lists tables rather than being one. Registering a directory as a dataset implies a confirmed table endpoint that does not exist. | Marked `table_identification: unconfirmed`; the specific table id must be established before the metric is implementable. |
-| `psa_ows` | Same directory-as-dataset problem. v1 had additionally targeted an **industry** table. | Directory flagged; the parser now refuses a file whose name identifies it as an industry table. |
-| `psa_sof` | `download_url` was a **landing page**, described as if it were a downloadable table. | Marked `landing_page`, not `dataset`. |
+| `psa_lfs` | `download_url` pointed at an obsolete PXWeb directory. | Pinned matrix 1B3FEMP4 and a 2024 Annual POST query; verified its `In thousands` unit and normalized to persons. |
+| `psa_ows` | v1 targeted an industry-oriented table and conflated wage concepts. | Reviewed current O10/O20 tables; none satisfies coded-occupation average basic pay, so the metric stays unavailable. |
+| `psa_sof` | `download_url` was a landing page. | Identified 2024 Table 2 XLSX; automated retrieval remains CDN-blocked. |
 | `psa_informal` | No occupation-level source was ever identified; the entry implied one would soon be available. | Moved out of the planned core release. See below. |
 | `psa_psoc` | Pointed at a landing page; version was "PSOC 2012" although the current publication is the **2022 Updates to the 2012 PSOC**. | Version corrected; entry records that the volume is the authoritative artifact. |
 | `onet` | Pinned release 30.2 with no justification while 31.0 is current. | Re-pinned to 31.0 with a stated reason and an update policy. |
@@ -29,12 +28,12 @@ data.
 
 | source_id | Authority | Retrieval | Table identified? | Parser | Metric state |
 | --- | --- | --- | --- | --- | --- |
-| `psa_psoc` | PH official statistical authority | blocked (403) | volume, not a table | importer fixture-tested | classification unverified |
-| `psa_lfs` | PH official statistical authority | blocked (403) | **no** — directory only | fixture-tested | blocked |
-| `psa_ows` | PH official statistical authority | blocked (403) | **no** — directory only | fixture-tested | blocked |
-| `psa_sof` | PH official statistical authority | blocked (403) | **no** — landing page | fixture-tested | blocked |
-| `psa_informal` | PH official statistical authority | blocked (403) | **no source exists** | none | removed from core release |
-| `onet` | International official occupational | blocked (403) | yes — pinned archive URL | fixture-tested (4 files) | blocked |
+| `psa_psoc` | PH official statistical authority | token required | API identified | importer fixture-tested | classification unverified |
+| `psa_lfs` | PH official statistical authority | retrieved + hashed | **yes** — matrix 1B3FEMP4 | real-source verified | 10 major-group estimates published |
+| `psa_ows` | PH official statistical authority | reachable | no matching coded basic-pay table | fixture-tested | unavailable by definition mismatch |
+| `psa_sof` | PH official statistical authority | CDN blocked | **yes** — 2024 Table 2 | XLSX parser pending | blocked |
+| `psa_informal` | PH official statistical authority | not attempted | **no source identified** | none | removed from core release |
+| `onet` | International official occupational | retrieved + hashed | yes — 31.0 archive | real-source verified (4 files) | blocked by missing accepted crosswalk |
 | `philjobnet` | Other PH government | not used | n/a | none | not planned |
 | `ibpap` | Industry | not used | n/a | none | not planned |
 | `dmw` | Other PH government | not used | n/a | none | not planned |
@@ -45,7 +44,10 @@ data.
 ## OWS: what must be verified before any wage is published
 
 Finding 15 requires these to be settled from the release itself, not assumed.
-All six remain **unverified**:
+Review of the current tables resolved the first three negatively for this
+metric: the available tables are industry/benchmark slices, publish average
+wage rates rather than coded-occupation basic pay, and do not provide the
+required concept. Coverage and exclusions remain documented constraints.
 
 1. Occupation table versus industry table — v1 used the industry table.
 2. Basic pay versus total earnings.
@@ -59,10 +61,11 @@ that is a name check, not a substitute for reading the release notes.
 
 ## SOF: the conditional is fixed in the measure name
 
-The parser emits `ofw_count_by_major_occupation` and the transformation
-`T-012-sof-distribution` divides by the all-OFW total, producing
-**P(occupation | OFW)**. The metric is named `ofw_distribution_share`. There is
-no code path that produces P(OFW | occupation), because the compatible
+The identified 2024 table publishes **P(occupation | OFW)** directly as percent
+distributions with measures of precision. The existing count-based parser is
+not suitable for that workbook, so publication remains blocked until a
+source-specific XLSX parser selects the all-OFW slice and preserves uncertainty.
+There is no code path that produces P(OFW | occupation), because the compatible
 denominator does not exist.
 
 ## Informality: removed from the planned core release

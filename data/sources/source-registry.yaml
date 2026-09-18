@@ -27,13 +27,12 @@ sources:
     dataset: 2022 Updates to the 2012 Philippine Standard Occupational Classification (PSOC)
     purpose: Canonical occupational classification and code list.
     authoritative_url: https://psa.gov.ph/classification/psoc
-    api_or_download: Published volume on the PSA classification page. A VOLUME, not a machine-readable table.
-    download_url: https://psa.gov.ph/classification/psoc
+    api_or_download: https://classification.psa.gov.ph/psoc/swagger/
     unit_group_browser: https://psa.gov.ph/classification/psoc/unit
     table_identification: >-
-      unconfirmed - the classification page is a landing page. The authoritative
-      artifact is the published volume; whether PSA offers a machine-readable
-      export or a classification API for it must be established on retrieval.
+      CONFIRMED API, but token-gated. PSA documents versioned PSOC endpoints for
+      the full list and each hierarchy level. The public Swagger index is
+      reachable, while data requests without a token return "Token is required."
     classification_version: PSOC 2012 (2022 Updates)
     published_structure:
       major_groups: 10
@@ -55,22 +54,18 @@ sources:
       stated. Individual datasets may carry their own terms that override that
       default, so the dataset page must be checked as well as the site notice.
     license_source_page: https://psa.gov.ph/
-    license_retrieved_at: >-
-      NOT RETRIEVED. psa.gov.ph is unreachable from this environment, so the
-      licence statement above is recorded from documentation and must be
-      confirmed against the live page, with the retrieval date noted, before
-      redistribution.
+    license_retrieved_at: "2026-09-18"
     dataset_specific_exception: none identified; re-check on retrieval
     attribution: "Philippine Statistics Authority, Philippine Standard Occupational Classification (PSOC) 2012."
     retrieval:
-      status: not_retrieved
+      status: blocked_requires_token
       blocked_reason: >-
-        psa.gov.ph is unreachable from the build environment (HTTP 403 at the
-        egress proxy). See docs/limitations.md.
+        The official PSA classification API requires a personal access token.
+        No token is stored in the repository or available to this build.
       manual_instruction: >-
-        Download the PSOC 2012 volume from the PSA classification page, place it
-        at data/raw/psa/psoc2012/, then run `make validate-raw` to record its
-        hash in the retrieval manifest.
+        Request a PSA classification API token, export the complete 2022 PSOC
+        code list as JSON or CSV into data/raw/psa_psoc/, then run
+        `make validate-raw`. Never commit or share the token.
     used_for:
       - classifications.csv (major and sub-major group codes and titles)
     notes: >-
@@ -84,14 +79,14 @@ sources:
     organization: Philippine Statistics Authority
     dataset: Labor Force Survey (LFS)
     purpose: Employed persons by occupation.
-    authoritative_url: https://openstat.psa.gov.ph/PXWeb/pxweb/en/DB/DB__1B__LFS/
-    api_or_download: PSA OpenSTAT PXWeb API (json-stat2), table id to be confirmed on retrieval.
-    download_url: https://openstat.psa.gov.ph/PXWeb/api/v1/en/DB/DB__1B__LFS/
+    authoritative_url: https://openstat.psa.gov.ph/PXWeb/pxweb/en/DB/DB__1B__LFS/0121B3FEMP4.px/
+    api_or_download: https://openstat.psa.gov.ph/PXWeb/api/v1/en/DB/1B/LFS/0121B3FEMP4.px
     table_identification: >-
-      UNCONFIRMED. This URL is a PXWeb API DIRECTORY that lists tables; it is not
-      a table endpoint. The specific table id must be established before the
-      employment metric is implementable.
-    classification_version: To be read from the table metadata on retrieval. Do not assume.
+      CONFIRMED matrix 1B3FEMP4: Number of Employed Persons by Major Occupation
+      Group (2012 PSOC Code). The pinned query selects the final 2024 annual
+      estimate and every published major occupation category. PX metadata states
+      UNITS="In thousands"; the parser converts to persons.
+    classification_version: PSOC 2012
     survey_universe: >-
       Household-based sample survey of the population 15 years and over, all
       regions. The exact universe and any reference-week rules must be quoted
@@ -108,10 +103,26 @@ sources:
       attribution. Not covered by this repository's MIT licence.
     attribution: "Philippine Statistics Authority, Labor Force Survey."
     retrieval:
-      status: blocked
+      status: identified_automated
       blocked_reason: >-
-        openstat.psa.gov.ph is unreachable from the build environment (HTTP 403
-        at the egress proxy).
+        Retrieval is now configured. Publication still requires hash verification,
+        successful parsing, and the explicit PSOC 2012-to-2022 major-group
+        correspondence; registry status alone grants nothing.
+      automated:
+        method: POST
+        url: https://openstat.psa.gov.ph/PXWeb/api/v1/en/DB/1B/LFS/0121B3FEMP4.px
+        destination_filename: lfs_employment_by_major_occupation_2024_annual.json
+        expected_format: json
+        timeout_seconds: 120
+        json_body:
+          query:
+            - code: Year
+              selection: {filter: item, values: ["8"]}
+            - code: Month
+              selection: {filter: item, values: ["12"]}
+            - code: Major Occupation Group (2012 PSOC Code)
+              selection: {filter: all, values: ["*"]}
+          response: {format: json-stat}
       manual_instruction: >-
         Run `make fetch-data` from a network that can reach openstat.psa.gov.ph.
         The fetcher records URL, retrieval timestamp and SHA-256 of every
@@ -135,11 +146,13 @@ sources:
     purpose: Wages by occupation in covered establishments.
     authoritative_url: https://psa.gov.ph/statistics/occupational-wages-survey
     api_or_download: Published statistical tables; some series mirrored in OpenSTAT.
-    download_url: https://openstat.psa.gov.ph/PXWeb/api/v1/en/DB/DB__1B__OWS/
     table_identification: >-
-      UNCONFIRMED. A PXWeb API directory, not a table. The OWS occupation table
-      must be identified specifically - v1 targeted an OWS INDUSTRY table, which
-      cannot yield an occupational wage.
+      REVIEWED. Matrix 1B3E1030 has an occupation dimension, but only three
+      benchmark categories across industries and publishes average monthly wage
+      rates, not the requested average monthly basic pay by coded occupation.
+      The 2024 O10 tables publish basic pay by industry and separate benchmark
+      tables only for General Office Clerks and Elementary Occupations. No table
+      currently satisfies this metric definition and code requirement.
     must_verify_before_publication:
       - occupation table versus industry table
       - basic pay versus total earnings
@@ -163,9 +176,14 @@ sources:
       repository's MIT licence.
     attribution: "Philippine Statistics Authority, Occupational Wages Survey."
     retrieval:
-      status: blocked
-      blocked_reason: psa.gov.ph and openstat.psa.gov.ph unreachable from the build environment (HTTP 403).
-      manual_instruction: Run `make fetch-data` from a permitted network.
+      status: blocked_no_matching_table
+      blocked_reason: >-
+        Reachability is no longer the blocker. The reviewed official tables do
+        not provide average monthly basic pay by coded occupation at the scope
+        this metric promises.
+      manual_instruction: >-
+        Keep the metric unavailable unless PSA publishes a coded occupation
+        table whose wage concept is explicitly average monthly basic pay.
     granularity_available: >-
       UNVERIFIED. OWS publishes wages for a selected list of occupations, not
       for every PSOC group. The wage concept published (basic pay versus total
@@ -186,11 +204,13 @@ sources:
     purpose: Distribution of overseas Filipino workers by major occupation group.
     authoritative_url: https://psa.gov.ph/statistics/survey/overseas-filipinos
     api_or_download: Published statistical tables.
-    download_url: https://psa.gov.ph/statistics/survey/overseas-filipinos
+    download_url: https://psa.gov.ph/system/files/iesd/TABLE%202.%20Percent%20Distribution%20of%20Overseas%20Filipino%20Workers%20and%20Overseas%20Contract%20Workers%20by%20Sex%2C%20Age%20Group%2C%20Major%20Occupation%2C%20and%20Region%20with%20Measures%20of%20Precision%202024.xlsx
     table_identification: >-
-      UNCONFIRMED. This is a LANDING PAGE, not a downloadable table. The specific
-      statistical table must be identified before the metric is implementable.
-    classification_version: To be read from the release.
+      CONFIRMED 2024 Table 2, an XLSX publishing percent distributions and
+      measures of precision by major occupation and other dimensions. It is not
+      a count table; the parser/metric must select the all-OFW occupation slice
+      and preserve its published uncertainty rather than reconstruct counts.
+    classification_version: PSOC 2012 (technical notes state adoption from October 2016)
     survey_universe: >-
       Rider to the LFS October round. Covers overseas Filipinos who left within
       a defined window and are members of sampled households. The OFW definition
@@ -203,9 +223,20 @@ sources:
     license: PSA official statistics. Attribution required.
     attribution: "Philippine Statistics Authority, Survey on Overseas Filipinos."
     retrieval:
-      status: blocked
-      blocked_reason: psa.gov.ph unreachable from the build environment (HTTP 403).
-      manual_instruction: Run `make fetch-data` from a permitted network.
+      status: blocked_by_cdn
+      blocked_reason: >-
+        The exact XLSX is identified, but automated requests currently receive
+        a Cloudflare HTML verification page. Acquisition validation rejects it.
+      automated:
+        method: GET
+        url: https://psa.gov.ph/system/files/iesd/TABLE%202.%20Percent%20Distribution%20of%20Overseas%20Filipino%20Workers%20and%20Overseas%20Contract%20Workers%20by%20Sex%2C%20Age%20Group%2C%20Major%20Occupation%2C%20and%20Region%20with%20Measures%20of%20Precision%202024.xlsx
+        destination_filename: sof_2024_table_2_major_occupation.xlsx
+        expected_format: xlsx
+        timeout_seconds: 120
+      manual_instruction: >-
+        Download 2024 Table 2 in a normal browser, place it under
+        data/raw/psa_sof/, then run `make validate-raw`. Real-XLSX signature
+        validation and a source-specific parser are still required before use.
     granularity_available: Major occupation group.
     used_for:
       - metric ofw_distribution_share
@@ -230,8 +261,10 @@ sources:
     license: PSA official statistics. Attribution required.
     attribution: "Philippine Statistics Authority."
     retrieval:
-      status: blocked
-      blocked_reason: psa.gov.ph unreachable from the build environment (HTTP 403).
+      status: blocked_no_source_identified
+      blocked_reason: >-
+        No occupation-level official table has been identified. Access is not
+        the relevant blocker until a dataset and concept are specified.
       manual_instruction: Confirm first that an occupation-level informality table exists at all.
     table_identification: >-
       NO SOURCE IDENTIFIED. No occupation-level Philippine informality table has
@@ -286,7 +319,9 @@ sources:
         occupations, and re-score. Scores from different releases are not
         comparable and the harness refuses to mix task-source versions in one
         run. The pinned release is never changed without a re-score.
-      verified_snapshot: none - www.onetcenter.org is unreachable from this environment
+      verified_snapshot: >-
+        The 31.0 archive URL and required members were verified on 2026-09-18;
+        production acquisition must still record its own hash.
     redistribution: >-
       Redistribution is permitted under CC BY 4.0 with attribution, but this
       repository does not vendor the archive; it is downloaded by script and
@@ -299,9 +334,17 @@ sources:
       Employment and Training Administration (USDOL/ETA). O*NET is a trademark
       of USDOL/ETA. Used under CC BY 4.0."
     retrieval:
-      status: blocked
-      blocked_reason: www.onetcenter.org is unreachable from the build environment (HTTP 403 at the egress proxy).
-      manual_instruction: Run `make fetch-data` from a permitted network.
+      status: identified_automated
+      blocked_reason: >-
+        Retrieval is configured and reachable. O*NET-derived values remain
+        blocked until an accepted PSOC-to-O*NET correspondence exists.
+      automated:
+        method: GET
+        url: https://www.onetcenter.org/dl_files/database/db_31_0_text.zip
+        destination_filename: db_31_0_text.zip
+        expected_format: zip
+        timeout_seconds: 300
+      manual_instruction: Run `make fetch-data`; the complete ZIP is CRC-checked and hashed.
     granularity_available: O*NET-SOC detailed occupation.
     used_for:
       - metric onet_job_zone

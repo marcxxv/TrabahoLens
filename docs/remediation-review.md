@@ -1,5 +1,8 @@
 # Remediation review — independent adversarial review of `audit/rebuild-v2`
 
+> Historical handoff snapshot. Source access and publication state have since
+> changed; use `docs/readiness-report.md` for current status.
+
 | | |
 | --- | --- |
 | Reviewed head | `4af84f6c43407ca1e523e6334e40580375228422` |

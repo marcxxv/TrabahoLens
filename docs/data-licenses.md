@@ -29,9 +29,9 @@ the Survey on Overseas Filipinos, and informality statistics.
 
 | | |
 | --- | --- |
-| Status in this release | **Not retrieved, not redistributed.** No PSA data is present in this repository. |
+| Status in this release | The LFS 2024 snapshot is retrieved into gitignored `data/raw/` and its hash/provenance are published; raw PSA bytes are not redistributed. Other PSA sources remain unavailable. |
 | Licence | The PSA website states that its data and content are made available under **Creative Commons Attribution 4.0 International (CC BY 4.0)** unless otherwise stated. Individual datasets may carry their own terms that override that default. |
-| Licence source | The site-wide notice on `https://psa.gov.ph/`. **Retrieved: never** — `psa.gov.ph` is unreachable from this environment, so this is recorded from documentation and must be confirmed against the live page, with the retrieval date noted, before redistribution. |
+| Licence source | The site-wide notice on `https://psa.gov.ph/`, confirmed on **2026-09-18**, states CC BY 4.0 unless otherwise stated. |
 | Dataset-specific exception | None identified. The dataset page must be checked as well as the site notice, because a per-dataset term overrides the default. |
 | Required attribution | Cite the PSA, the named survey or classification, and the round or edition. For example: *Philippine Statistics Authority, Labor Force Survey, October 2024.* |
 | How this project handles it | Data is acquired by script into `data/raw/`, which is gitignored. Only the URL, retrieval timestamp and SHA-256 are committed, in `data/sources/retrieval-manifest.json`. Anyone can confirm they hold the same bytes without this repository redistributing them. |
@@ -49,7 +49,7 @@ retrieval manifest entry backs it.
 
 | | |
 | --- | --- |
-| Status in this release | **Not retrieved, not redistributed.** |
+| Status in this release | **O*NET 31.0 retrieved into gitignored `data/raw/`, hash committed, raw archive not redistributed.** No O*NET-derived metric is published. |
 | Licence | O\*NET data are provided by USDOL/ETA under the **Creative Commons Attribution 4.0 International (CC BY 4.0)** licence. Redistribution and adaptation are permitted with attribution. |
 | Pinned release | **31.0**, not "latest". A specific release is pinned so a score traces to the exact task text that produced it; "latest" would silently change task statements under existing scores. The prior branch pinned 30.2 with no stated reason, which was staleness rather than a reproducibility argument. Update policy: retrieve, hash, diff the mapped occupations, re-score. Scores from different releases are not comparable and the harness refuses to mix task-source versions in one run. |
 | Required attribution | *This product uses data from O\*NET OnLine by the U.S. Department of Labor, Employment and Training Administration (USDOL/ETA). O\*NET® is a trademark of USDOL/ETA. Used under CC BY 4.0.* |

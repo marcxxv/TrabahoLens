@@ -140,6 +140,30 @@ def _crosswalk_target(row: NormalisedRow, crosswalk_rows: list[dict[str, Any]]) 
     return matches[0]["psoc_code"], matches[0]["crosswalk_id"], ""
 
 
+def _version_correspondence_target(
+    row: NormalisedRow,
+    canonical_version: str,
+    correspondence_rows: list[dict[str, Any]],
+) -> tuple[str, str, str]:
+    """Resolve a PSOC-version change through one explicit, source-backed edge."""
+    matches = [
+        edge for edge in correspondence_rows
+        if edge.get("source_version") == row.source_code_version
+        and edge.get("target_version") == canonical_version
+        and edge.get("source_code") == row.source_code
+        and edge.get("review_status") in {"source_verified", "human_reviewed"}
+        and edge.get("mapping_basis") not in {"title_similarity_only", "undocumented_heuristic"}
+    ]
+    if len(matches) != 1:
+        return "", "", (
+            f"Source classification version {row.source_code_version!r} is not "
+            f"reconcilable with the canonical {canonical_version!r}: code "
+            f"{row.source_code!r} has {len(matches)} accepted explicit correspondences."
+        )
+    edge = matches[0]
+    return edge["target_code"], edge["correspondence_id"], ""
+
+
 def transform_rows(
     metric_id: str,
     rows: list[NormalisedRow],
@@ -147,6 +171,7 @@ def transform_rows(
     canonical_codes: set[str],
     canonical_version: str,
     crosswalk_rows: list[dict[str, Any]] | None = None,
+    version_correspondence_rows: list[dict[str, Any]] | None = None,
 ) -> list[TransformOutcome]:
     """Apply the documented transformation for one metric.
 
@@ -165,6 +190,7 @@ def transform_rows(
 
     relevant = [r for r in rows if r.measure == transformation.applies_to_measure]
     crosswalk_rows = crosswalk_rows or []
+    version_correspondence_rows = version_correspondence_rows or []
     ofw_groups: dict[tuple[str, str, str, str], list[NormalisedRow]] = {}
     if metric_id == "ofw_distribution_share":
         for item in relevant:
@@ -177,22 +203,22 @@ def transform_rows(
         canonical_code = row.source_code
         crosswalk_id = ""
         if row.source_code_system == "PSOC" and row.source_code_version != canonical_version:
-            outcomes.append(
-                TransformOutcome(
-                    metric_id=metric_id,
-                    psoc_code=row.source_code,
-                    value=None,
-                    reason=(
-                        f"Source classification version {row.source_code_version!r} is not "
-                        f"reconcilable with the canonical {canonical_version!r} without an "
-                        "explicit correspondence table."
-                    ),
-                    availability="blocked_pending_source",
-                    suppression_status="no_value_yet",
-                    normalised_row_id=row.normalised_row_id,
-                )
+            canonical_code, crosswalk_id, mapping_error = _version_correspondence_target(
+                row, canonical_version, version_correspondence_rows
             )
-            continue
+            if mapping_error:
+                outcomes.append(
+                    TransformOutcome(
+                        metric_id=metric_id,
+                        psoc_code=row.source_code,
+                        value=None,
+                        reason=mapping_error,
+                        availability="blocked_pending_source",
+                        suppression_status="no_value_yet",
+                        normalised_row_id=row.normalised_row_id,
+                    )
+                )
+                continue
 
         if row.source_code_system != "PSOC":
             canonical_code, crosswalk_id, mapping_error = _crosswalk_target(row, crosswalk_rows)

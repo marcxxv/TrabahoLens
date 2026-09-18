@@ -187,6 +187,16 @@
       }
       .metric-meta dt { color: var(--fg3); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
       .metric-meta dd { color: var(--fg2); margin-top: 1px; overflow-wrap: anywhere; }
+      .published-values {
+        margin-top: 12px; display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 6px;
+      }
+      .published-value {
+        display: flex; justify-content: space-between; gap: 12px;
+        padding: 7px 9px; border: 1px solid var(--line); border-radius: 4px;
+        color: var(--fg2); font-size: 12.5px;
+      }
+      .published-value b { color: var(--fg); font-variant-numeric: tabular-nums; }
       .misread {
         margin-top: 10px; font-size: 12.5px; color: var(--fg2);
         border-left: 2px solid var(--line); padding-left: 10px;
@@ -310,12 +320,11 @@
             exists, the metric says so instead of showing a number.
           </p>
           <p>
-            <strong>This release publishes no metric values.</strong> What is
-            implemented, what is only fixture-tested, and what is blocked differ
-            per pipeline stage, and the table below says which is which rather
-            than calling the whole thing complete. No primary source could be
-            retrieved in this environment, so no parser has processed real data.
-            The reasons are recorded per source below and in
+            <strong id="releaseStatusLead">Loading release status…</strong>
+            <span id="releaseStatusDetail"></span>
+            What is implemented, real-source verified, fixture-tested, or blocked
+            differs per pipeline stage; the tables below preserve those
+            distinctions. The remaining gaps are recorded per source and in
             <a href="../docs/limitations.md">docs/limitations.md</a>.
           </p>
           <p>
@@ -543,6 +552,17 @@
         }
       }
 
+      function renderReleaseStatus(data) {
+        const count = data.counts.published_values;
+        const metrics = data.release.publication_state.metrics_with_published_values || [];
+        document.getElementById("releaseStatusLead").textContent = count === 0
+          ? "This release publishes no metric values."
+          : `This release publishes ${count} source-backed metric value${count === 1 ? "" : "s"}.`;
+        document.getElementById("releaseStatusDetail").textContent = count === 0
+          ? " No source has completed every publication gate."
+          : ` Published metric${metrics.length === 1 ? "" : "s"}: ${metrics.join(", ").replace(/_/g, " ")}.`;
+      }
+
       function renderLegend(data) {
         // Two independent axes. Keeping them visually separate is the point:
         // "PSA published it" and "it was directly observed" are different
@@ -565,17 +585,20 @@
 
       function renderLedger(data) {
         const host = document.getElementById("ledger");
-        // One representative observation per metric supplies the live
-        // availability and source state; the definition supplies the rest.
-        const sample = {};
+        const observations = {};
         for (const occ of data.occupations) {
           for (const [id, m] of Object.entries(occ.metrics)) {
-            if (!sample[id]) sample[id] = m;
+            if (!observations[id]) observations[id] = [];
+            observations[id].push({ occupation: occ, metric: m });
           }
         }
 
         for (const [id, def] of Object.entries(data.metrics)) {
-          const observed = sample[id];
+          const candidates = observations[id] || [];
+          const published = candidates.filter(
+            ({ metric }) => metric.availability === "published" && metric.value !== null
+          );
+          const observed = published.length ? published[0].metric : (candidates[0] || {}).metric;
           const card = el("div", "metric-card");
 
           const head = el("div", "metric-head");
@@ -612,9 +635,14 @@
             ["Denominator", def.denominator],
           ];
           if (observed) {
-            pairs.push(["Reference period", observed.reference_period || "—"]);
-            pairs.push(["Confidence grade", observed.confidence_grade || "—"]);
-            pairs.push(["Value", observed.value === null ? "—" : String(observed.value)]);
+            const periods = [...new Set(published.map(({ metric }) => metric.reference_period).filter(Boolean))];
+            const grades = [...new Set(published.map(({ metric }) => metric.confidence_grade).filter(Boolean))];
+            pairs.push(["Reference period", periods.join(", ") || observed.reference_period || "—"]);
+            pairs.push(["Confidence grade", grades.join(", ") || observed.confidence_grade || "—"]);
+            pairs.push([
+              "Published values",
+              published.length ? `${published.length} at ${def.expected_source_granularity.replace(/_/g, " ")}` : "—",
+            ]);
           } else {
             pairs.push([
               "Why no rows",
@@ -626,6 +654,25 @@
             meta.appendChild(el("dd", null, value));
           }
           card.appendChild(meta);
+
+          if (published.length) {
+            const values = el("div", "published-values");
+            for (const { occupation, metric } of published.sort(
+              (a, b) => a.occupation.psoc_code.localeCompare(
+                b.occupation.psoc_code, undefined, { numeric: true }
+              )
+            )) {
+              const row = el("div", "published-value");
+              row.appendChild(el("span", null, `${occupation.psoc_code} · ${occupation.title}`));
+              const numeric = Number(metric.value);
+              row.appendChild(el(
+                "b", null,
+                `${Number.isFinite(numeric) ? numeric.toLocaleString("en-PH") : metric.value} ${metric.unit}`
+              ));
+              values.appendChild(row);
+            }
+            card.appendChild(values);
+          }
 
           const misread = el("div", "misread");
           misread.appendChild(el("b", null, "Often misread as: "));
@@ -681,17 +728,21 @@
           tr.appendChild(el("td", null, id));
           tr.appendChild(el("td", null, info.organization));
 
-          const state = el("td", null, info.declared_status.replace(/_/g, " "));
-          if (info.declared_status === "blocked" || info.declared_status === "not_retrieved") {
+          const pipeline = (data.release.source_pipeline_status || {})[id] || {};
+          const verified = pipeline.retrieval === "implemented_verified_with_real_source";
+          const stateText = verified ? "retrieved and verified" : info.declared_status.replace(/_/g, " ");
+          const state = el("td", null, stateText);
+          if (!verified && info.declared_status.startsWith("blocked")) {
             state.className = "status-blocked";
           } else if (info.declared_status === "not_used") {
             state.className = "status-unused";
           }
           tr.appendChild(state);
 
-          tr.appendChild(
-            el("td", null, (info.blocked_reason || "—").trim() || "—")
-          );
+          const detail = verified
+            ? "Latest raw snapshot is hash-verified; downstream metric status is reported separately."
+            : (info.blocked_reason || "—").trim() || "—";
+          tr.appendChild(el("td", null, detail));
           tbody.appendChild(tr);
         }
       }
@@ -726,6 +777,7 @@
       fetch("data.json")
         .then((response) => response.json())
         .then((data) => {
+          renderReleaseStatus(data);
           document.getElementById("disclaimerText").textContent = data.disclaimers.exposure;
           document.getElementById("classificationNotice").innerHTML =
             "<strong>Classification not yet verified.</strong> " +
