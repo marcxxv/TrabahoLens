@@ -16,6 +16,7 @@ FILES = {
     "ilo_earnings_mean": "ilostat_earnings_mean/ilo_earnings_mean_2024.csv",
     "ilo_earnings_median": "ilostat_earnings_median/ilo_earnings_median_2024.csv",
     "ilo_education_attainment": "ilostat_education_attainment/ilo_education_2024.csv",
+    "ilo_status_employment": "ilostat_status_employment/ilo_status_employment_2024.csv",
 }
 
 pytestmark = pytest.mark.skipif(
@@ -40,7 +41,7 @@ def test_sub_major_code_set_matches_psoc_exactly():
 
 
 def test_major_code_set_matches_psoc_exactly():
-    for parser_id in ("ilo_earnings_mean", "ilo_earnings_median", "ilo_education_attainment"):
+    for parser_id in ("ilo_earnings_mean", "ilo_earnings_median", "ilo_education_attainment", "ilo_status_employment"):
         assert {r.source_code for r in _rows(parser_id)} == _classification_codes("psoc_major_group")
 
 
@@ -101,3 +102,12 @@ def test_structural_crosswalk_rows_are_verified_only_for_codes_in_the_ilo_files(
         if link["review_status"] == "source_verified":
             assert link["psoc_code"] in ilo_codes
             assert link["mapping_basis"] == "structural_derivation"
+
+
+def test_own_account_family_share_is_a_proportion_and_never_called_informal():
+    rows = _rows("ilo_status_employment")
+    assert rows and all(r.value is not None and 0 <= r.value <= 1 for r in rows)
+    by_code = {r.source_code: r.value for r in rows}
+    # Farming is overwhelmingly own-account; managers mostly employees.
+    assert by_code["6"] > 0.8 and by_code["1"] < 0.4
+    assert all("Not informal employment" in r.notes for r in rows)

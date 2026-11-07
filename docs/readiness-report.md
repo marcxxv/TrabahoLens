@@ -18,9 +18,10 @@ production exposure product.** No merge, push or deployment is implied.
 
 ## Data delivered by this pass
 
-The canonical observation table has 92 published values: 10 PSA LFS employment
-and nine SOF, plus 73 from ILOSTAT (43 sub-major employment, 10 mean and 10
-median employee earnings, 10 advanced-education shares).
+The canonical observation table has 102 published values: 10 PSA LFS employment
+and nine SOF, plus 83 from ILOSTAT (43 sub-major employment, 10 mean and 10
+median employee earnings, 10 advanced-education shares, 10 own-account and
+family work shares).
 A separate source-native wage reference table has 684 available records and nine
 withheld rows. These are not 684 unique national occupations. Classification
 units are not counts of occupations with measured data.

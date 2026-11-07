@@ -238,3 +238,65 @@ class IloEducationParser(_IloSdmxParser):
                 notes=(note + " Source: ILOSTAT, from the Philippine Labor Force Survey as processed by the ILO.").strip(),
             ))
         return result
+
+
+@register
+class IloStatusEmploymentParser(_IloSdmxParser):
+    """Own-account plus contributing-family workers as a share of employment.
+
+    This is the ILO's "vulnerable employment". It is deliberately not called
+    informal employment: the two overlap but differ, and a release must not
+    present one under the other's name.
+    """
+
+    parser_id = "ilo_status_employment"
+    source_id = "ilostat_status_employment"
+    measure = "ilo_own_account_family_share"
+    expected_source_table = "ILOSTAT DF_EMP_TEMP_SEX_STE_OCU_NB: Employment by sex, status in employment and occupation"
+    population_scope = "employed persons 15 years and over (ILO-processed LFS)"
+    #: ICSE-93 categories: 1 employees, 2 employers, 3 own-account, 4 producers'
+    #: cooperative members, 5 contributing family workers, 6 not classifiable.
+    PARTITION = ("1", "2", "3", "4", "5", "6")
+    VULNERABLE = ("3", "5")
+
+    def validate_format(self, path: Path) -> None:
+        super().validate_format(path)
+        if "STE" not in self._read(path)[0]:
+            raise FormatValidationError(f"{path.name}: missing STE column")
+
+    def parse(self, path: Path) -> ParseResult:
+        result = ParseResult(self.parser_id, self.parser_version)
+        cells: dict[str, dict[str, dict[str, str]]] = {}
+        for row in self._read(path):
+            code = self._code(row["OCU"])
+            if code and row["STE"].startswith("STE_ICSE93_"):
+                cells.setdefault(code, {})[row["STE"].removeprefix("STE_ICSE93_")] = row
+        for code, by_status in sorted(cells.items()):
+            total_row = by_status.get("TOTAL")
+            total = _number(total_row["OBS_VALUE"]) if total_row else None
+            share, note = None, ""
+            if total and total > 0:
+                # A blank category is treated as zero only if the categories that
+                # are present add to the published total. Otherwise a missing
+                # cell could hide real workers and the share is withheld.
+                counts = {k: _number(by_status[k]["OBS_VALUE"]) if k in by_status else None for k in self.PARTITION}
+                parts = sum(v for v in counts.values() if v is not None)
+                if abs(parts - total) / total <= 0.001:
+                    vulnerable = sum((counts[k] or 0.0) for k in self.VULNERABLE)
+                    share = vulnerable / total
+                    note = (f"Calculated as own-account plus contributing family workers over all employed "
+                            f"({vulnerable:.3f} of {total:.3f} thousand). Not informal employment. "
+                            "Blank status cells are treated as zero because the published categories add to the total.")
+                else:
+                    note = "Status categories do not add to the published total; share withheld."
+            result.rows.append(NormalisedRow(
+                normalised_row_id=f"{self.parser_id}:{code}",
+                source_id=self.source_id, source_table=self.expected_source_table,
+                source_code=code, source_code_system=CODE_SYSTEM, source_code_version=CODE_SYSTEM,
+                source_label=f"OCU_ISCO08_{code}", measure=self.measure,
+                value=share, unit="share of employed persons",
+                reference_period=REFERENCE_PERIOD, geography=GEOGRAPHY,
+                population_scope=self.population_scope,
+                notes=(note + " Source: ILOSTAT, from the Philippine Labor Force Survey as processed by the ILO.").strip(),
+            ))
+        return result

@@ -201,9 +201,15 @@ Rules that keep this honest:
   `source_verified` only when its code appears in the hash-verified ILO file, and
   a test compares the code sets (10 major, 43 sub-major) with the PSA workbook.
 * **Employees only.** Earnings exclude own-account workers and employers.
+* `vulnerable_employment_share`: own-account plus contributing family workers
+  over all employed persons by major group (the ILO's "vulnerable employment"),
+  calculated after checking that the status categories add to the total.
 * **No informal-employment layer.** ILOSTAT holds no Philippine series of
   informal employment by occupation (every such dataflow returns no data for the
-  Philippines), and PSA publishes none. The layer stays unavailable.
+  Philippines), and PSA publishes none. The layer stays unavailable. The
+  own-account and family share above is **not** informal employment and is never
+  presented as it: many own-account workers run registered businesses and many
+  employees hold informal jobs.
 
 ### 3.5 O\*NET
 
@@ -441,9 +447,9 @@ PSOC major group. PSA matrix 1B3FEMP4 is queried for one annual slice, stored as
 a hash-verified JSON-stat snapshot, normalized from thousands to persons, and
 reconciled through an explicit PSOC 2012-to-2022 major-group correspondence.
 
-ILOSTAT adds 73 values from four pinned extracts (see 3.4a): 43 sub-major
-employment counts, ten mean and ten median monthly earnings of employees, and
-ten advanced-education shares. They are labelled as ILO-processed everywhere.
+ILOSTAT adds 83 values from five pinned extracts (see 3.4a): 43 sub-major
+employment counts, ten mean and ten median monthly earnings of employees, ten
+advanced-education shares and ten own-account and family work shares. They are labelled as ILO-processed everywhere.
 
 SOF Table 2 adds nine published occupation shares with their standard errors
 and CVs. The blank armed-forces share remains missing. Percentages and standard

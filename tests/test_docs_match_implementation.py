@@ -74,6 +74,7 @@ def test_published_value_count_matches_payload():
     assert {row["metric_id"] for row in published} == {
         "employment_count", "ofw_distribution_share", "employment_count_subgroup",
         "earnings_monthly_mean", "earnings_monthly_median", "education_advanced_share",
+        "vulnerable_employment_share",
     }
     # Exposure scores are published, but as their own evidence layer: they are
     # not metric observations and must never be counted among them.
@@ -225,6 +226,7 @@ def test_dashboard_only_activates_source_backed_values():
     assert published_metric_ids == {
         "employment_count", "ofw_distribution_share", "employment_count_subgroup",
         "earnings_monthly_mean", "earnings_monthly_median", "education_advanced_share",
+        "vulnerable_employment_share",
     }
 
 

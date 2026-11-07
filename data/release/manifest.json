@@ -2,7 +2,7 @@
   "release_id": "v2.0.0-pre",
   "release_date": "2026-09-14T00:00:00Z",
   "generated_at": "2026-09-14T00:00:00Z",
-  "code_commit": "4bdbe3faca0b0560014a9691689445696d21c965",
+  "code_commit": "e37375df8cd3c9731206615922ef908e308b2cb1",
   "code_commit_note": "The commit the build ran at. It necessarily precedes the commit that records it, because committing this manifest moves HEAD. Treat it as 'generated from this input state', not as a self-describing id. `make check-stale` excludes it for the same reason.",
   "schema_version": "2.0.0",
   "methodology_version": "2.0.0",
@@ -122,6 +122,14 @@
       "last_attempt": "2026-11-07T14:10:25Z",
       "last_attempt_result": "retrieved",
       "blocked_reason": ""
+    },
+    "ilostat_status_employment": {
+      "organization": "International Labour Organization (ILOSTAT)",
+      "dataset": "ILOSTAT: Employment by sex, status in employment and occupation (DF_EMP_TEMP_SEX_STE_OCU_NB)",
+      "declared_status": "identified_automated",
+      "last_attempt": "2026-11-07T14:18:58Z",
+      "last_attempt_result": "retrieved",
+      "blocked_reason": ""
     }
   },
   "source_hashes": {
@@ -138,14 +146,15 @@
     "ilostat_employment_isco2": "ec6cd5ecbbc34bc8a13fbef6f1b5deb83e33f7eb38a638c4c8466bcd6f0da07b",
     "ilostat_earnings_mean": "0a97ff6e8b02a5f138ebf3b08d2f14c552903b515a677363216329b6762cc53b",
     "ilostat_earnings_median": "5a73221530a82b4956d92c11fa0ab3c4d8d013a497de83a261e5b7fa49dfa413",
-    "ilostat_education_attainment": "43d5e49e030af94c5fd55e2bc0b5ccd3720974fc4100e8a5ed204a84fb9cceb1"
+    "ilostat_education_attainment": "43d5e49e030af94c5fd55e2bc0b5ccd3720974fc4100e8a5ed204a84fb9cceb1",
+    "ilostat_status_employment": "bc1e80ecd789a45aa1a486a1e2aaebb23c061ca85f3514b06ba1bc3d56b99a59"
   },
   "canonical_table_checksums": {
     "data/canonical/classifications.csv": "f226b108120fdd2ea2ff12e98f7520d6132d92c3581a97987dbac98eb2c6f553",
     "data/canonical/occupations.csv": "79ceac77b5dbab6409f62c9a3582de11e94b90ae76ba6c7f5dad5a99d4afffe8",
-    "data/canonical/metric_observations.csv": "a6c69c659364d4d75ed3f7f5c5a8efe06422aba05e781a9884880c6651a98e5f",
+    "data/canonical/metric_observations.csv": "af1401aada1a0cf7f8d1459038301fa90f993a38e05852d91d2ff3b73aa3f06a",
     "data/canonical/crosswalk_psoc_isco_soc.csv": "23b5353b20b5ab8c788e7e3a1ac130591985312391fb71cecab1eee8bf1fb346",
-    "data/canonical/transformations.csv": "bd1f6d4036de5558050cb69bbbbb0ad82db3a02faccba4d2f4f7e655129bd2c1",
+    "data/canonical/transformations.csv": "948816bab8a4eebb03af1dafd75b4bd2a13a1b543f9b80f7919bb41933159c83",
     "data/canonical/model_scores.csv": "98de12b0214abd67f1932223f376e2be3b052c7a4ffe864676adffbd7131ec6f",
     "data/reference/ows_wage_benchmarks.csv": "eed0482c833f4e92c590b61916bfdde5f2038c6d7cae93021396bdf786c024c3"
   },
@@ -306,7 +315,7 @@
       "stage": "source_registry",
       "status": "implemented_verified_with_real_source",
       "status_meaning": "Implemented, and exercised end to end against the real primary source.",
-      "detail": "14 sources registered with universe, exclusions, licensing and attribution.",
+      "detail": "15 sources registered with universe, exclusions, licensing and attribution.",
       "evidence": "data/sources/source-registry.yaml",
       "blockers": []
     },
@@ -475,6 +484,11 @@
       "retrieval": "implemented_verified_with_real_source",
       "parsing": "implemented_verified_with_real_source",
       "transformation": "implemented_verified_with_real_source"
+    },
+    "ilostat_status_employment": {
+      "retrieval": "implemented_verified_with_real_source",
+      "parsing": "implemented_verified_with_real_source",
+      "transformation": "implemented_verified_with_real_source"
     }
   },
   "publication_state": {
@@ -487,6 +501,7 @@
       "gen_ai_task_exposure",
       "ofw_distribution_share",
       "onet_job_zone",
+      "vulnerable_employment_share",
       "wage_basic_pay"
     ],
     "metrics_with_published_values": [
@@ -495,7 +510,8 @@
       "education_advanced_share",
       "employment_count",
       "employment_count_subgroup",
-      "ofw_distribution_share"
+      "ofw_distribution_share",
+      "vulnerable_employment_share"
     ],
     "metrics_blocked_pending_source": [],
     "metrics_not_representable_at_current_granularity": [

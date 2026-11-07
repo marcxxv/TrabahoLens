@@ -192,6 +192,21 @@
       "last_modified": "",
       "request_method": "GET",
       "expected_format": "csv"
+    },
+    {
+      "source_id": "ilostat_status_employment",
+      "url": "https://sdmx.ilo.org/rest/data/ILO,DF_EMP_TEMP_SEX_STE_OCU_NB/PHL.A..SEX_T..?startPeriod=2024&endPeriod=2024&format=csv",
+      "destination": "data/raw/ilostat_status_employment/ilo_status_employment_2024.csv",
+      "attempted_at": "2026-11-07T14:18:58Z",
+      "http_status": 200,
+      "status": "retrieved",
+      "bytes": 23484,
+      "sha256": "bc1e80ecd789a45aa1a486a1e2aaebb23c061ca85f3514b06ba1bc3d56b99a59",
+      "retrieved_at": "2026-11-07T14:18:59Z",
+      "content_type": "application/vnd.sdmx.data+csv; charset=utf-8",
+      "last_modified": "",
+      "request_method": "GET",
+      "expected_format": "csv"
     }
   ]
 }

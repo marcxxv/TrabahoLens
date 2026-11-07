@@ -359,7 +359,7 @@ def test_full_build_publishes_a_value_and_it_reaches_the_site_payload(populated,
 
     # And the release validator accepts these rows.
     registry_ids = {"psa_lfs", "psa_ows", "psa_sof", "psa_informal", "onet", "llm_scoring", "psa_psoc",
-                    "ilostat_employment_isco2", "ilostat_earnings_mean", "ilostat_earnings_median", "ilostat_education_attainment"}
+                    "ilostat_employment_isco2", "ilostat_earnings_mean", "ilostat_earnings_median", "ilostat_education_attainment", "ilostat_status_employment"}
     failures = validate.check_observations(rows, registry_ids)
     assert not failures, [str(f) for f in failures]
 

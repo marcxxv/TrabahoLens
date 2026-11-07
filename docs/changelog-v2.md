@@ -90,7 +90,7 @@ Interface rebuilt around evidence:
 - Six normalised tables under `data/canonical/`.
 - Six metric definitions written before any value exists, each naming its
   required source, expected granularity, denominator and common misreading.
-- `data/sources/source-registry.yaml` — 14 sources with universe, exclusions,
+- `data/sources/source-registry.yaml` — 15 sources with universe, exclusions,
   reference period, classification version, licensing and attribution recorded
   separately per source.
 - `data/sources/retrieval-manifest.json` — hashed, timestamped attempts.

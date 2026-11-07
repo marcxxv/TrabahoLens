@@ -4,7 +4,7 @@
     "release_id": "v2.0.0-pre",
     "release_date": "2026-09-14T00:00:00Z",
     "generated_at": "2026-09-14T00:00:00Z",
-    "code_commit": "4bdbe3faca0b0560014a9691689445696d21c965",
+    "code_commit": "e37375df8cd3c9731206615922ef908e308b2cb1",
     "code_commit_note": "The commit the build ran at. It necessarily precedes the commit that records it, because committing this manifest moves HEAD. Treat it as 'generated from this input state', not as a self-describing id. `make check-stale` excludes it for the same reason.",
     "schema_version": "2.0.0",
     "methodology_version": "2.0.0",
@@ -124,6 +124,14 @@
         "last_attempt": "2026-11-07T14:10:25Z",
         "last_attempt_result": "retrieved",
         "blocked_reason": ""
+      },
+      "ilostat_status_employment": {
+        "organization": "International Labour Organization (ILOSTAT)",
+        "dataset": "ILOSTAT: Employment by sex, status in employment and occupation (DF_EMP_TEMP_SEX_STE_OCU_NB)",
+        "declared_status": "identified_automated",
+        "last_attempt": "2026-11-07T14:18:58Z",
+        "last_attempt_result": "retrieved",
+        "blocked_reason": ""
       }
     },
     "source_hashes": {
@@ -140,14 +148,15 @@
       "ilostat_employment_isco2": "ec6cd5ecbbc34bc8a13fbef6f1b5deb83e33f7eb38a638c4c8466bcd6f0da07b",
       "ilostat_earnings_mean": "0a97ff6e8b02a5f138ebf3b08d2f14c552903b515a677363216329b6762cc53b",
       "ilostat_earnings_median": "5a73221530a82b4956d92c11fa0ab3c4d8d013a497de83a261e5b7fa49dfa413",
-      "ilostat_education_attainment": "43d5e49e030af94c5fd55e2bc0b5ccd3720974fc4100e8a5ed204a84fb9cceb1"
+      "ilostat_education_attainment": "43d5e49e030af94c5fd55e2bc0b5ccd3720974fc4100e8a5ed204a84fb9cceb1",
+      "ilostat_status_employment": "bc1e80ecd789a45aa1a486a1e2aaebb23c061ca85f3514b06ba1bc3d56b99a59"
     },
     "canonical_table_checksums": {
       "data/canonical/classifications.csv": "f226b108120fdd2ea2ff12e98f7520d6132d92c3581a97987dbac98eb2c6f553",
       "data/canonical/occupations.csv": "79ceac77b5dbab6409f62c9a3582de11e94b90ae76ba6c7f5dad5a99d4afffe8",
-      "data/canonical/metric_observations.csv": "a6c69c659364d4d75ed3f7f5c5a8efe06422aba05e781a9884880c6651a98e5f",
+      "data/canonical/metric_observations.csv": "af1401aada1a0cf7f8d1459038301fa90f993a38e05852d91d2ff3b73aa3f06a",
       "data/canonical/crosswalk_psoc_isco_soc.csv": "23b5353b20b5ab8c788e7e3a1ac130591985312391fb71cecab1eee8bf1fb346",
-      "data/canonical/transformations.csv": "bd1f6d4036de5558050cb69bbbbb0ad82db3a02faccba4d2f4f7e655129bd2c1",
+      "data/canonical/transformations.csv": "948816bab8a4eebb03af1dafd75b4bd2a13a1b543f9b80f7919bb41933159c83",
       "data/canonical/model_scores.csv": "98de12b0214abd67f1932223f376e2be3b052c7a4ffe864676adffbd7131ec6f",
       "data/reference/ows_wage_benchmarks.csv": "eed0482c833f4e92c590b61916bfdde5f2038c6d7cae93021396bdf786c024c3"
     },
@@ -308,7 +317,7 @@
         "stage": "source_registry",
         "status": "implemented_verified_with_real_source",
         "status_meaning": "Implemented, and exercised end to end against the real primary source.",
-        "detail": "14 sources registered with universe, exclusions, licensing and attribution.",
+        "detail": "15 sources registered with universe, exclusions, licensing and attribution.",
         "evidence": "data/sources/source-registry.yaml",
         "blockers": []
       },
@@ -477,6 +486,11 @@
         "retrieval": "implemented_verified_with_real_source",
         "parsing": "implemented_verified_with_real_source",
         "transformation": "implemented_verified_with_real_source"
+      },
+      "ilostat_status_employment": {
+        "retrieval": "implemented_verified_with_real_source",
+        "parsing": "implemented_verified_with_real_source",
+        "transformation": "implemented_verified_with_real_source"
       }
     },
     "publication_state": {
@@ -489,6 +503,7 @@
         "gen_ai_task_exposure",
         "ofw_distribution_share",
         "onet_job_zone",
+        "vulnerable_employment_share",
         "wage_basic_pay"
       ],
       "metrics_with_published_values": [
@@ -497,7 +512,8 @@
         "education_advanced_share",
         "employment_count",
         "employment_count_subgroup",
-        "ofw_distribution_share"
+        "ofw_distribution_share",
+        "vulnerable_employment_share"
       ],
       "metrics_blocked_pending_source": [],
       "metrics_not_representable_at_current_granularity": [
@@ -798,6 +814,18 @@
       "expected_source_authority": "international_official_occupational",
       "parser_id": "ilo_education_attainment"
     },
+    "vulnerable_employment_share": {
+      "name": "Own-account and family work share of employment",
+      "unit": "share of employed persons",
+      "definition": "Own-account workers plus contributing family workers (ICSE-93 categories 3 and 5) divided by all employed persons in the major occupation group. The ILO calls this vulnerable employment. Calculated from ILO-tabulated Labor Force Survey counts.",
+      "denominator": "employed persons in the same group",
+      "common_misreading": "NOT informal employment. Many own-account workers run registered businesses and many employees hold informal jobs. It also does not mean the work is low quality or that the person is poor.",
+      "required_source": "ilostat_status_employment",
+      "expected_source_granularity": "psoc_major_group",
+      "expected_derivation_class": "calculated",
+      "expected_source_authority": "international_official_occupational",
+      "parser_id": "ilo_status_employment"
+    },
     "onet_job_zone": {
       "name": "O*NET Job Zone (US)",
       "unit": "ordinal 1-5",
@@ -828,9 +856,9 @@
     "psoc_major_groups": 10,
     "psoc_sub_major_groups": 43,
     "detailed_occupations": 466,
-    "metrics_defined": 9,
-    "metric_observations": 93,
-    "published_values": 92,
+    "metrics_defined": 10,
+    "metric_observations": 103,
+    "published_values": 102,
     "units_with_at_least_one_published_value": 53,
     "exposure_scores": 894,
     "vocabulary_note": "psoc_classification_units counts groups in the classification, not measured occupations. detailed_occupations counts non-aggregate classification units, not units with measured statistics. Employment and OFW distribution are major-group estimates only."
@@ -1047,6 +1075,45 @@
           "suppression_status": "not_suppressed",
           "common_misreading": "Describes who works in the group today, not what the occupation requires. A high share does not mean a degree is needed for the job.",
           "notes": "Transformed and published. Calculated as advanced / total from published counts (1068.240 of 1698.622 thousand). Education profile: less than basic 2.0%, basic 25.7%, intermediate 9.4%, advanced 62.9%. Advanced = tertiary-level attainment (ISCED 2011 levels 5-8). Source: ILOSTAT, from the Philippine Labor Force Survey as processed by the ILO. Common misreading to avoid: Describes who works in the group today, not what the occupation requires. A high share does not mean a degree is needed for the job."
+        },
+        "vulnerable_employment_share": {
+          "value": 0.2199624166,
+          "unit": "share of employed persons",
+          "derivation_class": "calculated",
+          "derivation_class_label": "Calculated",
+          "source_authority": "international_official_occupational",
+          "source_authority_label": "International official occupational source",
+          "availability": "published",
+          "confidence_grade": "C",
+          "confidence_reasons": [
+            "Calculated by this project from published figures."
+          ],
+          "pipeline_status": "implemented_verified_with_real_source",
+          "parser_id": "ilo_status_employment",
+          "parser_version": "0.1.0",
+          "normalised_row_id": "ilo_status_employment:1",
+          "transformation_id": "T-019-ilo-own-account-family-share",
+          "crosswalk_id": "XW-ISCO-1",
+          "reference_period": "2024 Annual",
+          "geography": "Philippines",
+          "population_scope": "employed persons 15 years and over (ILO-processed LFS)",
+          "source_granularity": "psoc_major_group",
+          "display_granularity": "psoc_major_group",
+          "granularity_mismatch": false,
+          "source_id": "ilostat_status_employment",
+          "source_organization": "International Labour Organization (ILOSTAT)",
+          "source_dataset": "ILOSTAT: Employment by sex, status in employment and occupation (DF_EMP_TEMP_SEX_STE_OCU_NB)",
+          "source_table": "ILOSTAT DF_EMP_TEMP_SEX_STE_OCU_NB: Employment by sex, status in employment and occupation",
+          "source_url": "https://sdmx.ilo.org/rest/data/ILO,DF_EMP_TEMP_SEX_STE_OCU_NB/PHL.A..SEX_T..?startPeriod=2024&endPeriod=2024&format=csv",
+          "source_file_hash": "bc1e80ecd789a45aa1a486a1e2aaebb23c061ca85f3514b06ba1bc3d56b99a59",
+          "retrieved_at": "2026-11-07T14:18:59Z",
+          "uncertainty_lower": null,
+          "uncertainty_upper": null,
+          "standard_error": null,
+          "coefficient_of_variation": null,
+          "suppression_status": "not_suppressed",
+          "common_misreading": "NOT informal employment. Many own-account workers run registered businesses and many employees hold informal jobs. It also does not mean the work is low quality or that the person is poor.",
+          "notes": "Transformed and published. Calculated as own-account plus contributing family workers over all employed (373.633 of 1698.622 thousand). Not informal employment. Blank status cells are treated as zero because the published categories add to the total. Source: ILOSTAT, from the Philippine Labor Force Survey as processed by the ILO. Common misreading to avoid: NOT informal employment. Many own-account workers run registered businesses and many employees hold informal jobs. It also does not mean the work is low quality or that the person is poor."
         }
       },
       "exposure": []
@@ -4337,6 +4404,45 @@
           "suppression_status": "not_suppressed",
           "common_misreading": "Describes who works in the group today, not what the occupation requires. A high share does not mean a degree is needed for the job.",
           "notes": "Transformed and published. Calculated as advanced / total from published counts (2652.766 of 2731.584 thousand). Education profile: less than basic 0.0%, basic 1.5%, intermediate 1.3%, advanced 97.1%. Advanced = tertiary-level attainment (ISCED 2011 levels 5-8). Source: ILOSTAT, from the Philippine Labor Force Survey as processed by the ILO. Common misreading to avoid: Describes who works in the group today, not what the occupation requires. A high share does not mean a degree is needed for the job."
+        },
+        "vulnerable_employment_share": {
+          "value": 0.02354165202,
+          "unit": "share of employed persons",
+          "derivation_class": "calculated",
+          "derivation_class_label": "Calculated",
+          "source_authority": "international_official_occupational",
+          "source_authority_label": "International official occupational source",
+          "availability": "published",
+          "confidence_grade": "C",
+          "confidence_reasons": [
+            "Calculated by this project from published figures."
+          ],
+          "pipeline_status": "implemented_verified_with_real_source",
+          "parser_id": "ilo_status_employment",
+          "parser_version": "0.1.0",
+          "normalised_row_id": "ilo_status_employment:2",
+          "transformation_id": "T-019-ilo-own-account-family-share",
+          "crosswalk_id": "XW-ISCO-2",
+          "reference_period": "2024 Annual",
+          "geography": "Philippines",
+          "population_scope": "employed persons 15 years and over (ILO-processed LFS)",
+          "source_granularity": "psoc_major_group",
+          "display_granularity": "psoc_major_group",
+          "granularity_mismatch": false,
+          "source_id": "ilostat_status_employment",
+          "source_organization": "International Labour Organization (ILOSTAT)",
+          "source_dataset": "ILOSTAT: Employment by sex, status in employment and occupation (DF_EMP_TEMP_SEX_STE_OCU_NB)",
+          "source_table": "ILOSTAT DF_EMP_TEMP_SEX_STE_OCU_NB: Employment by sex, status in employment and occupation",
+          "source_url": "https://sdmx.ilo.org/rest/data/ILO,DF_EMP_TEMP_SEX_STE_OCU_NB/PHL.A..SEX_T..?startPeriod=2024&endPeriod=2024&format=csv",
+          "source_file_hash": "bc1e80ecd789a45aa1a486a1e2aaebb23c061ca85f3514b06ba1bc3d56b99a59",
+          "retrieved_at": "2026-11-07T14:18:59Z",
+          "uncertainty_lower": null,
+          "uncertainty_upper": null,
+          "standard_error": null,
+          "coefficient_of_variation": null,
+          "suppression_status": "not_suppressed",
+          "common_misreading": "NOT informal employment. Many own-account workers run registered businesses and many employees hold informal jobs. It also does not mean the work is low quality or that the person is poor.",
+          "notes": "Transformed and published. Calculated as own-account plus contributing family workers over all employed (64.306 of 2731.584 thousand). Not informal employment. Blank status cells are treated as zero because the published categories add to the total. Source: ILOSTAT, from the Philippine Labor Force Survey as processed by the ILO. Common misreading to avoid: NOT informal employment. Many own-account workers run registered businesses and many employees hold informal jobs. It also does not mean the work is low quality or that the person is poor."
         }
       },
       "exposure": []
@@ -14298,6 +14404,45 @@
           "suppression_status": "not_suppressed",
           "common_misreading": "Describes who works in the group today, not what the occupation requires. A high share does not mean a degree is needed for the job.",
           "notes": "Transformed and published. Calculated as advanced / total from published counts (1230.298 of 2074.972 thousand). Education profile: less than basic 1.3%, basic 28.0%, intermediate 11.4%, advanced 59.3%. Advanced = tertiary-level attainment (ISCED 2011 levels 5-8). Source: ILOSTAT, from the Philippine Labor Force Survey as processed by the ILO. Common misreading to avoid: Describes who works in the group today, not what the occupation requires. A high share does not mean a degree is needed for the job."
+        },
+        "vulnerable_employment_share": {
+          "value": 0.05598822538,
+          "unit": "share of employed persons",
+          "derivation_class": "calculated",
+          "derivation_class_label": "Calculated",
+          "source_authority": "international_official_occupational",
+          "source_authority_label": "International official occupational source",
+          "availability": "published",
+          "confidence_grade": "C",
+          "confidence_reasons": [
+            "Calculated by this project from published figures."
+          ],
+          "pipeline_status": "implemented_verified_with_real_source",
+          "parser_id": "ilo_status_employment",
+          "parser_version": "0.1.0",
+          "normalised_row_id": "ilo_status_employment:3",
+          "transformation_id": "T-019-ilo-own-account-family-share",
+          "crosswalk_id": "XW-ISCO-3",
+          "reference_period": "2024 Annual",
+          "geography": "Philippines",
+          "population_scope": "employed persons 15 years and over (ILO-processed LFS)",
+          "source_granularity": "psoc_major_group",
+          "display_granularity": "psoc_major_group",
+          "granularity_mismatch": false,
+          "source_id": "ilostat_status_employment",
+          "source_organization": "International Labour Organization (ILOSTAT)",
+          "source_dataset": "ILOSTAT: Employment by sex, status in employment and occupation (DF_EMP_TEMP_SEX_STE_OCU_NB)",
+          "source_table": "ILOSTAT DF_EMP_TEMP_SEX_STE_OCU_NB: Employment by sex, status in employment and occupation",
+          "source_url": "https://sdmx.ilo.org/rest/data/ILO,DF_EMP_TEMP_SEX_STE_OCU_NB/PHL.A..SEX_T..?startPeriod=2024&endPeriod=2024&format=csv",
+          "source_file_hash": "bc1e80ecd789a45aa1a486a1e2aaebb23c061ca85f3514b06ba1bc3d56b99a59",
+          "retrieved_at": "2026-11-07T14:18:59Z",
+          "uncertainty_lower": null,
+          "uncertainty_upper": null,
+          "standard_error": null,
+          "coefficient_of_variation": null,
+          "suppression_status": "not_suppressed",
+          "common_misreading": "NOT informal employment. Many own-account workers run registered businesses and many employees hold informal jobs. It also does not mean the work is low quality or that the person is poor.",
+          "notes": "Transformed and published. Calculated as own-account plus contributing family workers over all employed (116.174 of 2074.972 thousand). Not informal employment. Blank status cells are treated as zero because the published categories add to the total. Source: ILOSTAT, from the Philippine Labor Force Survey as processed by the ILO. Common misreading to avoid: NOT informal employment. Many own-account workers run registered businesses and many employees hold informal jobs. It also does not mean the work is low quality or that the person is poor."
         }
       },
       "exposure": []
@@ -22981,6 +23126,45 @@
           "suppression_status": "not_suppressed",
           "common_misreading": "Describes who works in the group today, not what the occupation requires. A high share does not mean a degree is needed for the job.",
           "notes": "Transformed and published. Calculated as advanced / total from published counts (2458.692 of 3682.485 thousand). Education profile: less than basic 0.6%, basic 18.2%, intermediate 14.4%, advanced 66.8%. Advanced = tertiary-level attainment (ISCED 2011 levels 5-8). Source: ILOSTAT, from the Philippine Labor Force Survey as processed by the ILO. Common misreading to avoid: Describes who works in the group today, not what the occupation requires. A high share does not mean a degree is needed for the job."
+        },
+        "vulnerable_employment_share": {
+          "value": 0.01143874313,
+          "unit": "share of employed persons",
+          "derivation_class": "calculated",
+          "derivation_class_label": "Calculated",
+          "source_authority": "international_official_occupational",
+          "source_authority_label": "International official occupational source",
+          "availability": "published",
+          "confidence_grade": "C",
+          "confidence_reasons": [
+            "Calculated by this project from published figures."
+          ],
+          "pipeline_status": "implemented_verified_with_real_source",
+          "parser_id": "ilo_status_employment",
+          "parser_version": "0.1.0",
+          "normalised_row_id": "ilo_status_employment:4",
+          "transformation_id": "T-019-ilo-own-account-family-share",
+          "crosswalk_id": "XW-ISCO-4",
+          "reference_period": "2024 Annual",
+          "geography": "Philippines",
+          "population_scope": "employed persons 15 years and over (ILO-processed LFS)",
+          "source_granularity": "psoc_major_group",
+          "display_granularity": "psoc_major_group",
+          "granularity_mismatch": false,
+          "source_id": "ilostat_status_employment",
+          "source_organization": "International Labour Organization (ILOSTAT)",
+          "source_dataset": "ILOSTAT: Employment by sex, status in employment and occupation (DF_EMP_TEMP_SEX_STE_OCU_NB)",
+          "source_table": "ILOSTAT DF_EMP_TEMP_SEX_STE_OCU_NB: Employment by sex, status in employment and occupation",
+          "source_url": "https://sdmx.ilo.org/rest/data/ILO,DF_EMP_TEMP_SEX_STE_OCU_NB/PHL.A..SEX_T..?startPeriod=2024&endPeriod=2024&format=csv",
+          "source_file_hash": "bc1e80ecd789a45aa1a486a1e2aaebb23c061ca85f3514b06ba1bc3d56b99a59",
+          "retrieved_at": "2026-11-07T14:18:59Z",
+          "uncertainty_lower": null,
+          "uncertainty_upper": null,
+          "standard_error": null,
+          "coefficient_of_variation": null,
+          "suppression_status": "not_suppressed",
+          "common_misreading": "NOT informal employment. Many own-account workers run registered businesses and many employees hold informal jobs. It also does not mean the work is low quality or that the person is poor.",
+          "notes": "Transformed and published. Calculated as own-account plus contributing family workers over all employed (42.123 of 3682.485 thousand). Not informal employment. Blank status cells are treated as zero because the published categories add to the total. Source: ILOSTAT, from the Philippine Labor Force Survey as processed by the ILO. Common misreading to avoid: NOT informal employment. Many own-account workers run registered businesses and many employees hold informal jobs. It also does not mean the work is low quality or that the person is poor."
         }
       },
       "exposure": []
@@ -26120,6 +26304,45 @@
           "suppression_status": "not_suppressed",
           "common_misreading": "Describes who works in the group today, not what the occupation requires. A high share does not mean a degree is needed for the job.",
           "notes": "Transformed and published. Calculated as advanced / total from published counts (2689.877 of 11503.775 thousand). Education profile: less than basic 5.8%, basic 56.7%, intermediate 14.1%, advanced 23.4%. Advanced = tertiary-level attainment (ISCED 2011 levels 5-8). Source: ILOSTAT, from the Philippine Labor Force Survey as processed by the ILO. Common misreading to avoid: Describes who works in the group today, not what the occupation requires. A high share does not mean a degree is needed for the job."
+        },
+        "vulnerable_employment_share": {
+          "value": 0.47645838,
+          "unit": "share of employed persons",
+          "derivation_class": "calculated",
+          "derivation_class_label": "Calculated",
+          "source_authority": "international_official_occupational",
+          "source_authority_label": "International official occupational source",
+          "availability": "published",
+          "confidence_grade": "C",
+          "confidence_reasons": [
+            "Calculated by this project from published figures."
+          ],
+          "pipeline_status": "implemented_verified_with_real_source",
+          "parser_id": "ilo_status_employment",
+          "parser_version": "0.1.0",
+          "normalised_row_id": "ilo_status_employment:5",
+          "transformation_id": "T-019-ilo-own-account-family-share",
+          "crosswalk_id": "XW-ISCO-5",
+          "reference_period": "2024 Annual",
+          "geography": "Philippines",
+          "population_scope": "employed persons 15 years and over (ILO-processed LFS)",
+          "source_granularity": "psoc_major_group",
+          "display_granularity": "psoc_major_group",
+          "granularity_mismatch": false,
+          "source_id": "ilostat_status_employment",
+          "source_organization": "International Labour Organization (ILOSTAT)",
+          "source_dataset": "ILOSTAT: Employment by sex, status in employment and occupation (DF_EMP_TEMP_SEX_STE_OCU_NB)",
+          "source_table": "ILOSTAT DF_EMP_TEMP_SEX_STE_OCU_NB: Employment by sex, status in employment and occupation",
+          "source_url": "https://sdmx.ilo.org/rest/data/ILO,DF_EMP_TEMP_SEX_STE_OCU_NB/PHL.A..SEX_T..?startPeriod=2024&endPeriod=2024&format=csv",
+          "source_file_hash": "bc1e80ecd789a45aa1a486a1e2aaebb23c061ca85f3514b06ba1bc3d56b99a59",
+          "retrieved_at": "2026-11-07T14:18:59Z",
+          "uncertainty_lower": null,
+          "uncertainty_upper": null,
+          "standard_error": null,
+          "coefficient_of_variation": null,
+          "suppression_status": "not_suppressed",
+          "common_misreading": "NOT informal employment. Many own-account workers run registered businesses and many employees hold informal jobs. It also does not mean the work is low quality or that the person is poor.",
+          "notes": "Transformed and published. Calculated as own-account plus contributing family workers over all employed (5481.070 of 11503.775 thousand). Not informal employment. Blank status cells are treated as zero because the published categories add to the total. Source: ILOSTAT, from the Philippine Labor Force Survey as processed by the ILO. Common misreading to avoid: NOT informal employment. Many own-account workers run registered businesses and many employees hold informal jobs. It also does not mean the work is low quality or that the person is poor."
         }
       },
       "exposure": []
@@ -30470,6 +30693,45 @@
           "suppression_status": "not_suppressed",
           "common_misreading": "Describes who works in the group today, not what the occupation requires. A high share does not mean a degree is needed for the job.",
           "notes": "Transformed and published. Calculated as advanced / total from published counts (384.720 of 5336.210 thousand). Education profile: less than basic 33.4%, basic 55.1%, intermediate 4.3%, advanced 7.2%. Advanced = tertiary-level attainment (ISCED 2011 levels 5-8). Source: ILOSTAT, from the Philippine Labor Force Survey as processed by the ILO. Common misreading to avoid: Describes who works in the group today, not what the occupation requires. A high share does not mean a degree is needed for the job."
+        },
+        "vulnerable_employment_share": {
+          "value": 0.890119954,
+          "unit": "share of employed persons",
+          "derivation_class": "calculated",
+          "derivation_class_label": "Calculated",
+          "source_authority": "international_official_occupational",
+          "source_authority_label": "International official occupational source",
+          "availability": "published",
+          "confidence_grade": "C",
+          "confidence_reasons": [
+            "Calculated by this project from published figures."
+          ],
+          "pipeline_status": "implemented_verified_with_real_source",
+          "parser_id": "ilo_status_employment",
+          "parser_version": "0.1.0",
+          "normalised_row_id": "ilo_status_employment:6",
+          "transformation_id": "T-019-ilo-own-account-family-share",
+          "crosswalk_id": "XW-ISCO-6",
+          "reference_period": "2024 Annual",
+          "geography": "Philippines",
+          "population_scope": "employed persons 15 years and over (ILO-processed LFS)",
+          "source_granularity": "psoc_major_group",
+          "display_granularity": "psoc_major_group",
+          "granularity_mismatch": false,
+          "source_id": "ilostat_status_employment",
+          "source_organization": "International Labour Organization (ILOSTAT)",
+          "source_dataset": "ILOSTAT: Employment by sex, status in employment and occupation (DF_EMP_TEMP_SEX_STE_OCU_NB)",
+          "source_table": "ILOSTAT DF_EMP_TEMP_SEX_STE_OCU_NB: Employment by sex, status in employment and occupation",
+          "source_url": "https://sdmx.ilo.org/rest/data/ILO,DF_EMP_TEMP_SEX_STE_OCU_NB/PHL.A..SEX_T..?startPeriod=2024&endPeriod=2024&format=csv",
+          "source_file_hash": "bc1e80ecd789a45aa1a486a1e2aaebb23c061ca85f3514b06ba1bc3d56b99a59",
+          "retrieved_at": "2026-11-07T14:18:59Z",
+          "uncertainty_lower": null,
+          "uncertainty_upper": null,
+          "standard_error": null,
+          "coefficient_of_variation": null,
+          "suppression_status": "not_suppressed",
+          "common_misreading": "NOT informal employment. Many own-account workers run registered businesses and many employees hold informal jobs. It also does not mean the work is low quality or that the person is poor.",
+          "notes": "Transformed and published. Calculated as own-account plus contributing family workers over all employed (4749.867 of 5336.210 thousand). Not informal employment. Blank status cells are treated as zero because the published categories add to the total. Source: ILOSTAT, from the Philippine Labor Force Survey as processed by the ILO. Common misreading to avoid: NOT informal employment. Many own-account workers run registered businesses and many employees hold informal jobs. It also does not mean the work is low quality or that the person is poor."
         }
       },
       "exposure": []
@@ -34396,6 +34658,45 @@
           "suppression_status": "not_suppressed",
           "common_misreading": "Describes who works in the group today, not what the occupation requires. A high share does not mean a degree is needed for the job.",
           "notes": "Transformed and published. Calculated as advanced / total from published counts (398.726 of 3477.362 thousand). Education profile: less than basic 9.4%, basic 69.3%, intermediate 9.8%, advanced 11.5%. Advanced = tertiary-level attainment (ISCED 2011 levels 5-8). Source: ILOSTAT, from the Philippine Labor Force Survey as processed by the ILO. Common misreading to avoid: Describes who works in the group today, not what the occupation requires. A high share does not mean a degree is needed for the job."
+        },
+        "vulnerable_employment_share": {
+          "value": 0.1701085478,
+          "unit": "share of employed persons",
+          "derivation_class": "calculated",
+          "derivation_class_label": "Calculated",
+          "source_authority": "international_official_occupational",
+          "source_authority_label": "International official occupational source",
+          "availability": "published",
+          "confidence_grade": "C",
+          "confidence_reasons": [
+            "Calculated by this project from published figures."
+          ],
+          "pipeline_status": "implemented_verified_with_real_source",
+          "parser_id": "ilo_status_employment",
+          "parser_version": "0.1.0",
+          "normalised_row_id": "ilo_status_employment:7",
+          "transformation_id": "T-019-ilo-own-account-family-share",
+          "crosswalk_id": "XW-ISCO-7",
+          "reference_period": "2024 Annual",
+          "geography": "Philippines",
+          "population_scope": "employed persons 15 years and over (ILO-processed LFS)",
+          "source_granularity": "psoc_major_group",
+          "display_granularity": "psoc_major_group",
+          "granularity_mismatch": false,
+          "source_id": "ilostat_status_employment",
+          "source_organization": "International Labour Organization (ILOSTAT)",
+          "source_dataset": "ILOSTAT: Employment by sex, status in employment and occupation (DF_EMP_TEMP_SEX_STE_OCU_NB)",
+          "source_table": "ILOSTAT DF_EMP_TEMP_SEX_STE_OCU_NB: Employment by sex, status in employment and occupation",
+          "source_url": "https://sdmx.ilo.org/rest/data/ILO,DF_EMP_TEMP_SEX_STE_OCU_NB/PHL.A..SEX_T..?startPeriod=2024&endPeriod=2024&format=csv",
+          "source_file_hash": "bc1e80ecd789a45aa1a486a1e2aaebb23c061ca85f3514b06ba1bc3d56b99a59",
+          "retrieved_at": "2026-11-07T14:18:59Z",
+          "uncertainty_lower": null,
+          "uncertainty_upper": null,
+          "standard_error": null,
+          "coefficient_of_variation": null,
+          "suppression_status": "not_suppressed",
+          "common_misreading": "NOT informal employment. Many own-account workers run registered businesses and many employees hold informal jobs. It also does not mean the work is low quality or that the person is poor.",
+          "notes": "Transformed and published. Calculated as own-account plus contributing family workers over all employed (591.529 of 3477.362 thousand). Not informal employment. Blank status cells are treated as zero because the published categories add to the total. Source: ILOSTAT, from the Philippine Labor Force Survey as processed by the ILO. Common misreading to avoid: NOT informal employment. Many own-account workers run registered businesses and many employees hold informal jobs. It also does not mean the work is low quality or that the person is poor."
         }
       },
       "exposure": []
@@ -41122,6 +41423,45 @@
           "suppression_status": "not_suppressed",
           "common_misreading": "Describes who works in the group today, not what the occupation requires. A high share does not mean a degree is needed for the job.",
           "notes": "Transformed and published. Calculated as advanced / total from published counts (512.625 of 4122.839 thousand). Education profile: less than basic 7.4%, basic 69.4%, intermediate 10.8%, advanced 12.4%. Advanced = tertiary-level attainment (ISCED 2011 levels 5-8). Source: ILOSTAT, from the Philippine Labor Force Survey as processed by the ILO. Common misreading to avoid: Describes who works in the group today, not what the occupation requires. A high share does not mean a degree is needed for the job."
+        },
+        "vulnerable_employment_share": {
+          "value": 0.4001356832,
+          "unit": "share of employed persons",
+          "derivation_class": "calculated",
+          "derivation_class_label": "Calculated",
+          "source_authority": "international_official_occupational",
+          "source_authority_label": "International official occupational source",
+          "availability": "published",
+          "confidence_grade": "C",
+          "confidence_reasons": [
+            "Calculated by this project from published figures."
+          ],
+          "pipeline_status": "implemented_verified_with_real_source",
+          "parser_id": "ilo_status_employment",
+          "parser_version": "0.1.0",
+          "normalised_row_id": "ilo_status_employment:8",
+          "transformation_id": "T-019-ilo-own-account-family-share",
+          "crosswalk_id": "XW-ISCO-8",
+          "reference_period": "2024 Annual",
+          "geography": "Philippines",
+          "population_scope": "employed persons 15 years and over (ILO-processed LFS)",
+          "source_granularity": "psoc_major_group",
+          "display_granularity": "psoc_major_group",
+          "granularity_mismatch": false,
+          "source_id": "ilostat_status_employment",
+          "source_organization": "International Labour Organization (ILOSTAT)",
+          "source_dataset": "ILOSTAT: Employment by sex, status in employment and occupation (DF_EMP_TEMP_SEX_STE_OCU_NB)",
+          "source_table": "ILOSTAT DF_EMP_TEMP_SEX_STE_OCU_NB: Employment by sex, status in employment and occupation",
+          "source_url": "https://sdmx.ilo.org/rest/data/ILO,DF_EMP_TEMP_SEX_STE_OCU_NB/PHL.A..SEX_T..?startPeriod=2024&endPeriod=2024&format=csv",
+          "source_file_hash": "bc1e80ecd789a45aa1a486a1e2aaebb23c061ca85f3514b06ba1bc3d56b99a59",
+          "retrieved_at": "2026-11-07T14:18:59Z",
+          "uncertainty_lower": null,
+          "uncertainty_upper": null,
+          "standard_error": null,
+          "coefficient_of_variation": null,
+          "suppression_status": "not_suppressed",
+          "common_misreading": "NOT informal employment. Many own-account workers run registered businesses and many employees hold informal jobs. It also does not mean the work is low quality or that the person is poor.",
+          "notes": "Transformed and published. Calculated as own-account plus contributing family workers over all employed (1649.695 of 4122.839 thousand). Not informal employment. Blank status cells are treated as zero because the published categories add to the total. Source: ILOSTAT, from the Philippine Labor Force Survey as processed by the ILO. Common misreading to avoid: NOT informal employment. Many own-account workers run registered businesses and many employees hold informal jobs. It also does not mean the work is low quality or that the person is poor."
         }
       },
       "exposure": []
@@ -45796,6 +46136,45 @@
           "suppression_status": "not_suppressed",
           "common_misreading": "Describes who works in the group today, not what the occupation requires. A high share does not mean a degree is needed for the job.",
           "notes": "Transformed and published. Calculated as advanced / total from published counts (739.033 of 12804.238 thousand). Education profile: less than basic 18.1%, basic 67.4%, intermediate 8.7%, advanced 5.8%. Advanced = tertiary-level attainment (ISCED 2011 levels 5-8). Source: ILOSTAT, from the Philippine Labor Force Survey as processed by the ILO. Common misreading to avoid: Describes who works in the group today, not what the occupation requires. A high share does not mean a degree is needed for the job."
+        },
+        "vulnerable_employment_share": {
+          "value": 0.2106162038,
+          "unit": "share of employed persons",
+          "derivation_class": "calculated",
+          "derivation_class_label": "Calculated",
+          "source_authority": "international_official_occupational",
+          "source_authority_label": "International official occupational source",
+          "availability": "published",
+          "confidence_grade": "C",
+          "confidence_reasons": [
+            "Calculated by this project from published figures."
+          ],
+          "pipeline_status": "implemented_verified_with_real_source",
+          "parser_id": "ilo_status_employment",
+          "parser_version": "0.1.0",
+          "normalised_row_id": "ilo_status_employment:9",
+          "transformation_id": "T-019-ilo-own-account-family-share",
+          "crosswalk_id": "XW-ISCO-9",
+          "reference_period": "2024 Annual",
+          "geography": "Philippines",
+          "population_scope": "employed persons 15 years and over (ILO-processed LFS)",
+          "source_granularity": "psoc_major_group",
+          "display_granularity": "psoc_major_group",
+          "granularity_mismatch": false,
+          "source_id": "ilostat_status_employment",
+          "source_organization": "International Labour Organization (ILOSTAT)",
+          "source_dataset": "ILOSTAT: Employment by sex, status in employment and occupation (DF_EMP_TEMP_SEX_STE_OCU_NB)",
+          "source_table": "ILOSTAT DF_EMP_TEMP_SEX_STE_OCU_NB: Employment by sex, status in employment and occupation",
+          "source_url": "https://sdmx.ilo.org/rest/data/ILO,DF_EMP_TEMP_SEX_STE_OCU_NB/PHL.A..SEX_T..?startPeriod=2024&endPeriod=2024&format=csv",
+          "source_file_hash": "bc1e80ecd789a45aa1a486a1e2aaebb23c061ca85f3514b06ba1bc3d56b99a59",
+          "retrieved_at": "2026-11-07T14:18:59Z",
+          "uncertainty_lower": null,
+          "uncertainty_upper": null,
+          "standard_error": null,
+          "coefficient_of_variation": null,
+          "suppression_status": "not_suppressed",
+          "common_misreading": "NOT informal employment. Many own-account workers run registered businesses and many employees hold informal jobs. It also does not mean the work is low quality or that the person is poor.",
+          "notes": "Transformed and published. Calculated as own-account plus contributing family workers over all employed (2696.780 of 12804.238 thousand). Not informal employment. Blank status cells are treated as zero because the published categories add to the total. Source: ILOSTAT, from the Philippine Labor Force Survey as processed by the ILO. Common misreading to avoid: NOT informal employment. Many own-account workers run registered businesses and many employees hold informal jobs. It also does not mean the work is low quality or that the person is poor."
         }
       },
       "exposure": []
@@ -49642,6 +50021,45 @@
           "suppression_status": "not_suppressed",
           "common_misreading": "Describes who works in the group today, not what the occupation requires. A high share does not mean a degree is needed for the job.",
           "notes": "Transformed and published. Calculated as advanced / total from published counts (39.861 of 92.232 thousand). Education profile: less than basic 5.8%, basic 34.3%, intermediate 16.7%, advanced 43.2%. Advanced = tertiary-level attainment (ISCED 2011 levels 5-8). Source: ILOSTAT, from the Philippine Labor Force Survey as processed by the ILO. Common misreading to avoid: Describes who works in the group today, not what the occupation requires. A high share does not mean a degree is needed for the job."
+        },
+        "vulnerable_employment_share": {
+          "value": 0,
+          "unit": "share of employed persons",
+          "derivation_class": "calculated",
+          "derivation_class_label": "Calculated",
+          "source_authority": "international_official_occupational",
+          "source_authority_label": "International official occupational source",
+          "availability": "published",
+          "confidence_grade": "C",
+          "confidence_reasons": [
+            "Calculated by this project from published figures."
+          ],
+          "pipeline_status": "implemented_verified_with_real_source",
+          "parser_id": "ilo_status_employment",
+          "parser_version": "0.1.0",
+          "normalised_row_id": "ilo_status_employment:0",
+          "transformation_id": "T-019-ilo-own-account-family-share",
+          "crosswalk_id": "XW-ISCO-0",
+          "reference_period": "2024 Annual",
+          "geography": "Philippines",
+          "population_scope": "employed persons 15 years and over (ILO-processed LFS)",
+          "source_granularity": "psoc_major_group",
+          "display_granularity": "psoc_major_group",
+          "granularity_mismatch": false,
+          "source_id": "ilostat_status_employment",
+          "source_organization": "International Labour Organization (ILOSTAT)",
+          "source_dataset": "ILOSTAT: Employment by sex, status in employment and occupation (DF_EMP_TEMP_SEX_STE_OCU_NB)",
+          "source_table": "ILOSTAT DF_EMP_TEMP_SEX_STE_OCU_NB: Employment by sex, status in employment and occupation",
+          "source_url": "https://sdmx.ilo.org/rest/data/ILO,DF_EMP_TEMP_SEX_STE_OCU_NB/PHL.A..SEX_T..?startPeriod=2024&endPeriod=2024&format=csv",
+          "source_file_hash": "bc1e80ecd789a45aa1a486a1e2aaebb23c061ca85f3514b06ba1bc3d56b99a59",
+          "retrieved_at": "2026-11-07T14:18:59Z",
+          "uncertainty_lower": null,
+          "uncertainty_upper": null,
+          "standard_error": null,
+          "coefficient_of_variation": null,
+          "suppression_status": "not_suppressed",
+          "common_misreading": "NOT informal employment. Many own-account workers run registered businesses and many employees hold informal jobs. It also does not mean the work is low quality or that the person is poor.",
+          "notes": "Transformed and published. Calculated as own-account plus contributing family workers over all employed (0.000 of 92.232 thousand). Not informal employment. Blank status cells are treated as zero because the published categories add to the total. Source: ILOSTAT, from the Philippine Labor Force Survey as processed by the ILO. Common misreading to avoid: NOT informal employment. Many own-account workers run registered businesses and many employees hold informal jobs. It also does not mean the work is low quality or that the person is poor."
         }
       },
       "exposure": []

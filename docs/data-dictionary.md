@@ -175,6 +175,7 @@ One row per (occupation unit, metric, reference period).
 | `earnings_monthly_mean` | Average monthly earnings of employees (ILO-processed LFS) | PHP/month | ILOSTAT | PSOC major group |
 | `earnings_monthly_median` | Median monthly earnings of employees (ILO-processed LFS) | PHP/month | ILOSTAT | PSOC major group |
 | `education_advanced_share` | Share of employed persons with advanced (tertiary) education | share of employed persons | ILOSTAT (calculated) | PSOC major group |
+| `vulnerable_employment_share` | Own-account and family work share of employment | share of employed persons | ILOSTAT (calculated) | PSOC major group |
 | `onet_job_zone` | O\*NET Job Zone (US) | ordinal 1–5 | O\*NET | occupation |
 | `gen_ai_task_exposure` | Generative-AI technical task exposure | 0–5 rubric score | LLM scoring | occupation |
 

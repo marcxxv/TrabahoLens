@@ -494,6 +494,28 @@ METRIC_DEFINITIONS: dict[str, MetricDefinition] = {
             "requires. A high share does not mean a degree is needed for the job."
         ),
     ),
+    "vulnerable_employment_share": MetricDefinition(
+        metric_id="vulnerable_employment_share",
+        metric_name="Own-account and family work share of employment",
+        unit="share of employed persons",
+        definition=(
+            "Own-account workers plus contributing family workers (ICSE-93 "
+            "categories 3 and 5) divided by all employed persons in the major "
+            "occupation group. The ILO calls this vulnerable employment. "
+            "Calculated from ILO-tabulated Labor Force Survey counts."
+        ),
+        required_source_id="ilostat_status_employment",
+        expected_source_granularity="psoc_major_group",
+        expected_derivation_class="calculated",
+        expected_source_authority="international_official_occupational",
+        denominator="employed persons in the same group",
+        parser_id="ilo_status_employment",
+        common_misreading=(
+            "NOT informal employment. Many own-account workers run registered "
+            "businesses and many employees hold informal jobs. It also does not "
+            "mean the work is low quality or that the person is poor."
+        ),
+    ),
     "onet_job_zone": MetricDefinition(
         metric_id="onet_job_zone",
         metric_name="O*NET Job Zone (US)",

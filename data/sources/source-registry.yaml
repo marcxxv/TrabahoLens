@@ -285,6 +285,12 @@ sources:
       employment" (a job characteristic) are different counts, and a release must
       state which it used. Re-add only when a specific PSA table is identified.
     granularity_available: NONE IDENTIFIED by occupation.
+    ilostat_checked: >-
+      2026-11-07: every ILOSTAT informal-employment dataflow by occupation
+      (DF_EMP_NIFL_SEX_OCU_NB/RT, DF_EMP_NIFL_SEX_OC2_NB/RT,
+      DF_EMP_TEMP_SEX_IFL_OCU_NB, DF_EES_TEES_SEX_IFL_OCU_NB) returns no data for
+      the Philippines. PSA publishes none. The related but different
+      own-account and family-work share is published as its own metric.
     used_for:
       - metric informal_employment_share (blocked_by_unresolved_methodology)
     notes: >-
@@ -670,3 +676,47 @@ sources:
       - metric education_advanced_share
     notes: >-
       Counts by ILO education aggregate (less than basic, basic, intermediate, advanced). The advanced share is calculated by this project as advanced divided by total, from published counts.
+
+  - source_id: ilostat_status_employment
+    tier: 3
+    organization: International Labour Organization (ILOSTAT)
+    dataset: "ILOSTAT: Employment by sex, status in employment and occupation (DF_EMP_TEMP_SEX_STE_OCU_NB)"
+    purpose: Own-account and contributing family work as a share of employment, by major occupation group.
+    authoritative_url: https://ilostat.ilo.org/data/
+    api_or_download: https://sdmx.ilo.org/rest/data/ILO,DF_EMP_TEMP_SEX_STE_OCU_NB/PHL.A..SEX_T..?startPeriod=2024&endPeriod=2024&format=csv
+    table_identification: >-
+      CONFIRMED ILOSTAT SDMX dataflow DF_EMP_TEMP_SEX_STE_OCU_NB. Pinned query:
+      Philippines, annual, both sexes, 2024, ISCO-08 one-digit occupation by ICSE-93
+      status in employment. Built by the ILO from Philippine Labor Force Survey
+      microdata, so it is an ILO re-tabulation and not PSA's own published figure.
+    classification_version: ISCO-08 (level 1 structurally identical to PSOC 2012 major groups; code sets compared and tested)
+    survey_universe: Employed persons 15 years and over (ILO employment definition applied to the LFS).
+    exclusions: Institutional population; see ILOSTAT metadata for the Philippines LFS.
+    reference_period: 2024 annual
+    redistribution: Unmodified API response retained, with ILO attribution.
+    license: >-
+      ILO states that its databases and datasets, with their referential
+      metadata, are available under CC BY 4.0 (rights and permissions page, read
+      2026-11-07).
+    license_source_page: https://www.ilo.org/node/9321
+    license_retrieved_at: "2026-11-07"
+    dataset_specific_exception: none identified; re-check on retrieval
+    attribution: "International Labour Organization, ILOSTAT (DF_EMP_TEMP_SEX_STE_OCU_NB); source: Philippine Statistics Authority Labor Force Survey, processed by the ILO."
+    retrieval:
+      status: identified_automated
+      blocked_reason: ""
+      automated:
+        method: GET
+        url: https://sdmx.ilo.org/rest/data/ILO,DF_EMP_TEMP_SEX_STE_OCU_NB/PHL.A..SEX_T..?startPeriod=2024&endPeriod=2024&format=csv
+        destination_filename: ilo_status_employment_2024.csv
+        expected_format: csv
+        timeout_seconds: 120
+      manual_instruction: "`make fetch-data` re-fetches this exact query. Keep ILO calls sequential."
+    granularity_available: Major occupation group (one-digit).
+    used_for:
+      - metric vulnerable_employment_share
+    notes: >-
+      Own-account workers plus contributing family workers (ICSE-93 categories 3
+      and 5) divided by all employed persons. This is the ILO's "vulnerable
+      employment" and is NOT informal employment: many own-account workers run
+      registered businesses and many employees hold informal jobs.

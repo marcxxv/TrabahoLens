@@ -5,7 +5,7 @@ occupation-level exposure product or an independently validated statistical serv
 
 ## Published evidence
 
-`data/canonical/metric_observations.csv` contains 93 rows: 92 published
+`data/canonical/metric_observations.csv` contains 103 rows: 102 published
 estimates and one missing SOF value. PSA employment is limited to PSOC major
 groups; ILOSTAT adds sub-major employment, employee earnings and an education
 share (see below). Not every layer is available: informal employment by

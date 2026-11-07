@@ -130,6 +130,17 @@ TRANSFORMATIONS: dict[str, Transformation] = {
         ),
         applies_to_measure="ilo_advanced_education_share", produces_metric="education_advanced_share",
     ),
+    "T-019-ilo-own-account-family-share": Transformation(
+        transformation_id="T-019-ilo-own-account-family-share",
+        name="Own-account and family work share of employed persons",
+        description=(
+            "Own-account plus contributing-family counts divided by the published "
+            "total for the same ISCO-08 major group, computed by the parser after "
+            "checking that the status categories add to the total. Not described "
+            "as informal employment."
+        ),
+        applies_to_measure="ilo_own_account_family_share", produces_metric="vulnerable_employment_share",
+    ),
 }
 
 TRANSFORMATION_BY_METRIC = {
