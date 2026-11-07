@@ -1,7 +1,8 @@
 # TrabahoLens v2 source registry
 #
 # One entry per source the project uses or intends to use. A source may be
-# listed here and still have no data: `retrieval.status` says which.
+# listed here and still have no data. Only the hash-verified retrieval manifest
+# and parsed observations establish availability; registry status is configuration.
 #
 # Nothing may be published from a source that is not in this file. Validators
 # reject any metric observation whose `source_id` is absent here.
@@ -27,12 +28,12 @@ sources:
     dataset: 2022 Updates to the 2012 Philippine Standard Occupational Classification (PSOC)
     purpose: Canonical occupational classification and code list.
     authoritative_url: https://psa.gov.ph/classification/psoc
-    api_or_download: https://classification.psa.gov.ph/psoc/swagger/
+    api_or_download: https://psa.gov.ph/sites/default/files/kmcd/files/2022-Updates-to-the-2012-PSOC.xlsx
     unit_group_browser: https://psa.gov.ph/classification/psoc/unit
     table_identification: >-
-      CONFIRMED API, but token-gated. PSA documents versioned PSOC endpoints for
-      the full list and each hierarchy level. The public Swagger index is
-      reachable, while data requests without a token return "Token is required."
+      Public XLSX linked from the official classification page, retrieved in a
+      browser on 2026-09-28. Ten sheets contain explicit code columns. The API
+      still requires a token, but that is not necessary for this workbook.
     classification_version: PSOC 2012 (2022 Updates)
     published_structure:
       major_groups: 10
@@ -47,7 +48,7 @@ sources:
     survey_universe: n/a - a classification, not a survey.
     exclusions: n/a
     reference_period: n/a
-    redistribution: Not redistributed. Acquisition instruction only.
+    redistribution: Unmodified reviewed workbook retained for reproducible builds; PSA attribution and CC BY 4.0 apply.
     license: >-
       The PSA website states that its data and content are made available under
       the Creative Commons Attribution 4.0 International licence unless otherwise
@@ -58,21 +59,20 @@ sources:
     dataset_specific_exception: none identified; re-check on retrieval
     attribution: "Philippine Statistics Authority, Philippine Standard Occupational Classification (PSOC) 2012."
     retrieval:
-      status: blocked_requires_token
+      status: identified_public_workbook
       blocked_reason: >-
-        The official PSA classification API requires a personal access token.
-        No token is stored in the repository or available to this build.
+        Automated CDN access may fail. The public browser download is retained
+        and hash-verified; the token-gated API is not used.
       manual_instruction: >-
-        Request a PSA classification API token, export the complete 2022 PSOC
-        code list as JSON or CSV into data/raw/psa_psoc/, then run
-        `make validate-raw`. Never commit or share the token.
+        Download the exact XLSX from the official classification page into
+        data/raw/psa_psoc/psoc_2022_updates.xlsx. Changed hashes require review
+        of the parser's explicit source profile before publication.
     used_for:
-      - classifications.csv (major and sub-major group codes and titles)
+      - classifications.csv (all explicit workbook hierarchy levels)
     notes: >-
-      The code list currently in data/canonical/classifications.csv was entered
-      from ISCO-08-aligned classification documentation, not from this file, and
-      every row is marked verification_status=unverified_pending_source until
-      this source is retrieved and diffed against it.
+      The reviewed workbook has 466 unique unit codes while the webpage says
+      456. This discrepancy is disclosed, not reconciled by deleting or adding
+      codes. Completeness is pinned to this exact SHA-256, not a relaxed rule.
 
   - source_id: psa_lfs
     tier: 1
@@ -88,16 +88,24 @@ sources:
       UNITS="In thousands"; the parser converts to persons.
     classification_version: PSOC 2012
     survey_universe: >-
-      Household-based sample survey of the population 15 years and over, all
-      regions. The exact universe and any reference-week rules must be quoted
-      from the release notes of the round used, not assumed.
+      Household-based sample survey. Matrix 1B3FEMP4 notes (read 2026-09-28):
+      employed persons are those 15 years old and over as of their last
+      birthday who were at work or had a job or business during the reference
+      period. Since 2021 the LFS is monthly; the annual estimate is the average
+      of all rounds from January to December. Special rounds are reliable only
+      at national level, which is the level published here. January 2019 to
+      December 2025 estimates use 2015-based population projections.
     exclusions: >-
       Institutional population. Overseas Filipino workers are outside the
       domestic employed population; check the round's treatment explicitly.
-    reference_period: Quarterly rounds and annual averages. Round must be recorded per observation.
+    reference_period: >-
+      2024 Annual, from final monthly estimates. The matrix also carries a 2025
+      Annual (49,013.17 thousand employed), but its notes state it is computed
+      from preliminary January-December 2025 estimates and that August 2025
+      onward "may change". It is not adopted until those months are final.
     redistribution: >-
-      Not redistributed in this repository. Acquired by script into data/raw/,
-      which is gitignored; the hash and retrieval date are committed.
+      Reviewed JSON-stat response retained unmodified for reproducibility.
+      Other raw files stay ignored; attribution and source terms apply.
     license: >-
       PSA statistical tables are public official statistics. Reuse requires PSA
       attribution. Not covered by this repository's MIT licence.
@@ -128,8 +136,7 @@ sources:
         The fetcher records URL, retrieval timestamp and SHA-256 of every
         response into data/sources/retrieval-manifest.json.
     granularity_available: >-
-      UNVERIFIED. PSA OpenSTAT publishes LFS employment by major occupation
-      group. Whether any finer occupational breakdown is publicly available, and
+      Verified major occupation groups in matrix 1B3FEMP4. Whether any finer occupational breakdown is publicly available, and
       whether public-use microdata with survey weights can be obtained, must be
       established on retrieval before any finer figure is published.
     used_for:
@@ -145,52 +152,52 @@ sources:
     dataset: Occupational Wages Survey (OWS)
     purpose: Wages by occupation in covered establishments.
     authoritative_url: https://psa.gov.ph/statistics/occupational-wages-survey
-    api_or_download: Published statistical tables; some series mirrored in OpenSTAT.
+    api_or_download: https://psa.gov.ph/system/files/lsredsd/3_2024%20OWS%20SE%20CV_30%20October%202025.xlsx
     table_identification: >-
-      REVIEWED. Matrix 1B3E1030 has an occupation dimension, but only three
-      benchmark categories across industries and publishes average monthly wage
-      rates, not the requested average monthly basic pay by coded occupation.
-      The 2024 O10 tables publish basic pay by industry and separate benchmark
-      tables only for General Office Clerks and Elementary Occupations. No table
-      currently satisfies this metric definition and code requirement.
+      Table 1 of the official 2024 OWS SE CV workbook contains wage-rate estimates
+      and sampling precision by occupation code and industry. Published A:H only;
+      hidden working columns are excluded. This is not basic pay alone. Records
+      stay source-native because occupational code version is unconfirmed.
     must_verify_before_publication:
       - occupation table versus industry table
       - basic pay versus total earnings
       - mean versus median
       - establishment-size threshold
       - covered industries
-      - excluded workers (agriculture, informal, own-account, unpaid family)
-    classification_version: To be read from the release. Do not assume.
+      - excluded workers (small establishments, informal, own-account, unpaid family)
+    classification_version: >-
+      Not stated. Table 1's code column is headed "PSIC/PSOC" with no version;
+      industry tables state 2009 PSIC. Occupation codes stay source-native until
+      PSA confirms the PSOC version (checked 2026-09-28, workbook and OpenSTAT
+      OWS matrix notes).
     survey_universe: >-
-      Establishment-based. Covers non-agricultural establishments at or above an
-      employment threshold. The threshold and the covered industries must be
-      quoted from the round used.
+      2024 round: formal establishments employing 10 or more workers, including
+      agriculture. Wage-rate estimates refer to time-rated full-time workers.
     exclusions: >-
-      Agriculture, establishments below the employment threshold, informal-sector
+      Establishments below the employment threshold, informal-sector
       workers, own-account and self-employed workers, unpaid family workers.
       These exclusions are large in the Philippine context.
     reference_period: Biennial rounds. Round must be recorded per observation.
-    redistribution: Not redistributed. Acquired by script; hash committed.
+    redistribution: Unmodified reviewed XLSX retained for reproducibility, with PSA attribution.
     license: >-
       PSA official statistics. Attribution required. Not covered by this
       repository's MIT licence.
     attribution: "Philippine Statistics Authority, Occupational Wages Survey."
     retrieval:
-      status: blocked_no_matching_table
+      status: identified_source_native_wage_table
       blocked_reason: >-
-        Reachability is no longer the blocker. The reviewed official tables do
-        not provide average monthly basic pay by coded occupation at the scope
-        this metric promises.
+        Canonical basic pay remains unavailable. Source-native industry-specific
+        wage rates are a separate reference dataset, with inconsistent cells
+        withheld and no PSOC join or domestic employment weighting.
       manual_instruction: >-
         Keep the metric unavailable unless PSA publishes a coded occupation
         table whose wage concept is explicitly average monthly basic pay.
     granularity_available: >-
-      UNVERIFIED. OWS publishes wages for a selected list of occupations, not
-      for every PSOC group. The wage concept published (basic pay versus total
-      earnings, average versus median) must be read off the table and recorded
-      in the metric definition before publication.
+      Source job position by industry. Not exhaustive of PSOC and not a national
+      occupation-wide wage. Mean monthly basic pay plus regular cash allowances.
     used_for:
       - metric wage_basic_pay
+      - source-native wage_references (separate, not a substitute for wage_basic_pay)
     notes: >-
       v1 targeted table 0031B3E1030.px, which is wages by INDUSTRY and cannot
       yield an occupational wage. Any replacement must be an occupation table.
@@ -219,14 +226,15 @@ sources:
       Overseas Filipinos with no household member remaining in the Philippines
       are structurally under-covered by a household-based survey.
     reference_period: Annual, October round.
-    redistribution: Not redistributed.
+    redistribution: Unmodified reviewed Table 2 XLSX retained with PSA attribution.
     license: PSA official statistics. Attribution required.
     attribution: "Philippine Statistics Authority, Survey on Overseas Filipinos."
     retrieval:
-      status: blocked_by_cdn
+      status: identified_public_workbook
       blocked_reason: >-
-        The exact XLSX is identified, but automated requests currently receive
-        a Cloudflare HTML verification page. Acquisition validation rejects it.
+        Automated requests receive a Cloudflare verification page, which
+        acquisition validation rejects. The exact public XLSX was downloaded in
+        a browser, retained under data/raw/psa_sof/, and is hash-verified.
       automated:
         method: GET
         url: https://psa.gov.ph/system/files/iesd/TABLE%202.%20Percent%20Distribution%20of%20Overseas%20Filipino%20Workers%20and%20Overseas%20Contract%20Workers%20by%20Sex%2C%20Age%20Group%2C%20Major%20Occupation%2C%20and%20Region%20with%20Measures%20of%20Precision%202024.xlsx
@@ -461,13 +469,21 @@ sources:
       responses.
     attribution: "TrabahoLens experimental scoring; model and prompt version recorded per score."
     retrieval:
-      status: blocked
+      status: identified_automated
       blocked_reason: >-
-        openrouter.ai is unreachable from the build environment (HTTP 403 at the
-        egress proxy) and OPENROUTER_API_KEY is unset.
+        Not blocked. Two providers are supported: OpenRouter (needs
+        OPENROUTER_API_KEY) and the Claude Code CLI (`--provider claude-cli`,
+        needs an authenticated `claude` login). The CLI cannot set temperature;
+        runs record that instead of a value that was not applied.
       manual_instruction: >-
-        Set OPENROUTER_API_KEY and run `make score-exposure` from a permitted
-        network. Reruns write a new run directory; history is never overwritten.
+        `make exposure-tasks` then `make score-exposure`. Reruns write a new run
+        directory; history is never overwritten. `--no-publish` keeps pilots out
+        of model_scores.csv.
+    task_source: >-
+      PSA PSOC 2012 (2022 Updates) unit-group task statements, extracted from the
+      pinned workbook with cell references (data/exposure/tasks/psoc_tasks.csv).
+      Native to the canonical classification, so no crosswalk is involved. PSA
+      publishes no task importance, so occupation summaries are unweighted.
     granularity_available: Whatever granularity the task evidence supports.
     used_for:
       - metric gen_ai_task_exposure

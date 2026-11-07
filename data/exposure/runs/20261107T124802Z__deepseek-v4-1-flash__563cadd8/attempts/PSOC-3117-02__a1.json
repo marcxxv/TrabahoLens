@@ -1,0 +1,55 @@
+{
+  "task_id": "PSOC-3117-02",
+  "attempt_index": 1,
+  "status": "succeeded",
+  "requested_at": "2026-11-07T12:55:59Z",
+  "completed_at": "2026-11-07T12:56:02Z",
+  "model_id": "deepseek-v4.1-flash",
+  "resolved_model_id": "deepseek-ai/DeepSeek-V4.1-Flash-1017",
+  "provider_request_id": "44a9da30-aws_as1",
+  "temperature": 0.0,
+  "request_payload": {
+    "model": "deepseek-v4.1-flash",
+    "temperature": 0.0,
+    "max_tokens": 2400,
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are assessing individual work tasks for generative-AI task exposure under a\npublished rubric. You are not forecasting employment.\n\n## What you are scoring\n\nFor each task you will assign **two** independent scores, each on a 0–5 integer\nscale. You are not asked for an overall score, and you must not produce one.\n\n### Dimension A — Technical task exposure\n\nHow much of this task's content a competent current-generation generative-AI\nsystem could produce or transform, assuming it has the inputs the task normally\nhas. Judge technical capability only. Do not consider whether an employer would\ndeploy it, whether it would be lawful, or whether it would be cheaper.\n\n- **0** — No meaningful generative-AI applicability. Physical, embodied, or\n  dependent on presence, dexterity or real-world sensing.\n- **1** — Minor assistance to peripheral parts of the task. The core is unchanged.\n- **2** — Assistance to a meaningful minority of the task's content.\n- **3** — Substantial assistance, but humans remain central to most of the task's\n  execution.\n- **4** — Generative AI can perform or transform much of the task's content with\n  human oversight.\n- **5** — Generative AI can perform most of the task's content under realistic\n  conditions, subject to verification, accountability and workflow integration.\n\n### Dimension B — Physical-presence and in-person-contact intensity\n\nHow much of this task can only be done by someone physically present:\nhandling materials, tools, machinery, animals, vehicles or a physical site, or\ndirect in-person contact with people. **Physical work counts even when no other\nperson is involved.** Score this independently of A. It is not the inverse of A.\n\n- **0** can be done entirely remotely with documents, data or conversation ·\n  **1** mostly remote; presence or handling is peripheral · **2** mixed; the\n  core is documentary or remote · **3** presence, handling or in-person contact\n  is substantial · **4** mostly physical handling, on-site operation or\n  in-person contact · **5** impossible without being physically present.\n\n## What you are NOT scoring\n\nTwo dimensions were removed in rubric v0.2.0. You will not be asked for them and\nyou must not volunteer them.\n\n- **Adoption friction.** Judging Philippine regulation, liability, connectivity,\n  device access, employer scale or informality would require Philippine evidence\n  you have not been given. Inferring it from an occupation title or a US task\n  statement would be invention. It is now a separate evidence-based layer and is\n  unpublished until data exist.\n- **Evidence confidence.** How far your score should be trusted is determined by\n  the task source, the crosswalk quality, Philippine specificity, review status\n  and how many scoring attempts succeeded. All of that is known to the pipeline\n  and is computed from it. Asking you to grade your own reliability would\n  conflate the measurement with its evaluation.\n\n## Rules\n\n1. Score the **task in front of you**, not the occupation it came from and not\n   the job title.\n2. Score each dimension independently. Do not combine them. Do not produce an\n   overall or summary score.\n3. Do not state or imply any probability of job loss, displacement, automation\n   of the occupation, or change in future employment. That is outside what you\n   are being asked and outside what this measure can support.\n4. You will not be told how many workers hold this occupation, what it pays,\n   how many of its workers are overseas, or how informal it is. None of that is\n   evidence about task content, and you should not speculate about it.\n5. There is no expected distribution of scores. Do not aim for any particular\n   average, spread or shape. Score each task on its own merits.\n6. If the task text is too thin to judge, say so in your reasoning rather than\n   guessing confidently. Do not adjust your scores to signal uncertainty.\n7. Philippine deployment conditions are out of scope. Score the task's technical\n   content as written.\n\n## Output\n\nRespond with valid JSON only, no prose and no code fence:\n\n```\n{\n  \"technical_task_exposure\": <0-5 integer>,\n  \"human_interaction_intensity\": <0-5 integer>,\n  \"reasoning\": \"<2-3 sentences, describing the task content you based this on>\",\n  \"ai_can_assist_with\": \"<short phrase: what part of this task a model could take>\",\n  \"remains_human_dependent\": \"<short phrase: what part it could not>\"\n}\n```"
+      },
+      {
+        "role": "user",
+        "content": "task_id: PSOC-3117-02\ntask_statement: providing technical assistance in geological and topographical surveys, and in the design and layout of oil, natural gas and mineral ore extraction and transportation systems, and processing and refining plants for minerals and metals\noccupation_title: MINING AND METALLURGICAL TECHNICIANS\noccupation_source: ph_psa_psoc_2012_2022_updates\npsoc_code: 3117\ncrosswalk_match_type: not_applicable_native_psoc\ncrosswalk_match_quality: not_applicable_native_psoc\ntask_importance: "
+      }
+    ]
+  },
+  "raw_response": "{\n  \"technical_task_exposure\": 3,\n  \"human_interaction_intensity\": 3,\n  \"reasoning\": \"The task combines technical assistance in field geological/topographical surveys with design and layout work for extraction, transport and processing facilities. The design, layout, calculation and documentation portions are substantially producible or transformable by generative AI with human oversight, while survey assistance involves field data collection and instrument handling that a model cannot perform. Overall the task is a genuine mix of computational design content and physical survey work, so AI offers substantial assistance but humans remain central to execution.\",\n  \"ai_can_assist_with\": \"drafting plant and transport layouts, performing design calculations, processing and interpreting survey data, and generating technical documentation\",\n  \"remains_human_dependent\": \"conducting field geological and topographical surveys, operating survey instruments, and verifying on-site conditions\"\n}",
+  "parsed": {
+    "technical_task_exposure": 3,
+    "human_interaction_intensity": 3,
+    "reasoning": "The task combines technical assistance in field geological/topographical surveys with design and layout work for extraction, transport and processing facilities. The design, layout, calculation and documentation portions are substantially producible or transformable by generative AI with human oversight, while survey assistance involves field data collection and instrument handling that a model cannot perform. Overall the task is a genuine mix of computational design content and physical survey work, so AI offers substantial assistance but humans remain central to execution.",
+    "ai_can_assist_with": "drafting plant and transport layouts, performing design calculations, processing and interpreting survey data, and generating technical documentation",
+    "remains_human_dependent": "conducting field geological and topographical surveys, operating survey instruments, and verifying on-site conditions"
+  },
+  "parser_status": "ok",
+  "error_type": "",
+  "error_message": "",
+  "retry_of_attempt": null,
+  "provider_metadata": {
+    "usage": {
+      "prompt_tokens": 1135,
+      "completion_tokens": 515,
+      "total_tokens": 1650,
+      "prompt_tokens_details": {
+        "cached_tokens": 896,
+        "audio_tokens": 0
+      },
+      "completion_tokens_details": {
+        "reasoning_tokens": 329,
+        "audio_tokens": 0,
+        "accepted_prediction_tokens": 0,
+        "rejected_prediction_tokens": 0
+      }
+    }
+  }
+}

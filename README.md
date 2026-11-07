@@ -5,11 +5,11 @@ Standard Occupational Classification (PSOC)**, built so that every figure states
 what kind of evidence it is, where it came from, and what period it covers — and
 so that a gap in the evidence appears as a gap, not as a number.
 
-> **This release publishes no metric values.** The structure, source registry,
-> validation rules and interface are complete; the data is not, because no
-> source could be retrieved from the build environment. See
-> [`docs/limitations.md`](docs/limitations.md). Numbers were not carried over
-> from the previous version to fill the space.
+> **Research preview, not a completed exposure product.** This release carries
+> real PSA LFS employment, SOF occupation distributions and separately scoped
+> OWS wage references. No synthetic v1 values are carried forward. Detailed
+> employment and the AI, education, hiring and informality layers remain
+> unavailable. See [`docs/limitations.md`](docs/limitations.md).
 
 ## Why this version exists
 
@@ -40,7 +40,11 @@ never measured still publishes it.
 
 ## What it shows now
 
-- The PSOC 2012 structure — 10 major groups and 43 sub-major groups.
+- The official 2022 PSOC workbook's explicit hierarchy, including unit groups.
+- Employment and OFW distribution at major-group level only.
+- OWS job-position × industry wage references, not mapped to canonical PSOC.
+- The original treemap/bento interaction pattern, with search, filters, zoom,
+  source details, table view, CSV export, keyboard access and light/dark themes.
 - Every metric the project intends to publish, defined **before** it has a
   value, with the source that would satisfy it, the level that source publishes
   at, the denominator, and the reading it is most often confused with.
@@ -55,15 +59,16 @@ never measured still publishes it.
 > affected or assisted by generative AI. It is not an estimate of automation,
 > displacement, layoffs, or future employment.
 
-The measure is rebuilt as four independent 0–5 dimensions — technical task
-exposure, human-interaction and physical-presence intensity, adoption friction,
-and evidence confidence — scored on **task statements** rather than job titles.
+The measure is rebuilt as two model-scored 0–5 dimensions — technical task
+exposure and human-interaction/physical-presence intensity — scored on **task
+statements** rather than job titles. Adoption friction is not model-scored;
+evidence confidence is derived from provenance.
 The rubric prohibits combining them, because any weighted sum reads as a
 job-loss probability.
 
-No score is published in this release: the scoring harness requires task
-evidence that could not be retrieved, and refuses to fall back to title-based
-scoring. **This experimental score has not yet undergone independent
+No score is published: O*NET task evidence is retained, but no accepted
+Philippine correspondence or reviewed scoring run exists. The harness refuses
+to fall back to title-based scoring. **This experimental score has not yet undergone independent
 labour-economist validation.**
 
 ## Quickstart
@@ -95,6 +100,8 @@ make determinism       # prove two builds are byte-identical
 | --- | --- |
 | `data/canonical/` | Normalised PSOC tables: classifications, occupations, metric observations, crosswalk, transformations, model scores |
 | `data/sources/` | Source registry and hashed retrieval manifest |
+| `data/raw/` | Explicitly allowlisted, unmodified release snapshots; other raw downloads ignored |
+| `data/reference/ows_wage_benchmarks.csv` | Source-native wage records, with precision and withheld-row explanations |
 | `data/exposure/` | Versioned rubric, versioned prompt, scoring runs |
 | `data/release/` | Release manifest |
 | `data/legacy/v1/` | The previous dataset, verbatim. Evidence about v1, never an input to v2 |

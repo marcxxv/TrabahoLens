@@ -102,15 +102,15 @@ def test_expected_structure_matches_the_psa_publication():
     }
 
 
-def test_production_classification_is_still_unverified():
-    """Nothing may claim verification until the real volume is imported."""
+def test_production_classification_traces_to_official_workbook():
+    """Verification requires the retained official workbook, not the skeleton."""
+    from trabaholens.v2.sources.psoc_importer import PSOC_WORKBOOK_SHA256, WORKBOOK_STRUCTURE
     rows = list(csv.DictReader(open("data/canonical/classifications.csv", encoding="utf-8")))
     assert rows
-    assert all(r["verification_status"] == "unverified_pending_source" for r in rows), (
-        "a classification row claims verification, but the PSA volume has not been retrieved"
-    )
-    # And it holds only the aggregate levels, not invented detail.
-    assert {r["level"] for r in rows} == {"psoc_major_group", "psoc_sub_major_group"}
+    assert all(r["verification_status"] == "verified_against_source" for r in rows)
+    assert all(PSOC_WORKBOOK_SHA256 in r["notes"] for r in rows)
+    assert {r["level"] for r in rows} == set(WORKBOOK_STRUCTURE)
+    assert len(rows) == sum(WORKBOOK_STRUCTURE.values())
 
 
 # ---------------------------------------------------------------------------

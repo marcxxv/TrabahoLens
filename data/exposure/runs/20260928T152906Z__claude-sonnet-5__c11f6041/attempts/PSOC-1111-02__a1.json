@@ -1,0 +1,75 @@
+{
+  "task_id": "PSOC-1111-02",
+  "attempt_index": 1,
+  "status": "succeeded",
+  "requested_at": "2026-09-28T15:29:06Z",
+  "completed_at": "2026-09-28T15:29:16Z",
+  "model_id": "claude-sonnet-5",
+  "resolved_model_id": "claude-sonnet-5",
+  "provider_request_id": "2208d603-fa34-4d70-b09c-fcfac63cae9d",
+  "temperature": null,
+  "request_payload": {
+    "model": "claude-sonnet-5",
+    "temperature": null,
+    "max_tokens": 400,
+    "messages": [
+      {
+        "role": "system",
+        "content": "You are assessing individual work tasks for generative-AI task exposure under a\npublished rubric. You are not forecasting employment.\n\n## What you are scoring\n\nFor each task you will assign **two** independent scores, each on a 0–5 integer\nscale. You are not asked for an overall score, and you must not produce one.\n\n### Dimension A — Technical task exposure\n\nHow much of this task's content a competent current-generation generative-AI\nsystem could produce or transform, assuming it has the inputs the task normally\nhas. Judge technical capability only. Do not consider whether an employer would\ndeploy it, whether it would be lawful, or whether it would be cheaper.\n\n- **0** — No meaningful generative-AI applicability. Physical, embodied, or\n  dependent on presence, dexterity or real-world sensing.\n- **1** — Minor assistance to peripheral parts of the task. The core is unchanged.\n- **2** — Assistance to a meaningful minority of the task's content.\n- **3** — Substantial assistance, but humans remain central to most of the task's\n  execution.\n- **4** — Generative AI can perform or transform much of the task's content with\n  human oversight.\n- **5** — Generative AI can perform most of the task's content under realistic\n  conditions, subject to verification, accountability and workflow integration.\n\n### Dimension B — Human-interaction and physical-presence intensity\n\nHow much of the task requires physical presence, handling objects or people, or\na relationship of trust a person must hold. Score this independently of A. It is\nnot the inverse of A — a task can be both text-mediated and deeply relational.\n\n- **0** fully remote and text-mediated · **1** occasional, peripheral presence ·\n  **2** regular interaction over documentary substance · **3** interaction or\n  presence is substantial · **4** largely conducted through presence or\n  relationship · **5** constituted by embodied human contact.\n\n## What you are NOT scoring\n\nTwo dimensions were removed in rubric v0.2.0. You will not be asked for them and\nyou must not volunteer them.\n\n- **Adoption friction.** Judging Philippine regulation, liability, connectivity,\n  device access, employer scale or informality would require Philippine evidence\n  you have not been given. Inferring it from an occupation title or a US task\n  statement would be invention. It is now a separate evidence-based layer and is\n  unpublished until data exist.\n- **Evidence confidence.** How far your score should be trusted is determined by\n  the task source, the crosswalk quality, Philippine specificity, review status\n  and how many scoring attempts succeeded. All of that is known to the pipeline\n  and is computed from it. Asking you to grade your own reliability would\n  conflate the measurement with its evaluation.\n\n## Rules\n\n1. Score the **task in front of you**, not the occupation it came from and not\n   the job title.\n2. Score each dimension independently. Do not combine them. Do not produce an\n   overall or summary score.\n3. Do not state or imply any probability of job loss, displacement, automation\n   of the occupation, or change in future employment. That is outside what you\n   are being asked and outside what this measure can support.\n4. You will not be told how many workers hold this occupation, what it pays,\n   how many of its workers are overseas, or how informal it is. None of that is\n   evidence about task content, and you should not speculate about it.\n5. There is no expected distribution of scores. Do not aim for any particular\n   average, spread or shape. Score each task on its own merits.\n6. If the task text is too thin to judge, say so in your reasoning rather than\n   guessing confidently. Do not adjust your scores to signal uncertainty.\n7. Philippine deployment conditions are out of scope. Score the task's technical\n   content as written.\n\n## Output\n\nRespond with valid JSON only, no prose and no code fence:\n\n```\n{\n  \"technical_task_exposure\": <0-5 integer>,\n  \"human_interaction_intensity\": <0-5 integer>,\n  \"reasoning\": \"<2-3 sentences, describing the task content you based this on>\",\n  \"ai_can_assist_with\": \"<short phrase: what part of this task a model could take>\",\n  \"remains_human_dependent\": \"<short phrase: what part it could not>\"\n}\n```"
+      },
+      {
+        "role": "user",
+        "content": "task_id: PSOC-1111-02\ntask_statement: determining, formulating, and directing policies of national, state, regional or local governments\noccupation_title: LEGISLATORS\noccupation_source: ph_psa_psoc_2012_2022_updates\npsoc_code: 1111\ncrosswalk_match_type: not_applicable_native_psoc\ncrosswalk_match_quality: not_applicable_native_psoc\ntask_importance: "
+      }
+    ]
+  },
+  "raw_response": "```json\n{\n  \"technical_task_exposure\": 2,\n  \"human_interaction_intensity\": 3,\n  \"reasoning\": \"This task describes the core function of setting government policy, which involves political judgment, negotiation among stakeholders, and the exercise of legitimate authority. AI can assist with drafting policy briefs, summarizing research, and analyzing options, but the actual determination and directing of policy requires accountable human decision-makers and political legitimacy that cannot be delegated to a model.\",\n  \"ai_can_assist_with\": \"drafting policy documents, summarizing research/options, analyzing impacts\",\n  \"remains_human_dependent\": \"exercising political authority, negotiating with stakeholders, and taking accountable decisions\"\n}\n```",
+  "parsed": {
+    "technical_task_exposure": 2,
+    "human_interaction_intensity": 3,
+    "reasoning": "This task describes the core function of setting government policy, which involves political judgment, negotiation among stakeholders, and the exercise of legitimate authority. AI can assist with drafting policy briefs, summarizing research, and analyzing options, but the actual determination and directing of policy requires accountable human decision-makers and political legitimacy that cannot be delegated to a model.",
+    "ai_can_assist_with": "drafting policy documents, summarizing research/options, analyzing impacts",
+    "remains_human_dependent": "exercising political authority, negotiating with stakeholders, and taking accountable decisions"
+  },
+  "parser_status": "ok",
+  "error_type": "",
+  "error_message": "",
+  "retry_of_attempt": null,
+  "provider_metadata": {
+    "cost_usd_list": 0.009561599999999998,
+    "duration_ms": 8074,
+    "usage": {
+      "input_tokens": 2,
+      "cache_creation_input_tokens": 607,
+      "cache_read_input_tokens": 1398,
+      "output_tokens": 685,
+      "output_tokens_details": {
+        "thinking_tokens": 438
+      },
+      "server_tool_use": {
+        "web_search_requests": 0,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 607,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "not_available",
+      "iterations": [
+        {
+          "input_tokens": 2,
+          "output_tokens": 685,
+          "cache_read_input_tokens": 1398,
+          "cache_creation_input_tokens": 607,
+          "cache_creation": {
+            "ephemeral_5m_input_tokens": 0,
+            "ephemeral_1h_input_tokens": 607
+          },
+          "type": "message"
+        }
+      ],
+      "speed": "standard"
+    }
+  }
+}

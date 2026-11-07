@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import csv
 import json
+import math
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -37,6 +38,7 @@ from .schema import (
     AVAILABILITY,
     BANNED_EXPOSURE_TERMS,
     CONFIDENCE_GRADES,
+    CLASSIFICATIONS_COLUMNS,
     CROSSWALK_COLUMNS,
     DERIVATION_CLASSES,
     SOURCE_AUTHORITIES,
@@ -156,6 +158,21 @@ def check_observations(observations, registry_ids: set[str]) -> list[Failure]:
         authority = row.get("source_authority", "")
         availability = row.get("availability", "")
         grade = row.get("confidence_grade", "")
+        for field in ("metric_value", "standard_error", "coefficient_of_variation", "uncertainty_lower", "uncertainty_upper"):
+            raw = row.get(field)
+            if raw not in (None, ""):
+                try:
+                    n = float(raw)
+                except (TypeError, ValueError):
+                    n = float("nan")
+                if not math.isfinite(n) or (field in {"standard_error", "coefficient_of_variation"} and n < 0):
+                    failures.append(Failure("numeric", f"{oid}: invalid {field}"))
+        cv = row.get("coefficient_of_variation")
+        try:
+            if cv not in (None, "") and float(cv) > 10 and grade != "D":
+                failures.append(Failure("precision", f"{oid}: CV above 10% without caution grade"))
+        except (TypeError, ValueError):
+            pass
 
         if derivation not in DERIVATION_CLASSES:
             failures.append(Failure("derivation_class", f"{oid}: unknown derivation_class {derivation!r}"))
@@ -533,6 +550,19 @@ def check_model_scores(scores) -> list[Failure]:
 # Language and published-surface rules
 # ---------------------------------------------------------------------------
 
+#: Fields that quote a source document verbatim. Their wording is evidence, not
+#: the project's own framing, so the hazard-vocabulary check does not apply to
+#: them. Everything else in a payload is still scanned.
+SOURCE_QUOTATION_KEYS = frozenset({
+    "statement",
+    "task_statement",
+    "source_cell",
+    "source_item_label",
+    "occupation_title",
+    "psoc_title",
+})
+
+
 def _strip_audit_context(text: str) -> str:
     """Remove regions marked as quoting v1, so the audit can describe the defect.
 
@@ -573,13 +603,48 @@ def _is_negated(text: str, index: int) -> bool:
     return any(marker in window for marker in _NEGATION_MARKERS)
 
 
+def _scannable_text(path: Path, text: str) -> str:
+    """Text the project is answerable for.
+
+    A JSON payload that quotes a source verbatim is not making its own claim:
+    PSA task statements mention "children and other at risk persons", and
+    rewriting them to suit our framing rules would falsify the quotation. Those
+    fields are skipped. Every other string in the payload is still scanned, and
+    a file that is not JSON is scanned whole.
+    """
+    if path.suffix.lower() != ".json":
+        return text
+    try:
+        payload = json.loads(text)
+    except json.JSONDecodeError:
+        return text
+
+    chunks: list[str] = []
+
+    def walk(node: Any) -> None:
+        if isinstance(node, dict):
+            for key, value in node.items():
+                if key in SOURCE_QUOTATION_KEYS:
+                    continue
+                walk(value)
+        elif isinstance(node, list):
+            for item in node:
+                walk(item)
+        elif isinstance(node, str):
+            chunks.append(node)
+
+    walk(payload)
+    return "\n".join(chunks)
+
+
 def check_language(paths: Iterable[Path]) -> list[Failure]:
     """Refuse hazard framing for the exposure measure, but not its disclaimer."""
     failures: list[Failure] = []
     for path in paths:
         if not path.exists():
             continue
-        text = _strip_audit_context(path.read_text(encoding="utf-8")).lower()
+        raw = path.read_text(encoding="utf-8")
+        text = _strip_audit_context(_scannable_text(path, raw)).lower()
         for term in BANNED_EXPOSURE_TERMS:
             start = 0
             while True:
@@ -706,9 +771,39 @@ def run_all() -> list[Failure]:
     failures += check_observation_crosswalk_references(observations, crosswalk)
     failures += check_observations_do_not_use_rejected_crosswalks(observations, crosswalk)
     failures += check_model_scores(scores)
-    failures += check_language([SITE_INDEX_HTML, SITE_DATA_JSON])
+    failures += check_language([SITE_INDEX_HTML, *SITE_INDEX_HTML.parent.glob("*.json"),
+                                *SITE_INDEX_HTML.parent.glob("*.js")])
     failures += check_site_payload(SITE_DATA_JSON)
     failures += check_no_legacy_values_in_release(SITE_DATA_JSON)
+    from . import wage_benchmarks
+    wages = wage_benchmarks.load()
+    failures += [Failure("wage_references", error) for error in (
+        wage_benchmarks.validate(wages) + wage_benchmarks.validate_against_source(wages)
+    )]
+    if SITE_DATA_JSON.exists():
+        payload = json.loads(SITE_DATA_JSON.read_text(encoding="utf-8"))
+        if payload.get("wage_references", []) != wages:
+            failures.append(Failure("wage_references", "Site payload differs from reference table"))
+    # Source replay, not just self-consistency: plausible edits to values or
+    # classifications must not inherit a legitimate source's provenance.
+    from .build_canonical import build_classifications, build_occupations, build_metric_observations
+    from .paths import PSOC_VERSION_CORRESPONDENCE_CSV
+    try:
+        expected_classifications = build_classifications()
+        expected_occupations = build_occupations(expected_classifications)
+        expected_observations = build_metric_observations(
+            expected_occupations, crosswalk, read_csv(PSOC_VERSION_CORRESPONDENCE_CSV)
+        )
+        for name, actual, expected, columns in (
+            ("classifications", classifications, expected_classifications, CLASSIFICATIONS_COLUMNS),
+            ("occupations", occupations, expected_occupations, OCCUPATIONS_COLUMNS),
+            ("observations", observations, expected_observations, METRIC_OBSERVATIONS_COLUMNS),
+        ):
+            serialised = [{k: "" if r.get(k) is None else str(r.get(k, "")) for k in columns} for r in expected]
+            if actual != serialised:
+                failures.append(Failure("source_replay", f"{name} differs from verified source reconstruction"))
+    except Exception as exc:
+        failures.append(Failure("source_replay", f"Source reconstruction failed: {exc}"))
 
     if not transformations:
         failures.append(Failure("transformations", "transformations.csv is empty"))

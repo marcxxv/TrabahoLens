@@ -69,64 +69,120 @@ def load_runs() -> list[dict[str, Any]]:
 def within_model_stability(run: dict[str, Any]) -> dict[str, Any]:
     ranges: list[int] = []
     stdevs: list[float] = []
+    agreements: list[float] = []
     unstable: list[str] = []
     for entry in run.get("tasks", []):
         consensus = entry["consensus"]["technical_task_exposure"]
         if consensus.get("range") is None:
             continue
+        values = consensus.get("values") or []
         ranges.append(consensus["range"])
-        stdevs.append(consensus.get("stdev", 0.0))
-        if consensus.get("stability") == "unstable":
+        stdevs.append(statistics.pstdev(values) if len(values) > 1 else 0.0)
+        if consensus.get("agreement") is not None:
+            agreements.append(float(consensus["agreement"]))
+        # The release gate: a task whose attempts span more than one point is
+        # reported unstable. Consensus entries carry no "stability" field.
+        if consensus["range"] > 1:
             unstable.append(entry["task_id"])
     if not ranges:
         return {"tasks_with_repeated_attempts": 0}
-    return {
+    result = {
         "tasks_with_repeated_attempts": len(ranges),
         "mean_attempt_range": round(statistics.mean(ranges), 4),
         "max_attempt_range": max(ranges),
         "mean_attempt_stdev": round(statistics.mean(stdevs), 4),
+        "mean_attempt_agreement": (
+            round(statistics.mean(agreements), 4) if agreements else None
+        ),
         "unstable_task_count": len(unstable),
         "unstable_share": round(len(unstable) / len(ranges), 4),
+        "unstable_definition": "attempt range greater than one point",
         "unstable_task_ids": unstable[:25],
     }
+    if run.get("temperature") == 0.0:
+        result["temperature_zero_note"] = (
+            "Scored at temperature 0, so identical attempts are expected by "
+            "construction. Zero disagreement here measures provider "
+            "reproducibility only; it is not evidence that the judgement is "
+            "stable under a different prompt, model or occupation context."
+        )
+    return result
 
 
 def between_model_agreement(runs: list[dict[str, Any]]) -> dict[str, Any]:
-    by_model: dict[str, dict[str, float]] = defaultdict(dict)
-    for run in runs:
-        for entry in run.get("tasks", []):
-            score = entry["consensus"]["technical_task_exposure"]["score"]
-            if score is not None:
-                by_model[run["model_id"]][entry["task_id"]] = score
+    """Signed and absolute agreement between models, within one rubric version.
 
-    models = sorted(by_model)
-    if len(models) < 2:
+    Scores from different rubric or prompt versions are not on the same scale,
+    so they are never compared: a 0.2.0 pilot and a 0.3.0 run of the same model
+    are different instruments. Runs are grouped by (model, rubric, prompt) and
+    only groups sharing both versions are paired.
+    """
+    by_key: dict[tuple[str, str, str], dict[str, float]] = defaultdict(dict)
+    for run in runs:
+        key = (
+            run["model_id"],
+            str(run.get("rubric_version", "")),
+            str(run.get("prompt_version", "")),
+        )
+        for entry in run.get("tasks", []):
+            score = entry["consensus"]["technical_task_exposure"].get("median")
+            if score is not None:
+                by_key[key][entry["task_id"]] = score
+
+    if len({key[0] for key in by_key}) < 2:
         return {
-            "models_compared": models,
+            "models_compared": sorted({key[0] for key in by_key}),
             "status": "not_possible",
             "reason": "Between-model agreement needs runs from at least two distinct models.",
         }
 
     pairs = []
-    for i, left in enumerate(models):
-        for right in models[i + 1 :]:
-            shared = sorted(set(by_model[left]) & set(by_model[right]))
+    keys = sorted(by_key)
+    for i, left_key in enumerate(keys):
+        for right_key in keys[i + 1 :]:
+            if left_key == right_key:
+                continue
+            # Same instrument, different model. Anything else is not a comparison.
+            if left_key[1:] != right_key[1:]:
+                continue
+            left, right = left_key[0], right_key[0]
+            if left == right:
+                continue
+            shared = sorted(set(by_key[left_key]) & set(by_key[right_key]))
             if not shared:
                 continue
-            diffs = [abs(by_model[left][t] - by_model[right][t]) for t in shared]
+            diffs = [abs(by_key[left_key][t] - by_key[right_key][t]) for t in shared]
+            signed = [by_key[right_key][t] - by_key[left_key][t] for t in shared]
             exact = sum(1 for d in diffs if d == 0)
             pairs.append(
                 {
                     "model_a": left,
                     "model_b": right,
+                    "rubric_version": left_key[1],
+                    "prompt_version": left_key[2],
                     "tasks_compared": len(shared),
                     "mean_absolute_difference": round(statistics.mean(diffs), 4),
                     "max_absolute_difference": max(diffs),
                     "exact_agreement_share": round(exact / len(shared), 4),
                     "within_one_point_share": round(sum(1 for d in diffs if d <= 1) / len(shared), 4),
+                    # Signed so a systematic shift is not reported as mere noise:
+                    # positive means model_b scored higher than model_a.
+                    "mean_signed_difference": round(statistics.mean(signed), 4),
+                    "model_b_higher_share": round(sum(1 for s in signed if s > 0) / len(shared), 4),
+                    "model_b_lower_share": round(sum(1 for s in signed if s < 0) / len(shared), 4),
                 }
             )
-    return {"models_compared": models, "status": "computed", "pairs": pairs}
+    if not pairs:
+        return {
+            "models_compared": sorted({key[0] for key in by_key}),
+            "status": "not_possible",
+            "reason": "No two models share a rubric and prompt version, so nothing is comparable.",
+        }
+    return {
+        "models_compared": sorted({key[0] for key in by_key}),
+        "status": "computed",
+        "pairs": pairs,
+    }
 
 
 def weighting_sensitivity(run: dict[str, Any]) -> dict[str, Any]:
@@ -159,7 +215,9 @@ def weighting_sensitivity(run: dict[str, Any]) -> dict[str, Any]:
 
     if not diffs:
         return {"status": "not_possible",
-                "reason": "No occupation has both an unweighted and an importance-weighted aggregate."}
+                "reason": ("No task carries a positive importance weight. PSA's PSOC task "
+                           "statements publish no importance scores, so an importance-weighted "
+                           "aggregate cannot be computed from this task source.")}
     magnitudes = [abs(d["category_shift"]) for d in diffs]
     return {
         "status": "computed",
@@ -179,6 +237,26 @@ def crosswalk_quality_sensitivity(run: dict[str, Any]) -> dict[str, Any]:
         by_quality[entry["task"].get("crosswalk_match_quality") or "unknown"].append(score)
     if not by_quality:
         return {"status": "not_possible", "reason": "No scored tasks carry a crosswalk quality."}
+    if len(by_quality) == 1:
+        only = next(iter(by_quality))
+        return {
+            "status": "computed",
+            "by_quality": {
+                only: {
+                    "tasks": len(by_quality[only]),
+                    "median_score": statistics.median(by_quality[only]),
+                    "distribution": {
+                        str(score): by_quality[only].count(score)
+                        for score in sorted(set(by_quality[only]))
+                    },
+                }
+            },
+            "interpretation": (
+                f"Every scored task comes from the single crosswalk band '{only}' "
+                "(PSA task statements are native PSOC, so no crosswalk is involved). "
+                "No comparison across bands is possible or needed."
+            ),
+        }
     return {
         "status": "computed",
         "by_quality": {
@@ -197,6 +275,47 @@ def crosswalk_quality_sensitivity(run: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def face_validity_slices(run: dict[str, Any]) -> dict[str, Any]:
+    """Highest and lowest scoring unit groups, for a human to sanity-check.
+
+    This is not a verdict. It is the shortlist a reviewer reads first: a
+    physical trade near the top or a documentation-heavy group at the bottom is
+    a signal that the task list, not the work, was scored.
+    """
+    rollup = run.get("occupation_rollup") or {}
+    titles: dict[str, str] = {}
+    for entry in run.get("tasks", []):
+        code = entry["task"].get("psoc_code", "")
+        titles.setdefault(code, entry["task"].get("occupation_title", ""))
+
+    rows = []
+    for code, dimensions in rollup.items():
+        dimension = dimensions.get("technical_task_exposure") or {}
+        median = dimension.get("median")
+        if median is None:
+            continue
+        rows.append(
+            {
+                "psoc_code": code,
+                "title": titles.get(code, ""),
+                "technical_task_exposure_median": median,
+                "tasks": dimension.get("n_tasks"),
+            }
+        )
+    if not rows:
+        return {"status": "not_possible", "reason": "No occupation rollup in this run."}
+    rows.sort(key=lambda row: (-row["technical_task_exposure_median"], row["psoc_code"]))
+    return {
+        "status": "computed",
+        "occupations": len(rows),
+        "highest": rows[:5],
+        "lowest": sorted(rows[-5:], key=lambda row: (row["technical_task_exposure_median"], row["psoc_code"])),
+        "note": ("Shortlist for manual review. A physical trade at the top or a "
+                 "documentation-heavy group at the bottom means the task list may "
+                 "have been scored instead of the work."),
+    }
+
+
 def render_report(runs: list[dict[str, Any]]) -> str:
     lines: list[str] = []
     add = lines.append
@@ -212,11 +331,7 @@ def render_report(runs: list[dict[str, Any]]) -> str:
     if not runs:
         add("## Status: no scoring runs exist")
         add("")
-        add("`data/exposure/runs/` is empty, so there is nothing to analyse. This is")
-        add("the expected state of the current release: the scoring provider")
-        add("(`openrouter.ai`) is unreachable from the build environment and")
-        add("`OPENROUTER_API_KEY` is unset, and the task evidence the harness requires")
-        add("(O\\*NET task statements) could not be retrieved either. See")
+        add("`data/exposure/runs/` is empty, so there is nothing to analyse. See")
         add("`docs/limitations.md`.")
         add("")
         add("No exposure score is published in this release. The v1 scores are **not**")
@@ -259,7 +374,7 @@ def render_report(runs: list[dict[str, Any]]) -> str:
         add("- **Philippine-specific work scored from a US task profile.** Kasambahay,")
         add("  tricycle and jeepney driving, street vending and fisherfolk have no close")
         add("  O\\*NET analogue; a confident score here is a crosswalk failure, and")
-        add("  dimension D should be low.")
+        add("  computed evidence confidence should be low.")
         add("- **BPO and contact-centre work.** The occupation most exposed to this")
         add("  measure's headline framing in the Philippines, and the one where the gap")
         add("  between task exposure and employment outcome is widest. Treat any")
@@ -268,13 +383,27 @@ def render_report(runs: list[dict[str, Any]]) -> str:
 
     add(f"Runs analysed: **{len(runs)}**")
     add("")
+    latest = max(runs, key=lambda run: run.get("scoring_date", ""))
+    latest_instrument = (latest.get("rubric_version"), latest.get("prompt_version"))
+    add(f"Agreement is only computed between runs sharing a rubric and prompt version. "
+        f"The current instrument is rubric `{latest_instrument[0]}`, prompt "
+        f"`{latest_instrument[1]}`; runs at any other version are history.")
+    add("")
     for run in runs:
         add(f"## Run `{run['run_id']}`")
         add("")
         add(f"- model: `{run['model_id']}` (provider `{run['model_provider']}`)")
         add(f"- rubric `{run['rubric_version']}`, prompt `{run['prompt_version']}`")
+        if (run.get("rubric_version"), run.get("prompt_version")) != latest_instrument:
+            add("- **superseded instrument** — a different rubric or prompt version; its "
+                "scores are not comparable with the current layer")
         add(f"- temperature {run['temperature']}, repeated attempts {run.get('attempted_replicates', run.get('run_count'))}")
-        add(f"- scored {run.get('task_count')} tasks on {run['scoring_date']}")
+        if run.get("temperature_note"):
+            add(f"- temperature note: {run['temperature_note']}")
+        selection = run.get("selection") or {}
+        scope = ("complete task file" if selection.get("complete_task_file")
+                 else "pilot sample of the task file")
+        add(f"- scored {run.get('task_count')} tasks on {run['scoring_date']} ({scope})")
         add(f"- human review status: `{run.get('human_review_status')}`")
         add("")
         add("### Within-model stability")
@@ -293,6 +422,12 @@ def render_report(runs: list[dict[str, Any]]) -> str:
         add("")
         add("```json")
         add(json.dumps(crosswalk_quality_sensitivity(run), indent=2))
+        add("```")
+        add("")
+        add("### Face validity — highest and lowest scoring groups")
+        add("")
+        add("```json")
+        add(json.dumps(face_validity_slices(run), indent=2))
         add("```")
         add("")
 

@@ -6,6 +6,7 @@ weakens a check fails a test that explains why the check exists.
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -283,6 +284,35 @@ def test_quoting_v1_language_for_audit_is_allowed(tmp_path: Path):
         encoding="utf-8",
     )
     assert not validate.check_language([page])
+
+
+def test_verbatim_source_task_text_is_not_treated_as_our_claim(tmp_path: Path):
+    """PSA's own task wording is quoted evidence, not a framing choice.
+
+    Two real PSOC statements mention people "at risk" (child protection, HIV
+    programmes). Rewriting them to satisfy the hazard-vocabulary rule would
+    falsify the quotation, so only the quoted field is exempt.
+    """
+    payload = tmp_path / "exposure-tasks.json"
+    payload.write_text(json.dumps({
+        "tasks": [{
+            "statement": "taking action to protect children and other at risk persons",
+            "source_cell": "group 2!d2363",
+            "model_judged_ai_can_assist_with": "drafting case notes",
+        }],
+        "limitations": "Not a forecast of job loss or displacement.",
+    }), encoding="utf-8")
+    assert not validate.check_language([payload])
+
+
+def test_the_exemption_does_not_cover_our_own_prose(tmp_path: Path):
+    payload = tmp_path / "exposure-tasks.json"
+    payload.write_text(json.dumps({
+        "statement": "verbatim source wording is exempt",
+        "interpretation": "These occupations are most at risk from AI.",
+    }), encoding="utf-8")
+    failures = validate.check_language([payload])
+    assert any(f.check == "banned_language" for f in failures)
 
 
 # ---------------------------------------------------------------------------

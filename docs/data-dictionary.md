@@ -119,7 +119,7 @@ with any status other than `rejected`.
 | `psoc_major_label` | Major group title. |
 | `isco08_code` | Corresponding ISCO-08 code. |
 | `source_organization` / `source_dataset` / `source_url` | Where the list should come from. |
-| `verification_status` | See above. Currently `unverified_pending_source` for every row. |
+| `verification_status` | See above. Official-workbook imports are `verified_against_source`; unavailable-source fallback rows remain unverified. |
 | `notes` | Why, and what must be done to change it. |
 
 ## `data/canonical/occupations.csv`
@@ -159,6 +159,8 @@ One row per (occupation unit, metric, reference period).
 | `crosswalk_id` | Which mapping it resolved through, if any. May not reference a rejected crosswalk. |
 | `confidence_grade` | See above. |
 | `uncertainty_lower` / `uncertainty_upper` | Interval bounds where the source supports them. |
+| `standard_error` | Publisher's standard error in the same unit as the metric; null when absent. |
+| `coefficient_of_variation` | Publisher's CV in percent, not a 0–1 share. Above 10% requires grade D and a caution. |
 | `suppression_status` | See above. |
 | `notes` | Including, for a blocked row, why it is blocked and the reading to avoid. |
 
@@ -174,13 +176,24 @@ One row per (occupation unit, metric, reference period).
 
 `gen_ai_task_exposure` is the only metric that is not an observation. It is an
 `experimental_model_score` produced under a versioned rubric and prompt, and it
-is stored in `model_scores.csv` across four separate dimensions (A–D) rather
+is stored in `model_scores.csv` with separate dimensions and provenance rather
 than as a single value. **It is not automation probability, replacement
 probability, displacement, job loss, or any forecast of employment change.**
 
 The full definition of each metric — including its denominator and the reading
 it is most often confused with — lives in `v2/schema.py` and is carried into the
 site payload under `metrics`.
+
+### Source-native wage references
+
+`data/reference/ows_wage_benchmarks.csv` and payload `wage_references` retain
+OWS job-position × industry observations outside canonical PSOC. Each row has
+the standard provenance axes plus `source_code`, `industry_code`, `industry`,
+`source_occupation`, `population_scope`, table/cell reference, 90% interval,
+SE, CV and `classification_reconciliation=unmapped_source_native`.
+`blocked_source_inconsistency` rows carry null values and an explanation.
+`value` is a mean monthly wage rate including regular cash allowances, not the
+unavailable `wage_basic_pay` metric. No cross-industry mean is published.
 
 ---
 

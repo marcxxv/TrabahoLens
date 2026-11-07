@@ -59,6 +59,9 @@ EXCLUSION_RATIONALE = {
 }
 
 CHECKED_ARTIFACTS = (RELEASE_MANIFEST_JSON, SITE_DATA_JSON, PROFILE_JSON)
+#: Present only once an exposure run is published. Its absence is itself
+#: checked: a rebuild that would create it means the committed tree is stale.
+OPTIONAL_ARTIFACTS = (REPO_ROOT / "site" / "exposure-tasks.json",)
 
 
 def normalise(value: Any) -> Any:
@@ -129,6 +132,7 @@ def check() -> list[str]:
         if not path.exists():
             return [f"{rel(path)} does not exist; run `make all`"]
         original[path] = path.read_bytes()
+    optional = {path: path.read_bytes() if path.exists() else None for path in OPTIONAL_ARTIFACTS}
 
     try:
         rebuild()
@@ -138,9 +142,19 @@ def check() -> list[str]:
             difference = _first_difference(before, normalise(_load(path)))
             if difference:
                 problems.append(f"{rel(path)} is stale at {difference}")
+        for path, data in optional.items():
+            if (data is None) != (not path.exists()):
+                problems.append(f"{rel(path)} {'would be created' if data is None else 'would be removed'} by a rebuild")
+            elif data is not None and data != path.read_bytes():
+                problems.append(f"{rel(path)} is stale")
     finally:
         for path, data in original.items():
             path.write_bytes(data)
+        for path, data in optional.items():
+            if data is None:
+                path.unlink(missing_ok=True)
+            else:
+                path.write_bytes(data)
     return problems
 
 

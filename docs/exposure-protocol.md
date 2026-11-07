@@ -40,9 +40,24 @@ four and refuses otherwise.
 
 ```bash
 export OPENROUTER_API_KEY=...          # never committed
-make score-exposure MODEL=<provider/model-id> RUNS=5
+make score-exposure MODEL=<provider/model-id> ATTEMPTS=5
 make sensitivity
 ```
+
+Two OpenAI-compatible providers are supported. `openrouter` (the default)
+reads `OPENROUTER_API_KEY`. `nyolab` reads `NYOLAB_API_KEY` and scores against
+`https://llm.nyolab.ai/api/public/v1`; it is the low-cost provider used for
+pilots and full-coverage runs:
+
+```bash
+export NYOLAB_API_KEY=...              # never committed
+uv run python scripts/score_exposure.py --provider nyolab \
+    --model deepseek-v4.1-flash --sample-every 25 --attempts 2 --no-publish
+```
+
+A cross-provider pilot is only evidence of agreement if it scores the **same
+tasks** as the reference run. Use the same `--sample-every`, and compare with
+`make sensitivity`, which reports between-model agreement per task.
 
 Each invocation writes a new directory under `data/exposure/runs/<run_id>/`
 containing `run.json` and every raw response under `raw/`. **Reruns never

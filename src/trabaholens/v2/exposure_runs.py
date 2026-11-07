@@ -54,6 +54,8 @@ class AttemptRecord:
     error_type: str = ""
     error_message: str = ""
     retry_of_attempt: int | None = None
+    #: Provider-reported facts that are not scores: cost, token usage, latency.
+    provider_metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
     def succeeded(self) -> bool:

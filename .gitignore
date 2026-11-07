@@ -29,7 +29,22 @@ id_rsa
 id_ed25519
 
 # Generated raw inputs
-data/raw/
+data/raw/*
+!data/raw/psa_lfs/
+!data/raw/psa_psoc/
+!data/raw/psa_sof/
+!data/raw/psa_ows/
+!data/raw/onet/
+data/raw/psa_lfs/*
+data/raw/psa_psoc/*
+data/raw/psa_sof/*
+data/raw/psa_ows/*
+data/raw/onet/*
+!data/raw/psa_lfs/lfs_employment_by_major_occupation_2024_annual.json
+!data/raw/psa_psoc/psoc_2022_updates.xlsx
+!data/raw/psa_sof/sof_2024_table_2_major_occupation.xlsx
+!data/raw/psa_ows/ows_2024_wage_estimates_precision.xlsx
+!data/raw/onet/db_31_0_text.zip
 data/derived/onet_occupations.json
 data/derived/ph_occupations_v2.json
 data/derived/ph_occupations_v2_with_stats.json
@@ -46,3 +61,6 @@ logs/
 
 # Legacy/editor scratch files
 pages/
+
+# Browser QA screenshots and throwaway Chrome profiles
+.browser-qa/

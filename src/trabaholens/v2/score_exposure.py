@@ -47,12 +47,30 @@ from .paths import (
     ensure_parent,
     rel,
 )
+from .psoc_tasks import NATIVE_CROSSWALK_ID, NATIVE_NOT_APPLICABLE, OCCUPATION_SOURCE, TASKS_CSV
 from .schema import MODEL_SCORES_COLUMNS
 
-DEFAULT_RUBRIC_VERSION = "0.2.0"
-DEFAULT_PROMPT_VERSION = "0.2.0"
+DEFAULT_RUBRIC_VERSION = "0.3.0"
+DEFAULT_PROMPT_VERSION = "0.3.0"
 DEFAULT_RUNS = 3  # repeated scoring attempts, not independent replicates
 DEFAULT_TEMPERATURE = 0.0
+#: Recorded retries per attempt slot after a failed or unparseable call.
+MAX_RETRIES = 2
+
+#: OpenAI-compatible scoring providers. `nyolab` is the low-cost provider used
+#: for pilots and full-coverage runs; its key is read from the environment and
+#: never written to disk. `claude-cli` is handled separately (no HTTP API).
+PROVIDER_BASE_URLS = {
+    "openrouter": "https://openrouter.ai/api/v1",
+    "nyolab": "https://llm.nyolab.ai/api/public/v1",
+}
+PROVIDER_KEY_ENVS = {
+    "openrouter": "OPENROUTER_API_KEY",
+    "nyolab": "NYOLAB_API_KEY",
+}
+#: NYO's reasoning models charge reasoning tokens against max_tokens, so a
+#: 400-token budget can be spent before any answer is written.
+NYOLAB_MAX_TOKENS = 2400
 
 #: Dimensions the MODEL is asked to score. C and D are deliberately absent.
 #:
@@ -282,6 +300,7 @@ def score_one_task(
     temperature: float,
     attempt_index: int = 1,
     retry_of: int | None = None,
+    max_tokens: int = 400,
 ) -> AttemptRecord:
     """One model call. Returns an AttemptRecord whether it succeeds or fails.
 
@@ -304,7 +323,7 @@ def score_one_task(
     request_payload = {
         "model": model,
         "temperature": temperature,
-        "max_tokens": 400,
+        "max_tokens": max_tokens,
         "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_message},
@@ -333,6 +352,12 @@ def score_one_task(
     record.raw_response = response.choices[0].message.content
     record.provider_request_id = str(getattr(response, "id", "") or "")
     record.resolved_model_id = str(getattr(response, "model", "") or "")
+    record.provider_metadata = dict(getattr(response, "provider_metadata", {}) or {})
+    usage = getattr(response, "usage", None)
+    if usage is not None and "usage" not in record.provider_metadata:
+        record.provider_metadata["usage"] = (
+            usage.model_dump() if hasattr(usage, "model_dump") else dict(usage)
+        )
 
     try:
         record.parsed = parse_response(record.raw_response)
@@ -393,21 +418,27 @@ def compute_evidence_confidence(
     score = 1
     reasons.append("Task statement present.")
 
-    ceiling = min(
-        _CROSSWALK_QUALITY_CEILING.get((crosswalk_match_quality or "").lower(), 0),
-        _MATCH_TYPE_CEILING.get((crosswalk_match_type or "").lower(), 0),
-    )
-    if ceiling == 0:
-        reasons.append(
-            f"Crosswalk unusable (quality={crosswalk_match_quality or 'unrecorded'}, "
-            f"type={crosswalk_match_type or 'unrecorded'})."
+    if task_source_is_philippine and (crosswalk_match_type or "") == NATIVE_NOT_APPLICABLE:
+        # PSA's own task text for the canonical unit group: there is no
+        # crosswalk to degrade it, so the crosswalk ceiling does not apply.
+        ceiling = 5
+        reasons.append("Task text is PSA's own PSOC task statement; no crosswalk involved.")
+    else:
+        ceiling = min(
+            _CROSSWALK_QUALITY_CEILING.get((crosswalk_match_quality or "").lower(), 0),
+            _MATCH_TYPE_CEILING.get((crosswalk_match_type or "").lower(), 0),
         )
-        return min(score, 1), reasons
+        if ceiling == 0:
+            reasons.append(
+                f"Crosswalk unusable (quality={crosswalk_match_quality or 'unrecorded'}, "
+                f"type={crosswalk_match_type or 'unrecorded'})."
+            )
+            return min(score, 1), reasons
+        reasons.append(
+            f"Crosswalk quality {crosswalk_match_quality}, match type {crosswalk_match_type}."
+        )
 
     score = max(score, 2)
-    reasons.append(
-        f"Crosswalk quality {crosswalk_match_quality}, match type {crosswalk_match_type}."
-    )
 
     has_importance = False
     try:
@@ -469,21 +500,190 @@ def new_run_id(model: str) -> str:
     return f"{stamp}__{slug}__{secrets.token_hex(4)}"
 
 
+class HttpChatClient:
+    """Minimal chat-completions client for an OpenAI-compatible endpoint.
+
+    Used for NYO because the OpenAI SDK hangs against that endpoint from this
+    machine even with a short timeout and no retries, while httpx and curl
+    return in about two seconds. It sends the same request body and returns the
+    same response shape, so nothing downstream changes.
+    """
+
+    def __init__(self, base_url: str, api_key: str, timeout: float = 180.0):
+        self.base_url = base_url.rstrip("/")
+        self.api_key = api_key
+        self.timeout = timeout
+        self.chat = self
+        self.completions = self
+
+    def create(self, *, model, messages, temperature=None, max_tokens=None, **_ignored):
+        import httpx
+        from types import SimpleNamespace
+
+        body: dict[str, Any] = {"model": model, "messages": messages}
+        if temperature is not None:
+            body["temperature"] = temperature
+        if max_tokens is not None:
+            body["max_tokens"] = max_tokens
+        with httpx.Client(timeout=self.timeout) as client:
+            response = client.post(
+                f"{self.base_url}/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json",
+                },
+                json=body,
+            )
+        if response.status_code >= 400:
+            raise RuntimeError(f"HTTP {response.status_code}: {response.text[:400]}")
+        data = response.json()
+        choice = data["choices"][0]
+        usage = data.get("usage")
+        return SimpleNamespace(
+            choices=[SimpleNamespace(message=SimpleNamespace(content=choice["message"]["content"]))],
+            id=data.get("id", ""),
+            model=data.get("model", ""),
+            provider_metadata={"usage": usage} if usage else {},
+        )
+
+
+def build_openai_client(provider: str):
+    """Client for an OpenAI-compatible scoring provider.
+
+    Refuses before any call when the provider's key is missing: a run with no
+    provider cannot honestly produce a score, and a run with no recorded model
+    has no provenance.
+    """
+    if provider not in PROVIDER_BASE_URLS:
+        raise ScoringRefusal(f"Unknown scoring provider {provider!r}.")
+    env = PROVIDER_KEY_ENVS[provider]
+    api_key = os.environ.get(env)
+    if not api_key:
+        raise ScoringRefusal(
+            f"{env} is not set. {provider} scoring is not run without its key, and "
+            "no score is published without a completed run. Use --provider "
+            "claude-cli on a machine with an authenticated Claude Code CLI."
+        )
+    if provider == "nyolab":
+        return HttpChatClient(PROVIDER_BASE_URLS[provider], api_key)
+    from openai import OpenAI  # imported late so the module loads without the dep
+
+    return OpenAI(api_key=api_key, base_url=PROVIDER_BASE_URLS[provider], timeout=180.0)
+
+
+class ClaudeCliClient:
+    """Minimal chat-completions shape over the Claude Code CLI.
+
+    Used when no API key is configured but the machine has an authenticated
+    `claude` CLI. Each call is a fresh, tool-less session with the rubric as the
+    entire system prompt, run from an empty directory so no project files or
+    memory reach the model. Temperature is not settable through the CLI; the
+    run manifest says so instead of recording a value that was not applied.
+    """
+
+    def __init__(self, timeout: int = 240):
+        import tempfile
+
+        self.timeout = timeout
+        self.workdir = tempfile.mkdtemp(prefix="trabaholens-scoring-")
+        self.chat = self
+        self.completions = self
+
+    def create(self, *, model, messages, **_ignored):
+        import subprocess
+        from types import SimpleNamespace
+
+        system = next(m["content"] for m in messages if m["role"] == "system")
+        user = next(m["content"] for m in messages if m["role"] == "user")
+        command = [
+            "claude", "-p", "--output-format", "json", "--model", model,
+            "--system-prompt", system, "--tools", "", "--setting-sources", "",
+            "--strict-mcp-config", "--mcp-config", '{"mcpServers":{}}', "--no-chrome",
+            "--disable-slash-commands", "--exclude-dynamic-system-prompt-sections",
+            "--no-session-persistence",
+        ]
+        completed = subprocess.run(
+            command, input=user, capture_output=True, text=True,
+            timeout=self.timeout, cwd=self.workdir,
+        )
+        text = completed.stdout
+        try:
+            result = json.loads(text[text.index("{"): text.rindex("}") + 1])
+        except ValueError as exc:
+            raise RuntimeError(f"CLI returned no JSON (exit {completed.returncode}): "
+                               f"{(completed.stderr or text)[:500]}") from exc
+        if result.get("is_error") or result.get("subtype") != "success":
+            raise RuntimeError(f"CLI error: {str(result.get('result', ''))[:500]}")
+        usage = result.get("modelUsage") or {}
+        return SimpleNamespace(
+            choices=[SimpleNamespace(message=SimpleNamespace(content=result.get("result", "")))],
+            id=result.get("session_id", ""),
+            model=",".join(sorted(usage)) or model,
+            provider_metadata={
+                "cost_usd_list": result.get("total_cost_usd"),
+                "duration_ms": result.get("duration_ms"),
+                "usage": result.get("usage", {}),
+            },
+        )
+
+
+def _select_tasks(tasks: list[dict[str, str]], args) -> list[dict[str, str]]:
+    """Deterministic subsets for pilots. Never random: a pilot must be replayable."""
+    if args.occupations:
+        wanted = {c.strip() for c in args.occupations.split(",") if c.strip()}
+        tasks = [t for t in tasks if t["psoc_code"] in wanted]
+    if args.sample_every:
+        codes = sorted({t["psoc_code"] for t in tasks})
+        keep = set(codes[:: args.sample_every])
+        tasks = [t for t in tasks if t["psoc_code"] in keep]
+    if args.limit:
+        tasks = tasks[: args.limit]
+    return tasks
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--model", required=True, help="Provider-qualified model id, recorded verbatim in provenance")
-    parser.add_argument("--tasks", default=str(EXPOSURE_RUNS_DIR.parent / "tasks.csv"))
+    parser.add_argument("--model", default="",
+                        help="Provider-qualified model id, recorded verbatim in provenance. "
+                             "Required to score; not needed with --publish-run, which reads the "
+                             "model from the run manifest.")
+    parser.add_argument("--provider", choices=["openrouter", "claude-cli", "nyolab"], default="openrouter")
+    parser.add_argument("--tasks", default=str(TASKS_CSV))
     parser.add_argument("--attempts", type=int, default=DEFAULT_RUNS,
                         help="Repeated scoring attempts per task (not independent replicates)")
     parser.add_argument("--min-successful", type=int, default=DEFAULT_MIN_SUCCESSFUL_ATTEMPTS,
                         help="Minimum SUCCESSFUL attempts before a task may be published")
     parser.add_argument("--temperature", type=float, default=DEFAULT_TEMPERATURE)
+    parser.add_argument("--max-tokens", type=int, default=None,
+                        help="Output budget per call (default 400; 2400 for nyolab, whose "
+                             "reasoning tokens count against the same budget)")
     parser.add_argument("--rubric-version", default=DEFAULT_RUBRIC_VERSION)
     parser.add_argument("--prompt-version", default=DEFAULT_PROMPT_VERSION)
     parser.add_argument("--exposure-threshold", type=int, default=4,
                         help="Predeclared dimension-A threshold for the share-above statistic")
     parser.add_argument("--limit", type=int, default=None)
+    parser.add_argument("--occupations", default="", help="Comma-separated PSOC unit codes to score")
+    parser.add_argument("--sample-every", type=int, default=0,
+                        help="Deterministic pilot: every Nth unit group in code order")
+    parser.add_argument("--workers", type=int, default=1, help="Parallel model calls")
+    parser.add_argument("--resume", default="", help="Existing run id to complete; finished attempts are kept")
+    parser.add_argument("--no-publish", action="store_true",
+                        help="Write the run only; leave data/canonical/model_scores.csv untouched")
+    parser.add_argument("--publish-run", default="",
+                        help="Publish an existing complete run to model_scores.csv without scoring")
+    parser.add_argument("--allow-partial", action="store_true",
+                        help="With --publish-run, allow a pilot subset (for local previews only)")
     args = parser.parse_args()
+
+    if args.max_tokens is None:
+        args.max_tokens = NYOLAB_MAX_TOKENS if args.provider == "nyolab" else 400
+
+    if args.publish_run:
+        publish_run(args.publish_run, allow_partial=args.allow_partial)
+        return
+
+    if not args.model:
+        parser.error("--model is required unless --publish-run supplies a finished run")
 
     if args.attempts < 2:
         raise ScoringRefusal(
@@ -504,55 +704,97 @@ def main() -> None:
 
     tasks = load_tasks(Path(args.tasks))
     validate_task_inputs(tasks)
-    if args.limit:
-        tasks = tasks[: args.limit]
+    tasks = _select_tasks(tasks, args)
+    if not tasks:
+        raise ScoringRefusal("Task selection is empty.")
 
-    api_key = os.environ.get("OPENROUTER_API_KEY")
-    if not api_key:
-        raise ScoringRefusal(
-            "OPENROUTER_API_KEY is not set. Scoring is not run without it, and no "
-            "score is published without a completed run."
-        )
+    if args.provider == "claude-cli":
+        client = ClaudeCliClient()
+        args.temperature = None
+    else:
+        client = build_openai_client(args.provider)
 
-    from openai import OpenAI  # imported late so the module loads without the dep
-
-    client = OpenAI(api_key=api_key, base_url="https://openrouter.ai/api/v1")
-
-    run_id = new_run_id(args.model)
+    run_id = args.resume or new_run_id(args.model)
     run_dir = EXPOSURE_RUNS_DIR / run_id
+    if args.resume and not run_dir.exists():
+        raise ScoringRefusal(f"No run {run_id!r} to resume.")
     (run_dir / "attempts").mkdir(parents=True, exist_ok=True)
 
     records = {task["task_id"]: TaskRunRecord(task_id=task["task_id"], task=task) for task in tasks}
+    from concurrent.futures import ThreadPoolExecutor
 
+    def attempt(job):
+        """One attempt slot: the call, plus at most MAX_RETRIES recorded retries.
+
+        A retry is a new call, recorded as its own attempt with retry_of_attempt
+        set. The failed call stays on disk and in the manifest, so attempt counts
+        include it; only successes count toward the minimum.
+        """
+        attempt_index, task = job
+        made: list[tuple[AttemptRecord, bool]] = []
+        for retry in range(MAX_RETRIES + 1):
+            suffix = "" if retry == 0 else f"__retry{retry}"
+            path = run_dir / "attempts" / f"{task['task_id']}__a{attempt_index}{suffix}.json"
+            if path.exists():
+                # Resuming: a finished attempt is evidence, never redone or replaced.
+                record = AttemptRecord(**json.loads(path.read_text(encoding="utf-8")))
+                made.append((record, False))
+            else:
+                record = score_one_task(client, system_prompt, task, args.model, args.temperature,
+                                        attempt_index=attempt_index,
+                                        retry_of=attempt_index if retry else None,
+                                        max_tokens=args.max_tokens)
+                # Every attempt is written, successful or not. A failure that leaves
+                # no trace is how a run comes to claim more coverage than it had.
+                path.write_text(json.dumps(record.as_dict(), indent=2, ensure_ascii=False), encoding="utf-8")
+                made.append((record, True))
+            if record.status == "succeeded":
+                break
+        return made
+
+    spent = 0.0
+    cost_reported = False
     for attempt_index in range(1, args.attempts + 1):
-        print(f"attempt pass {attempt_index}/{args.attempts} ({len(tasks)} tasks)")
-        for task in tasks:
-            record = score_one_task(
-                client, system_prompt, task, args.model, args.temperature,
-                attempt_index=attempt_index,
-            )
-            records[task["task_id"]].attempts.append(record)
-            # Every attempt is written, successful or not. A failure that leaves
-            # no trace is how a run comes to claim more coverage than it had.
-            (run_dir / "attempts" / f"{task['task_id']}__a{attempt_index}.json").write_text(
-                json.dumps(record.as_dict(), indent=2, ensure_ascii=False), encoding="utf-8"
-            )
-            if record.status != "succeeded":
-                print(f"  {task['task_id']} attempt {attempt_index}: {record.status} "
-                      f"({record.error_type}: {record.error_message[:80]})")
+        print(f"attempt pass {attempt_index}/{args.attempts} ({len(tasks)} tasks, {args.workers} workers)", flush=True)
+        with ThreadPoolExecutor(max_workers=max(1, args.workers)) as pool:
+            for done, made in enumerate(pool.map(attempt, [(attempt_index, t) for t in tasks]), 1):
+                for record, fresh in made:
+                    records[record.task_id].attempts.append(record)
+                    cost = (record.provider_metadata or {}).get("cost_usd_list")
+                    if cost is not None:
+                        cost_reported = True
+                        spent += float(cost) if fresh else 0.0
+                    if record.status != "succeeded":
+                        print(f"  {record.task_id} attempt {attempt_index}: {record.status} "
+                              f"({record.error_type}: {record.error_message[:80]})", flush=True)
+                if done % 100 == 0:
+                    suffix = f" · list cost so far ${spent:.2f}" if cost_reported else ""
+                    print(f"  {done}/{len(tasks)}{suffix}", flush=True)
 
     manifest = build_run_manifest(records, args, run_id, rubric)
+    manifest["selection"] = {
+        "occupations": args.occupations, "sample_every": args.sample_every, "limit": args.limit,
+        "complete_task_file": not (args.occupations or args.sample_every or args.limit),
+    }
+    manifest["provider_cost_usd_list_this_invocation"] = round(spent, 4) if cost_reported else None
     (run_dir / "run.json").write_text(
         json.dumps(manifest, indent=2, ensure_ascii=False), encoding="utf-8"
     )
 
-    write_occupation_scores(manifest)
+    if args.no_publish:
+        print("--no-publish: model_scores.csv left unchanged.")
+    else:
+        write_occupation_scores(manifest)
 
     print(f"\nRun written to {rel(run_dir)}")
     print(f"  tasks meeting the {args.min_successful}-success minimum: "
           f"{manifest['tasks_meeting_minimum']} of {manifest['task_count']}")
     if manifest["tasks_below_minimum"]:
         print(f"  EXCLUDED (insufficient successful attempts): {manifest['tasks_below_minimum']}")
+    if cost_reported:
+        print(f"  provider list cost this invocation: ${spent:.2f}")
+    else:
+        print("  provider reported no per-call list cost; token usage is recorded per attempt")
     print("Previous runs are untouched; this run did not overwrite history.")
 
 
@@ -605,6 +847,20 @@ def validate_task_inputs(
         crosswalk_id = (task.get("crosswalk_id") or "").strip()
         if psoc_code and psoc_code not in canonical_codes:
             problems.append(f"row {index} ({task_id}): unknown canonical PSOC code {psoc_code!r}")
+        if crosswalk_id == NATIVE_CROSSWALK_ID:
+            # PSA's own task statement for a canonical unit group. No crosswalk
+            # exists, so none can be claimed as reviewed; every crosswalk field
+            # must say "not applicable" rather than borrow a reviewed status.
+            if onet_code:
+                problems.append(f"row {index} ({task_id}): a native PSOC task cannot carry an O*NET code")
+            if len(psoc_code) != 4:
+                problems.append(f"row {index} ({task_id}): native tasks must belong to a PSOC unit group")
+            if (task.get("occupation_source") or "").strip() != OCCUPATION_SOURCE:
+                problems.append(f"row {index} ({task_id}): native task source must be {OCCUPATION_SOURCE}")
+            for key in ("crosswalk_match_type", "crosswalk_match_quality", "crosswalk_review_status"):
+                if (task.get(key) or "").strip() != NATIVE_NOT_APPLICABLE:
+                    problems.append(f"row {index} ({task_id}): {key} must be {NATIVE_NOT_APPLICABLE}")
+            continue
         if onet_code and (crosswalk_id, psoc_code, onet_code) not in accepted_crosswalks:
             problems.append(
                 f"row {index} ({task_id}): no accepted human-reviewed crosswalk for "
@@ -645,6 +901,13 @@ def validate_task_inputs(
 
     if problems:
         raise ScoringRefusal("Task input validation failed:\n  " + "\n  ".join(problems))
+
+
+def _task_source_label(records) -> str:
+    sources = {str(r.task.get("occupation_source", "")) for r in records.values()}
+    if sources == {OCCUPATION_SOURCE}:
+        return "PSA PSOC 2012 (2022 Updates) unit-group task statements (native; no crosswalk)"
+    return "O*NET task statements via PSOC crosswalk"
 
 
 def build_run_manifest(records, args, run_id: str, rubric: dict) -> dict[str, Any]:
@@ -710,13 +973,24 @@ def build_run_manifest(records, args, run_id: str, rubric: dict) -> dict[str, An
     return {
         "run_id": run_id,
         "scoring_date": now_iso(),
-        "model_provider": "openrouter",
+        "model_provider": getattr(args, "provider", "openrouter"),
         "model_id": args.model,
         "model_release_or_snapshot": "as resolved by the provider at scoring time; not pinned",
         "resolved_model_ids": sorted({
             a.resolved_model_id for r in records.values() for a in r.attempts if a.resolved_model_id
         }),
         "temperature": args.temperature,
+        "temperature_note": (
+            "Not controllable through the Claude Code CLI; provider default used."
+            if getattr(args, "provider", "openrouter") == "claude-cli"
+            else (
+                "Temperature 0. Repeated attempts are expected to be identical, so the "
+                "attempt-agreement statistic measures provider reproducibility, not the "
+                "stability of the judgement under a changed prompt or context."
+                if args.temperature == 0.0
+                else ""
+            )
+        ),
         # Vocabulary: repeated attempts, not independent replicates. Each task is
         # a separate request, so this measures run-to-run reproducibility and
         # provider variability, not statistical independence.
@@ -735,7 +1009,10 @@ def build_run_manifest(records, args, run_id: str, rubric: dict) -> dict[str, An
         "prompt_version": args.prompt_version,
         "prompt_file": rel(prompt_path(args.prompt_version)),
         "rubric_file": rel(rubric_path(args.rubric_version)),
-        "task_source": "O*NET task statements via PSOC crosswalk",
+        "task_source": _task_source_label(records),
+        "task_source_versions": sorted({
+            str(r.task.get("task_source_version", "")) for r in records.values()
+        } - {""}),
         "task_count": len(records),
         "tasks_meeting_minimum": meeting,
         "tasks_below_minimum": below,
@@ -751,6 +1028,19 @@ def build_run_manifest(records, args, run_id: str, rubric: dict) -> dict[str, An
         "occupation_rollup": occupation_rollup,
         "tasks": task_entries,
     }
+
+
+def publish_run(run_id: str, *, allow_partial: bool = False) -> None:
+    """Publish a finished run. Only a run over the complete task file qualifies.
+
+    A pilot covers a sample of occupations; publishing it would present a
+    sample as the layer. ``allow_partial`` exists for local previews and the
+    resulting rows still name the run, so the release shows what it came from.
+    """
+    manifest = json.loads((EXPOSURE_RUNS_DIR / run_id / "run.json").read_text(encoding="utf-8"))
+    if not manifest.get("selection", {}).get("complete_task_file") and not allow_partial:
+        raise ScoringRefusal(f"Run {run_id} scored a subset of the task file; refusing to publish it.")
+    write_occupation_scores(manifest)
 
 
 def write_occupation_scores(run_manifest: dict[str, Any]) -> None:
@@ -796,9 +1086,17 @@ def write_occupation_scores(run_manifest: dict[str, Any]) -> None:
                 "model_id": run_manifest["model_id"],
                 "model_release_or_snapshot": run_manifest["model_release_or_snapshot"],
                 "scoring_date": run_manifest["scoring_date"],
-                "temperature": run_manifest["temperature"],
+                # A value that was never applied is not recorded as if it were.
+                "temperature": (
+                    run_manifest["temperature"] if run_manifest["temperature"] is not None
+                    else "provider_default_not_controllable"
+                ),
                 "run_count": run_manifest["min_successful_replicates"],
-                "attempted_attempts": run_manifest["attempted_replicates"],
+                # Actual calls, including recorded retries, not the requested count.
+                "attempted_attempts": max(
+                    (e["attempted_attempts"] for e in task_entries),
+                    default=run_manifest["attempted_replicates"],
+                ),
                 "successful_attempts": min(
                     (e["successful_attempts"] for e in task_entries), default=0
                 ),

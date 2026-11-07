@@ -41,19 +41,12 @@ Classification (PSOC) 2012** code. v1 keyed on US O\*NET-SOC and attached a PSOC
 label afterwards, which meant the *set of occupations that existed* was decided
 by a US classification and a keyword-ranking heuristic.
 
-PSOC 2012 is built on ISCO-08. This release carries its 10 major groups and 43
-sub-major groups. Major group 0 (Armed Forces Occupations) and major group 9
-(Elementary Occupations) are both present; v1 omitted 0 entirely and could reach
-9 only through three hand-written records.
-
-**Minor (3-digit) and unit (4-digit) groups are deliberately absent.** The
-authoritative PSA volume could not be retrieved in this environment, and PSOC
-2012 departs from ISCO-08 at finer levels in ways this project cannot guess.
-Guessing them would recreate the defect the rebuild exists to remove.
-
-Every classification row is marked `verification_status =
-unverified_pending_source`. A validator fails the build if any row loses that
-marker before someone diffs the list against the PSA volume.
+The pinned official 2022 workbook supplies all four hierarchy levels, including
+leading-zero armed-forces codes. Imported rows are `verified_against_source`.
+The workbook has 466 unique unit codes, while PSA's technical-notes webpage
+states 456. We preserve the workbook and disclose this unresolved discrepancy;
+we neither guess extra codes nor delete codes to match the webpage count.
+Only explicit source-version correspondences may attach statistics to this tree.
 
 ### 2.2 Normalised tables, not one wide CSV
 
@@ -132,11 +125,10 @@ be weighted, standard errors or confidence intervals computed where variance
 guidance permits, and cells with inadequate sample support suppressed or
 aggregated.
 
-**Occupational Wages Survey.** An *establishment* survey covering
-non-agricultural establishments at or above an employment threshold. It excludes
-agriculture, small establishments, informal-sector workers, own-account and
-self-employed workers, and unpaid family workers — exclusions that are large in
-the Philippine context. An OWS wage may therefore **never** be described as the
+**Occupational Wages Survey.** The 2024 *establishment* survey covers formal
+establishments with 10 or more workers, including agriculture. It does not
+represent informal-sector, own-account or unpaid family workers, or small
+establishments. An OWS wage may therefore **never** be described as the
 average earnings of all Filipino workers in an occupation. The wage concept
 published (basic pay versus total earnings; average versus median) must be read
 off the table and carried into the metric name.
@@ -415,11 +407,16 @@ PSOC major group. PSA matrix 1B3FEMP4 is queried for one annual slice, stored as
 a hash-verified JSON-stat snapshot, normalized from thousands to persons, and
 reconciled through an explicit PSOC 2012-to-2022 major-group correspondence.
 
-The other ten canonical observation rows remain empty and explicit. O*NET 31.0
-is retrieved and parser-verified but produces no Philippine value without an
-accepted crosswalk. The exact SOF table is identified but its workbook is
-CDN-blocked; current OWS tables do not satisfy the registered wage definition;
-the detailed PSOC API requires a token. See
+SOF Table 2 adds nine published occupation shares with their standard errors
+and CVs. The blank armed-forces share remains missing. Percentages and standard
+errors are divided by 100; there is no renormalisation or domestic denominator.
+
+OWS Table 1 supplies 693 occupation-by-industry records in a separate source-native
+reference table. Nine inconsistent confidence intervals are quarantined;
+684 wage-rate estimates remain available with precision warnings. These include
+regular cash allowances, are not basic pay alone, and are not reconciled to
+canonical PSOC. Box areas are equal record weights, never inferred employment.
+O*NET 31.0 produces no Philippine metric without an accepted correspondence. See
 [`readiness-report.md`](readiness-report.md) for the per-phase classification.
 
 That the pipeline works is demonstrated rather than asserted:

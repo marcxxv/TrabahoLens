@@ -243,6 +243,8 @@ METRIC_OBSERVATIONS_COLUMNS = [
     "pipeline_status",
     "uncertainty_lower",
     "uncertainty_upper",
+    "standard_error",
+    "coefficient_of_variation",
     "suppression_status",
     "notes",
 ]
@@ -382,8 +384,8 @@ METRIC_DEFINITIONS: dict[str, MetricDefinition] = {
         parser_id="psa_ows_occupation_table",
         common_misreading=(
             "Not the average earnings of all Filipino workers in the occupation. "
-            "OWS covers non-agricultural establishments above an employment "
-            "threshold and excludes informal and own-account workers."
+            "The 2024 OWS covers formal establishments with 10 or more workers, including agriculture. "
+            "Industry-specific wage rates include allowances and are NOT this basic-pay metric."
         ),
     ),
     "ofw_distribution_share": MetricDefinition(
@@ -397,8 +399,8 @@ METRIC_DEFINITIONS: dict[str, MetricDefinition] = {
         ),
         required_source_id="psa_sof",
         expected_source_granularity="psoc_major_group",
-        # Calculated by this project from official survey-estimated counts.
-        expected_derivation_class="calculated",
+        # Official survey-estimated percentages, converted to a 0-1 share.
+        expected_derivation_class="estimated",
         expected_source_authority="ph_official_statistical_authority",
         denominator="all OFWs",
         parser_id="psa_sof_occupation_table",

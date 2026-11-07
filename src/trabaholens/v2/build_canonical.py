@@ -117,7 +117,7 @@ def build_classifications() -> list[dict[str, Any]]:
                     "source_dataset": source["dataset"],
                     "source_url": acquisition.url or source["authoritative_url"],
                     "verification_status": "verified_against_source",
-                    "notes": f"Imported from SHA-256 {acquisition.sha256}.",
+                    "notes": f"Imported from SHA-256 {acquisition.sha256}. {entry.get('notes', '')}".strip(),
                 }
                 for entry in report.rows
             ]
@@ -259,8 +259,11 @@ def build_metric_observations(
                 derivation_class=definition.expected_derivation_class,
                 source_granularity=definition.expected_source_granularity,
                 display_granularity=unit["occupation_level"],
-                has_uncertainty=bool(outcome and outcome.uncertainty_lower is not None),
+                has_uncertainty=bool(outcome and (outcome.uncertainty_lower is not None or outcome.standard_error is not None)),
             )
+            if has_value and outcome.coefficient_of_variation is not None and outcome.coefficient_of_variation > 10:
+                grade = "D"
+                reasons.append("PSA cautions: coefficient of variation above 10%; use with caution.")
             if not has_value:
                 grade = "D" if definition.expected_derivation_class != "model_derived" else "E"
                 reasons = ["No value yet: source not acquired, parsed and transformed."]
@@ -325,11 +328,13 @@ def build_metric_observations(
                         "" if not outcome or outcome.uncertainty_upper is None
                         else _format_value(outcome.uncertainty_upper)
                     ),
+                    "standard_error": "" if not outcome or outcome.standard_error is None else _format_value(outcome.standard_error),
+                    "coefficient_of_variation": "" if not outcome or outcome.coefficient_of_variation is None else _format_value(outcome.coefficient_of_variation),
                     "suppression_status": (
                         outcome.suppression_status if outcome is not None else "no_value_yet"
                     ),
                     "notes": (
-                        f"{why} {blocked_reason}".strip()
+                        f"{why} {blocked_reason if not has_value else ''}".strip()
                         + f" Common misreading to avoid: {definition.common_misreading}"
                     ),
                 }
@@ -362,14 +367,14 @@ def pipeline_stage_reports() -> list[StageReport]:
 
     return [
         StageReport(Stage.SOURCE_REGISTRY, StageStatus.VERIFIED_REAL_SOURCE,
-                    "Ten sources registered with universe, exclusions, licensing and attribution.",
+                    f"{len(registry)} sources registered with universe, exclusions, licensing and attribution.",
                     evidence="data/sources/source-registry.yaml"),
         StageReport(Stage.RETRIEVAL, acquired_status,
                     "Retrieval attempts are recorded with timestamps and outcomes.",
                     evidence="data/sources/retrieval-manifest.json",
                     blockers=() if all_acquired else ("One or more required sources have not been retrieved and verified.",)),
         StageReport(Stage.RAW_SNAPSHOT, acquired_status,
-                    "Raw snapshots are written under data/raw/ (gitignored) when retrieval succeeds."),
+                    "Raw snapshots are written under data/raw/. Reviewed release inputs are explicitly retained for reproducibility."),
         StageReport(Stage.HASH_VERIFICATION, downstream,
                     "SHA-256 recorded at retrieval and re-checked against the file before parsing.",
                     evidence="src/trabaholens/v2/acquisition_state.py"),
@@ -377,20 +382,19 @@ def pipeline_stage_reports() -> list[StageReport]:
                     "Each parser validates the snapshot's shape before reading rows.",
                     evidence="src/trabaholens/v2/sources/"),
         StageReport(Stage.PARSING, StageStatus.PARTIALLY_IMPLEMENTED if any_acquired and not all_acquired else downstream,
-                    "LFS and O*NET parsers have processed real snapshots; OWS and SOF remain unverified against real files.",
+                    "Source-specific parsers validate actual LFS, SOF, PSOC and source-native OWS formats; availability is recorded per source.",
                     evidence="src/trabaholens/v2/sources/",
                     blockers=() if all_acquired else ("At least one source-specific parser has not processed its real source.",)),
         StageReport(Stage.NORMALISED_SOURCE_TABLE, StageStatus.PARTIALLY_IMPLEMENTED if any_acquired and not all_acquired else downstream,
                     "Parsers emit normalised rows carrying the source's own codes and version."),
         StageReport(Stage.CLASSIFICATION_RECONCILIATION, StageStatus.PARTIALLY_IMPLEMENTED,
-                    "Version compatibility is enforced and unmatched codes are reported, but the "
-                    "PSOC minor and unit group lists are absent, so only aggregate codes reconcile.",
-                    blockers=("PSOC 2012 (2022 Updates) volume not retrievable.",)),
-        StageReport(Stage.TRANSFORMATION, StageStatus.PARTIALLY_IMPLEMENTED if any_acquired and not all_acquired else downstream,
-                    "The employment transformation is verified with real LFS data; wage, OFW and Job Zone remain blocked.",
+                    "Version compatibility is enforced. LFS and SOF use explicit major-group correspondence; OWS remains source-native.",
+                    blockers=("OWS code-version reconciliation and reviewed O*NET correspondence remain unavailable.",)),
+        StageReport(Stage.TRANSFORMATION, StageStatus.PARTIALLY_IMPLEMENTED,
+                    "Employment and OFW distribution have source-specific transformations. Source-native wage references are separate from canonical basic pay.",
                     evidence="src/trabaholens/v2/transform.py"),
-        StageReport(Stage.CANONICAL_OBSERVATION, StageStatus.PARTIALLY_IMPLEMENTED if any_acquired and not all_acquired else downstream,
-                    "Ten LFS major-group observations carry full provenance; other planned observations remain blocked."),
+        StageReport(Stage.CANONICAL_OBSERVATION, StageStatus.PARTIALLY_IMPLEMENTED,
+                    "Only source-backed observations publish. Detailed employment, canonical basic pay, Job Zone and exposure remain unavailable."),
         StageReport(Stage.RELEASE_VALIDATION, StageStatus.VERIFIED_REAL_SOURCE,
                     "Validators run on every build and are each tested against a violating fixture.",
                     evidence="src/trabaholens/v2/validate.py"),
@@ -538,7 +542,14 @@ def _annotate_cardinality(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
 # ---------------------------------------------------------------------------
 
 def build_transformations() -> list[dict[str, Any]]:
-    return [
+    from .transform import TRANSFORMATIONS
+    source_transformations = [dict(
+        transformation_id=t.transformation_id, name=t.name, description=t.description,
+        inputs=t.applies_to_measure, outputs=t.produces_metric,
+        code_reference="src/trabaholens/v2/transform.py", reversible="true",
+        notes="Source-specific transformation; classification, denominator and missing-value checks apply.",
+    ) for t in TRANSFORMATIONS.values() if t.transformation_id != "T-000-identity"]
+    return source_transformations + [
         {
             "transformation_id": "T-000-identity",
             "name": "Identity",
@@ -553,14 +564,13 @@ def build_transformations() -> list[dict[str, Any]]:
             "transformation_id": "T-001-psoc-structure",
             "name": "PSOC structure entry",
             "description": (
-                "PSOC 2012 major and sub-major codes and titles entered from "
-                "ISCO-08-aligned classification documentation."
+                "Import the pinned official 2022 PSOC workbook when verified; otherwise retain the explicitly unverified aggregate skeleton."
             ),
             "inputs": "classification documentation",
             "outputs": "data/canonical/classifications.csv",
             "code_reference": "src/trabaholens/v2/psoc.py",
             "reversible": "true",
-            "notes": "Every output row carries verification_status=unverified_pending_source.",
+            "notes": "Every output row carries verification_status; workbook completeness discrepancy is retained in notes.",
         },
         {
             "transformation_id": "T-002-task-aggregation-unweighted",
@@ -647,7 +657,10 @@ def main() -> None:
     write_table(TRANSFORMATIONS_CSV, TRANSFORMATIONS_COLUMNS, transformations)
     # Header-only until a scoring run exists. An empty table with a schema is a
     # statement; a missing file is an accident.
-    write_table(MODEL_SCORES_CSV, MODEL_SCORES_COLUMNS, [])
+    if not MODEL_SCORES_CSV.exists():
+        write_table(MODEL_SCORES_CSV, MODEL_SCORES_COLUMNS, [])
+    from .wage_benchmarks import build as build_wages
+    wages = build_wages()
 
     print(f"{rel(CLASSIFICATIONS_CSV)}: {len(classifications)} rows")
     print(f"{rel(OCCUPATIONS_CSV)}: {len(occupations)} rows")
@@ -655,7 +668,7 @@ def main() -> None:
           f"({sum(1 for r in observations if r['metric_value'] == '')} without a value)")
     print(f"{rel(CROSSWALK_CSV)}: {len(crosswalk)} rows")
     print(f"{rel(TRANSFORMATIONS_CSV)}: {len(transformations)} rows")
-    print(f"{rel(MODEL_SCORES_CSV)}: 0 rows (header only)")
+    print(f"Source-native OWS references: {len(wages)} rows")
 
 
 if __name__ == "__main__":

@@ -24,6 +24,8 @@ from typing import Any
 import yaml
 
 from . import psoc
+from . import wage_benchmarks
+from .sources.psoc_importer import WORKBOOK_DISCREPANCY
 from .paths import (
     CLASSIFICATIONS_CSV,
     CROSSWALK_CSV,
@@ -31,6 +33,7 @@ from .paths import (
     MODEL_SCORES_CSV,
     OCCUPATIONS_CSV,
     RELEASE_MANIFEST_JSON,
+    REPO_ROOT,
     RETRIEVAL_MANIFEST_JSON,
     SITE_DATA_JSON,
     SOURCE_REGISTRY_YAML,
@@ -51,8 +54,8 @@ from .schema import (
 
 PAYLOAD_SCHEMA = "trabaholens-site-payload/2"
 METHODOLOGY_VERSION = "2.0.0"
-RUBRIC_VERSION = "0.2.0"
-PROMPT_VERSION = "0.2.0"
+RUBRIC_VERSION = "0.3.0"
+PROMPT_VERSION = "0.3.0"
 
 EXPOSURE_DISCLAIMER = (
     "Generative-AI task exposure indicates how much an occupation's tasks may be "
@@ -134,6 +137,8 @@ def build_metric_block(row: dict[str, str]) -> dict[str, Any]:
         "retrieved_at": row.get("retrieved_at", ""),
         "uncertainty_lower": _value_or_none(row.get("uncertainty_lower", "")),
         "uncertainty_upper": _value_or_none(row.get("uncertainty_upper", "")),
+        "standard_error": _value_or_none(row.get("standard_error", "")),
+        "coefficient_of_variation": _value_or_none(row.get("coefficient_of_variation", "")),
         "suppression_status": row.get("suppression_status", ""),
         "common_misreading": definition.common_misreading if definition else "",
         "notes": row.get("notes", ""),
@@ -181,6 +186,18 @@ def build_payload(release: dict[str, Any]) -> dict[str, Any]:
                 "run_count": _value_or_none(row.get("run_count", "")),
                 "human_review_status": row.get("human_review_status", ""),
                 "raw_response_reference": row.get("raw_response_reference", ""),
+                "temperature": row.get("temperature", ""),
+                "attempted_attempts": _value_or_none(row.get("attempted_attempts", "")),
+                "successful_attempts": _value_or_none(row.get("successful_attempts", "")),
+                "tasks_included": _value_or_none(row.get("tasks_included", "")),
+                "tasks_total_for_occupation": _value_or_none(row.get("tasks_total_for_occupation", "")),
+                "partial_coverage": row.get("partial_coverage", "") == "true",
+                "score_iqr_lower": _value_or_none(row.get("score_iqr_lower", "")),
+                "score_iqr_upper": _value_or_none(row.get("score_iqr_upper", "")),
+                "score_distribution": json.loads(row["score_distribution"]) if row.get("score_distribution") else {},
+                "share_at_or_above_threshold": _value_or_none(row.get("share_at_or_above_threshold", "")),
+                "evidence_confidence": _value_or_none(row.get("evidence_confidence", "")),
+                "limitations": row.get("limitations", ""),
             }
             for row in scores_by_occupation.get(oid, [])
         ]
@@ -209,16 +226,33 @@ def build_payload(release: dict[str, Any]) -> dict[str, Any]:
         if metric["availability"] == "published" and metric["value"] is not None
     )
 
+    from .psoc_tasks import TASKS_REPORT_JSON
+
+    task_report = (json.loads(TASKS_REPORT_JSON.read_text(encoding="utf-8"))
+                   if TASKS_REPORT_JSON.exists() else {})
     return {
         "schema": PAYLOAD_SCHEMA,
         "release": release,
+        "exposure_coverage": {
+            "task_source": "PSA PSOC 2012 (2022 Updates) unit-group task statements",
+            "task_source_file_hash": task_report.get("source_file_hash", ""),
+            "task_source_url": next(
+                (s.get("api_or_download", "") for s in yaml.safe_load(
+                    SOURCE_REGISTRY_YAML.read_text(encoding="utf-8"))["sources"]
+                 if s["source_id"] == "psa_psoc"), ""),
+            "unit_groups": task_report.get("unit_groups"),
+            "unit_groups_with_psa_tasks": task_report.get("unit_groups_with_tasks"),
+            "task_statements": task_report.get("task_statements"),
+            "unit_groups_scored": len({r["psoc_code"] for r in scores}),
+            "unit_groups_without_psa_tasks": task_report.get("unit_groups_without_tasks", []),
+            "task_evidence_file": "exposure-tasks.json" if scores else None,
+        },
         "disclaimers": {
             "exposure": EXPOSURE_DISCLAIMER,
             "classification_verification": (
-                "The PSOC 2012 code list in this release was entered from "
-                "classification documentation, not from the token-gated official "
-                "PSA API. Every classification row is marked "
-                "unverified_pending_source."
+                "Classification verification is recorded per row. The pinned PSA workbook "
+                "provides explicit 2022 PSOC codes, not an inferred occupational mapping. "
+                + WORKBOOK_DISCREPANCY
             ),
         },
         "derivation_class_legend": {
@@ -280,11 +314,12 @@ def build_payload(release: dict[str, Any]) -> dict[str, Any]:
             "vocabulary_note": (
                 "psoc_classification_units counts groups in the classification, "
                 "not measured occupations. detailed_occupations counts "
-                "non-aggregate units, which is currently zero: PSOC minor and "
-                "unit groups have not been retrieved."
+                "non-aggregate classification units, not units with measured statistics. "
+                "Employment and OFW distribution are major-group estimates only."
             ),
         },
         "occupations": entries,
+        "wage_references": wage_benchmarks.load(),
     }
 
 
@@ -317,9 +352,65 @@ def _discover_model_runs() -> list[dict[str, Any]]:
                 "tasks_meeting_minimum": payload.get("tasks_meeting_minimum"),
                 "tasks_below_minimum": payload.get("tasks_below_minimum"),
                 "human_review_status": payload.get("human_review_status", ""),
+                "model_provider": payload.get("model_provider", ""),
+                "task_source": payload.get("task_source", ""),
+                "selection": payload.get("selection", {}),
             }
         )
     return runs
+
+
+def _exposure_limitation() -> str:
+    """State what the exposure layer is from the scores on disk, never from a flag."""
+    scores = read_csv(MODEL_SCORES_CSV) if MODEL_SCORES_CSV.exists() else []
+    occupations = sorted({row["psoc_code"] for row in scores})
+    if not occupations:
+        return ("No generative-AI task exposure score is published: no complete scoring "
+                "run has been accepted into model_scores.csv.")
+    models = sorted({row["model_id"] for row in scores})
+    reviews = sorted({row["human_review_status"] for row in scores})
+    runs = sorted({row.get("raw_response_reference", "") for row in scores} - {""})
+    parts = [
+        f"Experimental generative-AI task exposure scores are published for "
+        f"{len(occupations)} PSOC unit groups, scored task by task from PSA's own PSOC "
+        f"task statements by {', '.join(models)} with at least two successful attempts "
+        f"per task."
+    ]
+    # Coverage and temperature come from the run manifest when exactly one run is
+    # published, so the statement can never drift from the rows it describes.
+    if len(runs) == 1:
+        manifest_path = REPO_ROOT / runs[0]
+        if manifest_path.exists():
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            total = manifest.get("task_count")
+            included = manifest.get("tasks_meeting_minimum")
+            if isinstance(total, int) and isinstance(included, int):
+                excluded = total - included
+                parts.append(
+                    f"{included:,} of {total:,} PSA task statements met the minimum; "
+                    + (
+                        f"the remaining {excluded} are excluded because they did not "
+                        "yield two parseable answers. No score is imputed for them and "
+                        "their unit groups carry a partial-coverage flag."
+                        if excluded
+                        else "every task statement is included."
+                    )
+                )
+            if manifest.get("temperature") == 0.0:
+                parts.append(
+                    "Scoring ran at temperature 0, so repeated attempts reproduce the "
+                    "same answer by construction; the attempt-agreement statistic is a "
+                    "reproducibility check, not a stability estimate."
+                )
+    parts.append(
+        f"Human review status: {', '.join(reviews)}. The 0–5 ordinal scale is one "
+        "model's judgement, not a calibrated probability: a different model scored a "
+        "shared sample systematically higher, and that shift is reported rather than "
+        "rescaled away. Unit groups without a PSA task list have no score. Scores "
+        "describe potential task interaction with generative AI, not employment "
+        "outcomes."
+    )
+    return " ".join(parts)
 
 
 def derive_publication_state(observations: list[dict[str, str]]) -> dict[str, list[str]]:
@@ -366,7 +457,7 @@ def build_release_manifest(frozen_time: str | None) -> dict[str, Any]:
             "declared_status": source["retrieval"]["status"],
             "last_attempt": attempt.get("attempted_at", "never"),
             "last_attempt_result": attempt.get("status", "none"),
-            "blocked_reason": source["retrieval"].get("blocked_reason", ""),
+            "blocked_reason": "" if verified.acquired else source["retrieval"].get("blocked_reason", ""),
         }
         source_hashes[sid] = verified.sha256 if verified.acquired else None
 
@@ -391,6 +482,10 @@ def build_release_manifest(frozen_time: str | None) -> dict[str, Any]:
         if sid == "psa_psoc":
             parsed = any(row.get("verification_status") == "verified_against_source" for row in classifications)
             transformed = parsed
+        if sid == "psa_ows":
+            parsed = bool(wage_benchmarks.load())
+            # A source-native reference does not satisfy canonical basic pay.
+            transformed = False
         if not has_parser:
             source_pipeline_status[sid] = {
                 "retrieval": "implemented_verified_with_real_source" if acquired else "blocked_by_source_access",
@@ -419,7 +514,7 @@ def build_release_manifest(frozen_time: str | None) -> dict[str, Any]:
     checksums = {}
     for path in (
         CLASSIFICATIONS_CSV, OCCUPATIONS_CSV, METRIC_OBSERVATIONS_CSV,
-        CROSSWALK_CSV, TRANSFORMATIONS_CSV, MODEL_SCORES_CSV,
+        CROSSWALK_CSV, TRANSFORMATIONS_CSV, MODEL_SCORES_CSV, wage_benchmarks.TABLE_PATH,
     ):
         if path.exists():
             checksums[rel(path)] = sha256_file(path)
@@ -448,25 +543,27 @@ def build_release_manifest(frozen_time: str | None) -> dict[str, Any]:
         "pipeline_stages": [report.as_dict() for report in pipeline_stage_reports()],
         "source_pipeline_status": source_pipeline_status,
         "publication_state": publication_state,
+        "wage_reference_state": {
+            "records": len(wage_benchmarks.load()),
+            "published": sum(r["availability"] == "published" for r in wage_benchmarks.load()),
+            "withheld": sum(r["availability"] != "published" for r in wage_benchmarks.load()),
+            "canonical_psoc_reconciled": False,
+        },
         "known_limitations": [
-            "This release publishes only the ten 2024 annual LFS major-group "
-            "employment estimates. It does not publish wages, OFW distribution, "
-            "O*NET Job Zone or generative-AI task exposure.",
-            "The PSOC 2012 code list was entered from classification documentation "
-            "rather than the PSA volume. Every classification row is marked "
-            "unverified_pending_source. The official PSOC API is identified but "
-            "requires a token; it must be imported and diffed before detailed use.",
-            "The canonical table holds PSOC major and sub-major groups only. Minor "
-            "and unit groups are absent rather than guessed, so occupation-level "
-            "metrics (wages, O*NET Job Zone, task exposure) have no unit to attach "
-            "to yet.",
+            "Publication counts are derived from observations. LFS employment and SOF distribution "
+            "are only shown at major-group level. No detailed employment is inferred.",
+            WORKBOOK_DISCREPANCY,
+            "SOF is the distribution of the survey's OFWs across occupations, not the probability "
+            "that a domestic worker is an OFW. Missing cells remain missing; shares are not renormalised.",
+            "OWS wage references retain the publisher's job-position by industry slices. They include "
+            "regular cash allowances and cover full-time time-rated workers in formal establishments "
+            "with 10 or more workers, including agriculture. They are not national occupational basic pay. "
+            "The source's occupational code version is unconfirmed, so no canonical PSOC mapping is asserted.",
+            "OWS records with inconsistent sampling intervals are withheld; CV above 10% carries "
+            "a low-precision caution. Missing precision is disclosed, not inferred.",
             "O*NET 31.0 is retrieved and hash-verified, but no O*NET-derived value "
             "is published because no accepted PSOC-to-O*NET correspondence exists.",
-            "The exact SOF 2024 occupation table is identified, but its XLSX is "
-            "blocked by the publisher's CDN in automated retrieval. The current OWS "
-            "tables do not satisfy the defined coded-occupation basic-pay metric.",
-            "No generative-AI task exposure score is published. The scoring harness "
-            "still requires a reviewed PSOC-to-O*NET mapping and a completed model run.",
+            _exposure_limitation(),
             "The v1 exposure scores are not carried forward and are not a fallback.",
             "This experimental exposure score has not yet undergone independent "
             "labour-economist validation.",
@@ -497,8 +594,11 @@ def main() -> None:
         json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
     )
 
+    from .exposure_publish import write_task_evidence
+
     counts = payload["counts"]
     print(f"{rel(RELEASE_MANIFEST_JSON)} written")
+    print(write_task_evidence())
     print(f"{rel(SITE_DATA_JSON)} written")
     print(f"  PSOC classification units: {counts['psoc_classification_units']}")
     print(f"  detailed occupations:      {counts['detailed_occupations']}")

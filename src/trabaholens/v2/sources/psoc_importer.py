@@ -31,11 +31,10 @@ explicit correspondence is supplied; it is never silently renumbered.
 
 ## What this importer has actually done
 
-Nothing, against the real source. The official classification API is identified
-but requires a personal token, so the authoritative code list has not been
-retrieved, hashed or parsed. The importer is implemented and fixture-tested;
-the production classification rows remain the ISCO-08-aligned skeleton marked
-``unverified_pending_source``.
+The public workbook linked by PSA has been retrieved and hash-pinned. Its
+explicit code columns supply the canonical tree. The token-gated API is not
+required for that public download. The workbook/webpage completeness mismatch
+is retained as a warning, never silently reconciled.
 
 Detailed groups are deliberately **not** transcribed from secondary material.
 The PSA publication describes 10 major, 43 sub-major, 130 minor and 456 unit
@@ -47,7 +46,9 @@ from __future__ import annotations
 
 import csv
 import json
-from dataclasses import dataclass
+import hashlib
+import re
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from ..pipeline import StageStatus
@@ -65,6 +66,17 @@ EXPECTED_STRUCTURE = {
     "psoc_unit_group": 456,
 }
 
+# The PSA webpage says 456 unit groups, but the workbook linked from that
+# page contains 466 unique unit codes (including new 2124, Data Scientist).
+# This exception is tied to reviewed bytes, not a relaxed completeness check.
+PSOC_WORKBOOK_SHA256 = "666e276e061efcf6939a4839420ddb0a9a30d3786ab41c5892a81a915858941c"
+WORKBOOK_STRUCTURE = {**EXPECTED_STRUCTURE, "psoc_unit_group": 466}
+WORKBOOK_DISCREPANCY = (
+    "The pinned official 2022 workbook contains 466 unit groups; the PSA "
+    "technical-notes webpage states 456. Workbook codes retained verbatim. "
+    "The publisher has not clarified this discrepancy."
+)
+
 LEVEL_BY_CODE_LENGTH = {
     1: "psoc_major_group",
     2: "psoc_sub_major_group",
@@ -80,12 +92,15 @@ class PsocImportReport:
     counts: dict[str, int]
     problems: list[str]
     complete: bool
+    expected: dict = field(default_factory=lambda: EXPECTED_STRUCTURE.copy())
+    warnings: list[str] = field(default_factory=list)
 
     def as_dict(self) -> dict:
         return {
             "version": self.version,
             "counts": self.counts,
-            "expected": EXPECTED_STRUCTURE,
+            "expected": self.expected,
+            "warnings": self.warnings,
             "complete": self.complete,
             "problems": self.problems,
             "row_count": len(self.rows),
@@ -108,6 +123,7 @@ class PsocVolumeParser(SourceParser):
     status = StageStatus.FIXTURE_TESTED_ONLY
 
     REQUIRED_COLUMNS = {"code", "title"}
+    parser_version = "0.2.0"
 
     def validate_format(self, path: Path) -> None:
         if not path.exists():
@@ -121,7 +137,10 @@ class PsocVolumeParser(SourceParser):
                 "from a PDF by heuristic is not a source of record. Convert it to "
                 "CSV or JSON, review the conversion, and import that."
             )
-        if suffix == ".csv":
+        if suffix == ".xlsx":
+            if hashlib.sha256(path.read_bytes()).hexdigest() != PSOC_WORKBOOK_SHA256:
+                raise FormatValidationError("Unreviewed PSOC workbook snapshot; review its structure before import")
+        elif suffix == ".csv":
             with open(path, encoding="utf-8-sig", newline="") as handle:
                 header = next(csv.reader(handle), None)
             if not header:
@@ -144,10 +163,45 @@ class PsocVolumeParser(SourceParser):
             )
 
     def _entries(self, path: Path) -> list[dict]:
+        if path.suffix.lower() == ".xlsx":
+            return self._workbook_entries(path)
         if path.suffix.lower() == ".json":
             return json.loads(path.read_text(encoding="utf-8"))
         with open(path, encoding="utf-8-sig", newline="") as handle:
             return [{k.strip().lower(): v for k, v in row.items()} for row in csv.DictReader(handle)]
+
+    def _workbook_entries(self, path: Path) -> list[dict]:
+        from openpyxl import load_workbook
+        entries = []
+        with_workbook = load_workbook(path, read_only=True, data_only=True)
+        try:
+            if set(with_workbook.sheetnames) != {f"Group {i}" for i in range(10)}:
+                raise FormatValidationError("PSOC workbook sheet set changed")
+            for sheet in with_workbook:
+                rows = list(sheet.iter_rows(max_col=6, values_only=True))
+                if rows[0][:4] != ("SUB-MAJOR\nGROUP", "MINOR\nGROUP", "UNIT\nGROUP", "OCCUPATIONAL TITLES AND DEFINITIONS"):
+                    raise FormatValidationError(f"{sheet.title}: unexpected column headers")
+                match = re.fullmatch(r"Major Group (\d)\.?", str(rows[2][3]).strip())
+                if not match or sheet.title != f"Group {match[1]}":
+                    raise FormatValidationError(f"{sheet.title}: missing major-group header")
+                entries.append({"code": match[1], "title": str(rows[3][3]).strip(),
+                                "definition": str(rows[5][3]).strip(), "version": CANONICAL_PSOC_VERSION,
+                                "notes": f"{sheet.title}!D4. {WORKBOOK_DISCREPANCY}"})
+                for i, row in enumerate(rows[1:], 2):
+                    for col, value in enumerate(row[:3]):
+                        if value is None:
+                            continue
+                        code = str(value).strip()
+                        if not code.isdigit() or len(code) != col + 2 or code[0] != match[1]:
+                            raise FormatValidationError(f"{sheet.title}!{i}: invalid code {code!r}")
+                        # The military sheet explicitly prints all three levels
+                        # on one row. No forward-fill or invented parent codes.
+                        entries.append({"code": code, "title": str(row[3] or "").strip(),
+                                        "version": CANONICAL_PSOC_VERSION,
+                                        "notes": f"{sheet.title}!{'ABC'[col]}{i}. {WORKBOOK_DISCREPANCY}"})
+        finally:
+            with_workbook.close()
+        return entries
 
     def parse(self, path: Path) -> ParseResult:
         """Not used for metric observations; see import_classification."""
@@ -211,7 +265,7 @@ class PsocVolumeParser(SourceParser):
                     "isco08_code": str(entry.get("isco08_code", "") or ""),
                     "definition": str(entry.get("definition", "") or ""),
                     "verification_status": "verified_against_source",
-                    "notes": "",
+                    "notes": entry.get("notes", ""),
                 }
             )
 
@@ -228,7 +282,8 @@ class PsocVolumeParser(SourceParser):
         for row in rows:
             row["psoc_major_label"] = majors.get(row["psoc_major"], "")
 
-        complete = all(counts[level] == expected for level, expected in EXPECTED_STRUCTURE.items())
+        expected_structure = WORKBOOK_STRUCTURE if path.suffix.lower() == ".xlsx" else EXPECTED_STRUCTURE
+        complete = all(counts[level] == expected for level, expected in expected_structure.items()) and not problems
         if not complete:
             problems.append(
                 "Import is not a complete PSOC: counts "
@@ -242,4 +297,6 @@ class PsocVolumeParser(SourceParser):
             counts=counts,
             problems=problems,
             complete=complete,
+            expected=expected_structure,
+            warnings=[WORKBOOK_DISCREPANCY] if path.suffix.lower() == ".xlsx" else [],
         )

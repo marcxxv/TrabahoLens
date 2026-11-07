@@ -2,22 +2,22 @@
   "release_id": "v2.0.0-pre",
   "release_date": "2026-09-14T00:00:00Z",
   "generated_at": "2026-09-14T00:00:00Z",
-  "code_commit": "8aa62f756ca1828ca17e1cbb7a1fac2cbfaf605c",
+  "code_commit": "1d652a7d3b65487baa1207dbd8910d0d5376db67",
   "code_commit_note": "The commit the build ran at. It necessarily precedes the commit that records it, because committing this manifest moves HEAD. Treat it as 'generated from this input state', not as a self-describing id. `make check-stale` excludes it for the same reason.",
   "schema_version": "2.0.0",
   "methodology_version": "2.0.0",
-  "exposure_rubric_version": "0.2.0",
-  "prompt_version": "0.2.0",
+  "exposure_rubric_version": "0.3.0",
+  "prompt_version": "0.3.0",
   "crosswalk_version": "0.1.0",
   "psoc_version": "PSOC 2012 (2022 Updates)",
   "source_versions": {
     "psa_psoc": {
       "organization": "Philippine Statistics Authority",
       "dataset": "2022 Updates to the 2012 Philippine Standard Occupational Classification (PSOC)",
-      "declared_status": "blocked_requires_token",
-      "last_attempt": "2026-09-14T17:16:46Z",
-      "last_attempt_result": "failed",
-      "blocked_reason": "The official PSA classification API requires a personal access token. No token is stored in the repository or available to this build."
+      "declared_status": "identified_public_workbook",
+      "last_attempt": "2026-09-28T05:36:56Z",
+      "last_attempt_result": "hashed_existing_file",
+      "blocked_reason": ""
     },
     "psa_lfs": {
       "organization": "Philippine Statistics Authority",
@@ -25,23 +25,23 @@
       "declared_status": "identified_automated",
       "last_attempt": "2026-09-18T03:33:44Z",
       "last_attempt_result": "retrieved",
-      "blocked_reason": "Retrieval is now configured. Publication still requires hash verification, successful parsing, and the explicit PSOC 2012-to-2022 major-group correspondence; registry status alone grants nothing."
+      "blocked_reason": ""
     },
     "psa_ows": {
       "organization": "Philippine Statistics Authority",
       "dataset": "Occupational Wages Survey (OWS)",
-      "declared_status": "blocked_no_matching_table",
-      "last_attempt": "2026-09-14T17:16:46Z",
-      "last_attempt_result": "failed",
-      "blocked_reason": "Reachability is no longer the blocker. The reviewed official tables do not provide average monthly basic pay by coded occupation at the scope this metric promises."
+      "declared_status": "identified_source_native_wage_table",
+      "last_attempt": "2026-09-28T05:36:56Z",
+      "last_attempt_result": "hashed_existing_file",
+      "blocked_reason": ""
     },
     "psa_sof": {
       "organization": "Philippine Statistics Authority",
       "dataset": "Survey on Overseas Filipinos (SOF)",
-      "declared_status": "blocked_by_cdn",
-      "last_attempt": "2026-09-18T03:33:45Z",
-      "last_attempt_result": "failed",
-      "blocked_reason": "The exact XLSX is identified, but automated requests currently receive a Cloudflare HTML verification page. Acquisition validation rejects it."
+      "declared_status": "identified_public_workbook",
+      "last_attempt": "2026-09-28T05:36:56Z",
+      "last_attempt_result": "hashed_existing_file",
+      "blocked_reason": ""
     },
     "psa_informal": {
       "organization": "Philippine Statistics Authority",
@@ -57,7 +57,7 @@
       "declared_status": "identified_automated",
       "last_attempt": "2026-09-18T03:33:45Z",
       "last_attempt_result": "retrieved",
-      "blocked_reason": "Retrieval is configured and reachable. O*NET-derived values remain blocked until an accepted PSOC-to-O*NET correspondence exists."
+      "blocked_reason": ""
     },
     "philjobnet": {
       "organization": "Department of Labor and Employment / PhilJobNet",
@@ -86,17 +86,17 @@
     "llm_scoring": {
       "organization": "Model provider, recorded per run",
       "dataset": "TrabahoLens generative-AI task exposure scoring runs",
-      "declared_status": "blocked",
+      "declared_status": "identified_automated",
       "last_attempt": "never",
       "last_attempt_result": "none",
-      "blocked_reason": "openrouter.ai is unreachable from the build environment (HTTP 403 at the egress proxy) and OPENROUTER_API_KEY is unset."
+      "blocked_reason": "Not blocked. Two providers are supported: OpenRouter (needs OPENROUTER_API_KEY) and the Claude Code CLI (`--provider claude-cli`, needs an authenticated `claude` login). The CLI cannot set temperature; runs record that instead of a value that was not applied."
     }
   },
   "source_hashes": {
-    "psa_psoc": null,
+    "psa_psoc": "666e276e061efcf6939a4839420ddb0a9a30d3786ab41c5892a81a915858941c",
     "psa_lfs": "9cb88db30ecab0520cf5e8678f046b1cdb62a20ce834fa4db5c8abf856292b86",
-    "psa_ows": null,
-    "psa_sof": null,
+    "psa_ows": "78823a5d60b625398ce97cebfde9e5dd0df7d412c6862d2e1b4bd245ea91eef2",
+    "psa_sof": "f2ee9ecd9f2231fe235d29841dac09a4fc978a9dfe29c6b92d9a17330bc8be80",
     "psa_informal": null,
     "onet": "6883548adf5fde64cf6f801b35d15519c9225f2732c3cab0e281c652d16b23a9",
     "philjobnet": null,
@@ -105,20 +105,172 @@
     "llm_scoring": null
   },
   "canonical_table_checksums": {
-    "data/canonical/classifications.csv": "3ab1117303fa3e4a81d600fb8db1f7e282c9d73cb280333d416005a8a5a4dbaf",
-    "data/canonical/occupations.csv": "c5ed92d0aba512409ed6054ca438df4d4781ed99ba764154fdd629677333ac98",
-    "data/canonical/metric_observations.csv": "9f8caab9e4c8284d3e7663bd634039048fb13e51d874a66c5ba59ff68b955869",
-    "data/canonical/crosswalk_psoc_isco_soc.csv": "d6f21b0f2f12e91683e4d6d4118f799f17783b78a19bb458c1f210ca33b6935d",
-    "data/canonical/transformations.csv": "b166a6beed23800ac4a224c3eb2bbb46884787171f4dd0e690f9dd4184a40868",
-    "data/canonical/model_scores.csv": "0892fc0e7909988a008eefc12c1e89a86417b324928c4cf93440c563d506d617"
+    "data/canonical/classifications.csv": "f226b108120fdd2ea2ff12e98f7520d6132d92c3581a97987dbac98eb2c6f553",
+    "data/canonical/occupations.csv": "79ceac77b5dbab6409f62c9a3582de11e94b90ae76ba6c7f5dad5a99d4afffe8",
+    "data/canonical/metric_observations.csv": "c87b31fc58e9952854f790bf0027ae599d997f0a9c8b6e62c6516ffab6a00719",
+    "data/canonical/crosswalk_psoc_isco_soc.csv": "a622178fea63fb009838e334ecab29eb203dc55e323f821095818706e637e1c0",
+    "data/canonical/transformations.csv": "26678735c5f7479ab642e4effe89293d5bbf6b5360840a8ad3b12640742927eb",
+    "data/canonical/model_scores.csv": "98de12b0214abd67f1932223f376e2be3b052c7a4ffe864676adffbd7131ec6f",
+    "data/reference/ows_wage_benchmarks.csv": "eed0482c833f4e92c590b61916bfdde5f2038c6d7cae93021396bdf786c024c3"
   },
-  "model_runs": [],
+  "model_runs": [
+    {
+      "run_id": "20260928T152906Z__claude-sonnet-5__c11f6041",
+      "model_id": "claude-sonnet-5",
+      "rubric_version": "0.2.0",
+      "prompt_version": "0.2.0",
+      "scoring_date": "2026-09-28T15:34:04Z",
+      "attempted_replicates": 2,
+      "min_successful_replicates": 2,
+      "tasks_meeting_minimum": 137,
+      "tasks_below_minimum": [],
+      "human_review_status": "not_reviewed",
+      "model_provider": "claude-cli",
+      "task_source": "PSA PSOC 2012 (2022 Updates) unit-group task statements (native; no crosswalk)",
+      "selection": {
+        "occupations": "",
+        "sample_every": 25,
+        "limit": null,
+        "complete_task_file": false
+      }
+    },
+    {
+      "run_id": "20260928T153525Z__claude-sonnet-5__5bd1b1fc",
+      "model_id": "claude-sonnet-5",
+      "rubric_version": "0.3.0",
+      "prompt_version": "0.3.0",
+      "scoring_date": "2026-09-28T15:38:16Z",
+      "attempted_replicates": 2,
+      "min_successful_replicates": 2,
+      "tasks_meeting_minimum": 136,
+      "tasks_below_minimum": [
+        "PSOC-3332-02"
+      ],
+      "human_review_status": "not_reviewed",
+      "model_provider": "claude-cli",
+      "task_source": "PSA PSOC 2012 (2022 Updates) unit-group task statements (native; no crosswalk)",
+      "selection": {
+        "occupations": "",
+        "sample_every": 25,
+        "limit": null,
+        "complete_task_file": false
+      }
+    },
+    {
+      "run_id": "20261107T123959Z__deepseek-v4-1-flash__21c1f433",
+      "model_id": "deepseek-v4.1-flash",
+      "rubric_version": "0.3.0",
+      "prompt_version": "0.3.0",
+      "scoring_date": "2026-11-07T12:43:00Z",
+      "attempted_replicates": 2,
+      "min_successful_replicates": 2,
+      "tasks_meeting_minimum": 135,
+      "tasks_below_minimum": [
+        "PSOC-1412-08",
+        "PSOC-9216-02"
+      ],
+      "human_review_status": "not_reviewed",
+      "model_provider": "nyolab",
+      "task_source": "PSA PSOC 2012 (2022 Updates) unit-group task statements (native; no crosswalk)",
+      "selection": {
+        "occupations": "",
+        "sample_every": 25,
+        "limit": null,
+        "complete_task_file": false
+      }
+    },
+    {
+      "run_id": "20261107T124518Z__glm-5-3-flash__436536ae",
+      "model_id": "glm-5.3-flash",
+      "rubric_version": "0.3.0",
+      "prompt_version": "0.3.0",
+      "scoring_date": "2026-11-07T12:47:18Z",
+      "attempted_replicates": 2,
+      "min_successful_replicates": 2,
+      "tasks_meeting_minimum": 137,
+      "tasks_below_minimum": [],
+      "human_review_status": "not_reviewed",
+      "model_provider": "nyolab",
+      "task_source": "PSA PSOC 2012 (2022 Updates) unit-group task statements (native; no crosswalk)",
+      "selection": {
+        "occupations": "",
+        "sample_every": 25,
+        "limit": null,
+        "complete_task_file": false
+      }
+    },
+    {
+      "run_id": "20261107T124802Z__deepseek-v4-1-flash__563cadd8",
+      "model_id": "deepseek-v4.1-flash",
+      "rubric_version": "0.3.0",
+      "prompt_version": "0.3.0",
+      "scoring_date": "2026-11-07T13:24:39Z",
+      "attempted_replicates": 2,
+      "min_successful_replicates": 2,
+      "tasks_meeting_minimum": 3318,
+      "tasks_below_minimum": [
+        "PSOC-1120-10",
+        "PSOC-1343-04",
+        "PSOC-1344-02",
+        "PSOC-1412-08",
+        "PSOC-2114-11",
+        "PSOC-2153-01",
+        "PSOC-2211-02",
+        "PSOC-2230-03",
+        "PSOC-2421-02",
+        "PSOC-2622-02",
+        "PSOC-2633-05",
+        "PSOC-3122-05",
+        "PSOC-3152-03",
+        "PSOC-3155-02",
+        "PSOC-3343-01",
+        "PSOC-3433-04",
+        "PSOC-3513-02",
+        "PSOC-4120-02",
+        "PSOC-5112-06",
+        "PSOC-5132-02",
+        "PSOC-5152-06",
+        "PSOC-5246-01",
+        "PSOC-5322-02",
+        "PSOC-5414-01",
+        "PSOC-6122-07",
+        "PSOC-6125-04",
+        "PSOC-6213-03",
+        "PSOC-7124-06",
+        "PSOC-7131-01",
+        "PSOC-7311-02",
+        "PSOC-7412-02",
+        "PSOC-7532-08",
+        "PSOC-7535-12",
+        "PSOC-8112-06",
+        "PSOC-8211-01",
+        "PSOC-8219-01",
+        "PSOC-8331-07",
+        "PSOC-8343-01",
+        "PSOC-9129-02",
+        "PSOC-9213-06",
+        "PSOC-9216-02",
+        "PSOC-9612-03",
+        "PSOC-9623-01",
+        "PSOC-9624-04"
+      ],
+      "human_review_status": "not_reviewed",
+      "model_provider": "nyolab",
+      "task_source": "PSA PSOC 2012 (2022 Updates) unit-group task statements (native; no crosswalk)",
+      "selection": {
+        "occupations": "",
+        "sample_every": 0,
+        "limit": null,
+        "complete_task_file": true
+      }
+    }
+  ],
   "pipeline_stages": [
     {
       "stage": "source_registry",
       "status": "implemented_verified_with_real_source",
       "status_meaning": "Implemented, and exercised end to end against the real primary source.",
-      "detail": "Ten sources registered with universe, exclusions, licensing and attribution.",
+      "detail": "10 sources registered with universe, exclusions, licensing and attribution.",
       "evidence": "data/sources/source-registry.yaml",
       "blockers": []
     },
@@ -136,7 +288,7 @@
       "stage": "raw_snapshot",
       "status": "partially_implemented",
       "status_meaning": "Some of the stage exists; named parts are missing.",
-      "detail": "Raw snapshots are written under data/raw/ (gitignored) when retrieval succeeds.",
+      "detail": "Raw snapshots are written under data/raw/. Reviewed release inputs are explicitly retained for reproducibility.",
       "evidence": "",
       "blockers": []
     },
@@ -160,7 +312,7 @@
       "stage": "parsing",
       "status": "partially_implemented",
       "status_meaning": "Some of the stage exists; named parts are missing.",
-      "detail": "LFS and O*NET parsers have processed real snapshots; OWS and SOF remain unverified against real files.",
+      "detail": "Source-specific parsers validate actual LFS, SOF, PSOC and source-native OWS formats; availability is recorded per source.",
       "evidence": "src/trabaholens/v2/sources/",
       "blockers": [
         "At least one source-specific parser has not processed its real source."
@@ -178,17 +330,17 @@
       "stage": "classification_reconciliation",
       "status": "partially_implemented",
       "status_meaning": "Some of the stage exists; named parts are missing.",
-      "detail": "Version compatibility is enforced and unmatched codes are reported, but the PSOC minor and unit group lists are absent, so only aggregate codes reconcile.",
+      "detail": "Version compatibility is enforced. LFS and SOF use explicit major-group correspondence; OWS remains source-native.",
       "evidence": "",
       "blockers": [
-        "PSOC 2012 (2022 Updates) volume not retrievable."
+        "OWS code-version reconciliation and reviewed O*NET correspondence remain unavailable."
       ]
     },
     {
       "stage": "transformation",
       "status": "partially_implemented",
       "status_meaning": "Some of the stage exists; named parts are missing.",
-      "detail": "The employment transformation is verified with real LFS data; wage, OFW and Job Zone remain blocked.",
+      "detail": "Employment and OFW distribution have source-specific transformations. Source-native wage references are separate from canonical basic pay.",
       "evidence": "src/trabaholens/v2/transform.py",
       "blockers": []
     },
@@ -196,7 +348,7 @@
       "stage": "canonical_observation",
       "status": "partially_implemented",
       "status_meaning": "Some of the stage exists; named parts are missing.",
-      "detail": "Ten LFS major-group observations carry full provenance; other planned observations remain blocked.",
+      "detail": "Only source-backed observations publish. Detailed employment, canonical basic pay, Job Zone and exposure remain unavailable.",
       "evidence": "",
       "blockers": []
     },
@@ -219,9 +371,9 @@
   ],
   "source_pipeline_status": {
     "psa_psoc": {
-      "retrieval": "blocked_by_source_access",
-      "parsing": "implemented_fixture_tested_only",
-      "transformation": "implemented_fixture_tested_only"
+      "retrieval": "implemented_verified_with_real_source",
+      "parsing": "implemented_verified_with_real_source",
+      "transformation": "implemented_verified_with_real_source"
     },
     "psa_lfs": {
       "retrieval": "implemented_verified_with_real_source",
@@ -229,14 +381,14 @@
       "transformation": "implemented_verified_with_real_source"
     },
     "psa_ows": {
-      "retrieval": "blocked_by_source_access",
-      "parsing": "implemented_fixture_tested_only",
-      "transformation": "implemented_fixture_tested_only"
+      "retrieval": "implemented_verified_with_real_source",
+      "parsing": "implemented_verified_with_real_source",
+      "transformation": "partially_implemented"
     },
     "psa_sof": {
-      "retrieval": "blocked_by_source_access",
-      "parsing": "implemented_fixture_tested_only",
-      "transformation": "implemented_fixture_tested_only"
+      "retrieval": "implemented_verified_with_real_source",
+      "parsing": "implemented_verified_with_real_source",
+      "transformation": "implemented_verified_with_real_source"
     },
     "psa_informal": {
       "retrieval": "blocked_by_source_access",
@@ -278,24 +430,30 @@
       "wage_basic_pay"
     ],
     "metrics_with_published_values": [
-      "employment_count"
-    ],
-    "metrics_blocked_pending_source": [
+      "employment_count",
       "ofw_distribution_share"
     ],
+    "metrics_blocked_pending_source": [],
     "metrics_not_representable_at_current_granularity": [
       "gen_ai_task_exposure",
       "onet_job_zone",
       "wage_basic_pay"
     ]
   },
+  "wage_reference_state": {
+    "records": 693,
+    "published": 684,
+    "withheld": 9,
+    "canonical_psoc_reconciled": false
+  },
   "known_limitations": [
-    "This release publishes only the ten 2024 annual LFS major-group employment estimates. It does not publish wages, OFW distribution, O*NET Job Zone or generative-AI task exposure.",
-    "The PSOC 2012 code list was entered from classification documentation rather than the PSA volume. Every classification row is marked unverified_pending_source. The official PSOC API is identified but requires a token; it must be imported and diffed before detailed use.",
-    "The canonical table holds PSOC major and sub-major groups only. Minor and unit groups are absent rather than guessed, so occupation-level metrics (wages, O*NET Job Zone, task exposure) have no unit to attach to yet.",
+    "Publication counts are derived from observations. LFS employment and SOF distribution are only shown at major-group level. No detailed employment is inferred.",
+    "The pinned official 2022 workbook contains 466 unit groups; the PSA technical-notes webpage states 456. Workbook codes retained verbatim. The publisher has not clarified this discrepancy.",
+    "SOF is the distribution of the survey's OFWs across occupations, not the probability that a domestic worker is an OFW. Missing cells remain missing; shares are not renormalised.",
+    "OWS wage references retain the publisher's job-position by industry slices. They include regular cash allowances and cover full-time time-rated workers in formal establishments with 10 or more workers, including agriculture. They are not national occupational basic pay. The source's occupational code version is unconfirmed, so no canonical PSOC mapping is asserted.",
+    "OWS records with inconsistent sampling intervals are withheld; CV above 10% carries a low-precision caution. Missing precision is disclosed, not inferred.",
     "O*NET 31.0 is retrieved and hash-verified, but no O*NET-derived value is published because no accepted PSOC-to-O*NET correspondence exists.",
-    "The exact SOF 2024 occupation table is identified, but its XLSX is blocked by the publisher's CDN in automated retrieval. The current OWS tables do not satisfy the defined coded-occupation basic-pay metric.",
-    "No generative-AI task exposure score is published. The scoring harness still requires a reviewed PSOC-to-O*NET mapping and a completed model run.",
+    "Experimental generative-AI task exposure scores are published for 447 PSOC unit groups, scored task by task from PSA's own PSOC task statements by deepseek-v4.1-flash with at least two successful attempts per task. 3,318 of 3,362 PSA task statements met the minimum; the remaining 44 are excluded because they did not yield two parseable answers. No score is imputed for them and their unit groups carry a partial-coverage flag. Scoring ran at temperature 0, so repeated attempts reproduce the same answer by construction; the attempt-agreement statistic is a reproducibility check, not a stability estimate. Human review status: not_reviewed. The 0–5 ordinal scale is one model's judgement, not a calibrated probability: a different model scored a shared sample systematically higher, and that shift is reported rather than rescaled away. Unit groups without a PSA task list have no score. Scores describe potential task interaction with generative AI, not employment outcomes.",
     "The v1 exposure scores are not carried forward and are not a fallback.",
     "This experimental exposure score has not yet undergone independent labour-economist validation.",
     "No component of this release has been reviewed by a Philippine labour statistician."

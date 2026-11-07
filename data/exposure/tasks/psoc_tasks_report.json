@@ -1,0 +1,128 @@
+{
+  "source_file": "data/raw/psa_psoc/psoc_2022_updates.xlsx",
+  "source_file_hash": "666e276e061efcf6939a4839420ddb0a9a30d3786ab41c5892a81a915858941c",
+  "task_source_version": "PSOC 2012 (2022 Updates); sha256:666e276e061efcf6939a4839420ddb0a9a30d3786ab41c5892a81a915858941c",
+  "unit_groups": 466,
+  "unit_groups_with_tasks": 447,
+  "task_statements": 3362,
+  "unit_groups_without_tasks": [
+    {
+      "psoc_code": "0110",
+      "title": "COMMISSIONED ARMED FORCES OFFICERS",
+      "cell": "Group 0!C14",
+      "task_intro_present": false
+    },
+    {
+      "psoc_code": "0210",
+      "title": "NON-COMMISSIONED ARMED FORCES OFFICERS",
+      "cell": "Group 0!C47",
+      "task_intro_present": false
+    },
+    {
+      "psoc_code": "0310",
+      "title": "ARMED FORCES OCCUPATIONS, OTHER RANKS",
+      "cell": "Group 0!C61",
+      "task_intro_present": false
+    },
+    {
+      "psoc_code": "1219",
+      "title": "BUSINESS SERVICES AND ADMINISTRATION MANAGERS NOT ELSEWHERE  CLASSIFIED",
+      "cell": "Group 1!C253",
+      "task_intro_present": false
+    },
+    {
+      "psoc_code": "1349",
+      "title": "PROFESSIONAL SERVICES MANAGERS NOT ELSEWHERE CLASSIFIED",
+      "cell": "Group 1!C768",
+      "task_intro_present": false
+    },
+    {
+      "psoc_code": "1439",
+      "title": "SERVICES MANAGERS NOT ELSEWHERE CLASSIFIED",
+      "cell": "Group 1!C926",
+      "task_intro_present": false
+    },
+    {
+      "psoc_code": "2119",
+      "title": "OTHER PHYSICAL AND EARTH SCIENCE PROFESSIONALS",
+      "cell": "Group 2!C142",
+      "task_intro_present": false
+    },
+    {
+      "psoc_code": "3139",
+      "title": "PROCESS CONTROL TECHNICIANS NOT ELSEWHERE CLASSIFIED",
+      "cell": "Group 3!C473",
+      "task_intro_present": false
+    },
+    {
+      "psoc_code": "3435",
+      "title": "ARTISTIC AND CULTURAL ASSOCIATE PROFESSIONAL NOT ELSEWHERE CLASSIFIED",
+      "cell": "Group 3!C2144",
+      "task_intro_present": false
+    },
+    {
+      "psoc_code": "4229",
+      "title": "CLIENT INFORMATION WORKERS NOT ELSEWHERE CLASSIFIED",
+      "cell": "Group 4!C374",
+      "task_intro_present": false
+    },
+    {
+      "psoc_code": "4419",
+      "title": "CLERICAL SUPPORT WORKERS NOT ELSEWHERE CLASSIFIED",
+      "cell": "Group 4!C670",
+      "task_intro_present": false
+    },
+    {
+      "psoc_code": "5169",
+      "title": "PERSONAL SERVICES WORKERS NOT ELSEWHERE CLASSIFIED",
+      "cell": "Group 5!C432",
+      "task_intro_present": false
+    },
+    {
+      "psoc_code": "5249",
+      "title": "SALES WORKERS NOT ELSEWHERE CLASSIFIED",
+      "cell": "Group 5!C798",
+      "task_intro_present": false
+    },
+    {
+      "psoc_code": "7119",
+      "title": "BUILDING FRAME AND RELATED TRADES WORKERS NOT ELSEWHERE CLASSIFIED",
+      "cell": "Group 7!C137",
+      "task_intro_present": false
+    },
+    {
+      "psoc_code": "7319",
+      "title": "HANDICRAFT WORKERS NOT ELSEWHERE CLASSIFIED",
+      "cell": "Group 7!C1152",
+      "task_intro_present": false
+    },
+    {
+      "psoc_code": "7414",
+      "title": "ELECTRIC VEHICLE MECHANICS AND REPAIRERS",
+      "cell": "Group 7!C1369",
+      "task_intro_present": false
+    },
+    {
+      "psoc_code": "7549",
+      "title": "CRAFT AND RELATED WORKERS NOT ELSEWHERE CLASSIFIED",
+      "cell": "Group 7!C2032",
+      "task_intro_present": false
+    },
+    {
+      "psoc_code": "8189",
+      "title": "STATIONARY PLANT AND MACHINE OPERATORS NOT ELSEWHERE CLASSIFIED",
+      "cell": "Group 8!C765",
+      "task_intro_present": false
+    },
+    {
+      "psoc_code": "9335",
+      "title": "TRANSPORT NETWORK VEHICLE SERVICE BICYCLE DRIVERS",
+      "cell": "Group 9!C542",
+      "task_intro_present": false
+    }
+  ],
+  "source_anomalies": [
+    "1113: repeated item letters in source ['a', 'b', 'c', 'd', 'e', 'e', 'f']"
+  ],
+  "task_importance": "not published by PSA; occupation summaries are unweighted"
+}

@@ -7,8 +7,8 @@ PY := PYTHONPATH=src uv run python
 PYTEST := PYTHONPATH=src uv run pytest
 
 .PHONY: help audit fetch-data validate-raw build-crosswalk build-metrics \
-        build-release score-exposure sensitivity validate-release build-site \
-        test test-populated-pipeline check check-stale determinism all clean-generated
+        build-release exposure-tasks score-exposure exposure-pipeline sensitivity validate-release build-site \
+        test test-populated-pipeline check check-stale determinism browser-qa all clean-generated
 
 help:
 	@echo "TrabahoLens v2"
@@ -27,6 +27,8 @@ help:
 	@echo "  make test-populated-pipeline  Prove a populated fixture publishes end to end"
 	@echo "  make check            Compile sources and validate the release"
 	@echo "  make check-stale      Prove the committed artifacts match their inputs"
+	@echo "  make exposure-pipeline MODEL=... [PROVIDER=claude-cli]  Tasks, scoring, release, validation"
+	@echo "  make browser-qa       Headless Chrome interaction QA (needs the local server)"
 	@echo "  make determinism      Prove two builds are byte-identical"
 	@echo "  make all              audit -> build -> validate -> test"
 
@@ -43,12 +45,22 @@ validate-raw:
 build-crosswalk build-metrics:
 	$(PY) scripts/build_canonical.py
 
+# PSA's own PSOC task statements, with cell references. No crosswalk involved.
+exposure-tasks:
+	$(PY) -m trabaholens.v2.psoc_tasks
+
 # MODEL is required: a scoring run without a recorded model id has no provenance.
-score-exposure:
+# PROVIDER=claude-cli uses an authenticated Claude Code login instead of an API key.
+# SCORE_ARGS passes pilots through, e.g. SCORE_ARGS="--sample-every 25 --no-publish".
+score-exposure: exposure-tasks
 ifndef MODEL
-	$(error MODEL is required, e.g. `make score-exposure MODEL=anthropic/claude-3.5-haiku`)
+	$(error MODEL is required, e.g. `make score-exposure MODEL=claude-sonnet-5 PROVIDER=claude-cli`)
 endif
-	$(PY) scripts/score_exposure.py --model "$(MODEL)" --runs $(or $(RUNS),3)
+	$(PY) scripts/score_exposure.py --model "$(MODEL)" --provider $(or $(PROVIDER),openrouter) \
+	    --attempts $(or $(ATTEMPTS),2) --min-successful 2 --workers $(or $(WORKERS),8) $(SCORE_ARGS)
+
+# The whole exposure pipeline: tasks -> scoring run -> release -> validation.
+exposure-pipeline: score-exposure build-release validate-release
 
 sensitivity:
 	$(PY) scripts/exposure_analysis.py
@@ -79,6 +91,11 @@ check:
 # rebuild could never pass.
 check-stale:
 	$(PY) scripts/check_stale.py
+
+# Needs Chrome and `scripts/serve.py` running. Screenshots land in .browser-qa/
+# for human comparison with the deployment; they are not an automatic verdict.
+browser-qa:
+	node scripts/browser_qa.mjs
 
 determinism:
 	@$(PY) scripts/build_release.py --frozen-time 2026-01-01T00:00:00Z >/dev/null

@@ -188,3 +188,26 @@ def test_written_scores_carry_full_provenance(tmp_path, monkeypatch):
 def test_harness_refuses_to_score_without_task_evidence(tmp_path):
     with pytest.raises(FileNotFoundError, match="task-based"):
         sx.load_tasks(tmp_path / "nope.csv")
+
+
+def test_max_tokens_is_recorded_and_configurable():
+    """A reasoning model needs a bigger budget; whatever was used is on the record."""
+    record = sx.score_one_task(StubClient(), "system prompt", TASKS[0], "stub/model", 0.0,
+                               max_tokens=1234)
+    assert record.status == "succeeded"
+    assert record.request_payload["max_tokens"] == 1234
+
+
+def test_openai_compatible_provider_needs_its_own_key(monkeypatch):
+    """A missing key is a refusal, not a run that quietly scores nothing."""
+    monkeypatch.delenv("NYOLAB_API_KEY", raising=False)
+    with pytest.raises(sx.ScoringRefusal, match="NYOLAB_API_KEY"):
+        sx.build_openai_client("nyolab")
+
+
+def test_nyolab_provider_points_at_the_openai_compatible_endpoint(monkeypatch):
+    monkeypatch.setenv("NYOLAB_API_KEY", "test-key")
+    client = sx.build_openai_client("nyolab")
+    assert str(client.base_url).rstrip("/") == sx.PROVIDER_BASE_URLS["nyolab"].rstrip("/")
+    with pytest.raises(sx.ScoringRefusal, match="Unknown scoring provider"):
+        sx.build_openai_client("not-a-provider")

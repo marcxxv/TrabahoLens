@@ -45,6 +45,8 @@ class NormalisedRow:
     uncertainty_lower: float | None = None
     uncertainty_upper: float | None = None
     notes: str = ""
+    standard_error: float | None = None
+    coefficient_of_variation: float | None = None
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -65,6 +67,8 @@ class NormalisedRow:
             "uncertainty_lower": "" if self.uncertainty_lower is None else self.uncertainty_lower,
             "uncertainty_upper": "" if self.uncertainty_upper is None else self.uncertainty_upper,
             "notes": self.notes,
+            "standard_error": self.standard_error if self.standard_error is not None else "",
+            "coefficient_of_variation": self.coefficient_of_variation if self.coefficient_of_variation is not None else "",
         }
 
 
@@ -73,6 +77,7 @@ NORMALISED_ROW_COLUMNS = [
     "source_code_system", "source_code_version", "source_label", "measure",
     "value", "unit", "reference_period", "geography", "population_scope",
     "suppression_flag", "uncertainty_lower", "uncertainty_upper", "notes",
+    "standard_error", "coefficient_of_variation",
 ]
 
 

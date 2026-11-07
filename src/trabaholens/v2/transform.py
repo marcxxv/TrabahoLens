@@ -90,11 +90,20 @@ TRANSFORMATIONS: dict[str, Transformation] = {
         applies_to_measure="job_zone",
         produces_metric="onet_job_zone",
     ),
+    "T-014-sof-published-share": Transformation(
+        transformation_id="T-014-sof-published-share",
+        name="SOF published percentage as share",
+        description="PSA Table 2 percentage and standard error divided by 100 by the parser; no re-estimation, no renormalisation, no domestic denominator.",
+        applies_to_measure="ofw_published_share", produces_metric="ofw_distribution_share",
+    ),
 }
 
 TRANSFORMATION_BY_METRIC = {
     t.produces_metric: t for t in TRANSFORMATIONS.values() if t.produces_metric != "*"
 }
+# Retain the count-fixture path; real Table 2 uses the separate published-share
+# transformation chosen by its measure below.
+TRANSFORMATION_BY_METRIC["ofw_distribution_share"] = TRANSFORMATIONS["T-012-sof-distribution"]
 
 #: Classification versions this project can reconcile without a correspondence
 #: table. Anything else must go through an explicit mapping, not an assumption.
@@ -116,6 +125,8 @@ class TransformOutcome:
     population_scope: str = ""
     source_code_version: str = ""
     crosswalk_id: str = ""
+    standard_error: float | None = None
+    coefficient_of_variation: float | None = None
 
 
 def _group_key(row: NormalisedRow) -> tuple[str, str, str, str]:
@@ -188,7 +199,8 @@ def transform_rows(
     if transformation is None:
         return outcomes
 
-    relevant = [r for r in rows if r.measure == transformation.applies_to_measure]
+    relevant = [r for r in rows if r.measure == transformation.applies_to_measure or
+                (metric_id == "ofw_distribution_share" and r.measure == "ofw_published_share")]
     crosswalk_rows = crosswalk_rows or []
     version_correspondence_rows = version_correspondence_rows or []
     ofw_groups: dict[tuple[str, str, str, str], list[NormalisedRow]] = {}
@@ -197,6 +209,8 @@ def transform_rows(
             ofw_groups.setdefault(_group_key(item), []).append(item)
 
     for row in relevant:
+        transformation = (TRANSFORMATIONS["T-014-sof-published-share"]
+                          if row.measure == "ofw_published_share" else TRANSFORMATION_BY_METRIC[metric_id])
         # Classification version must be known and compatible. "unknown" is a
         # refusal, not a default: silently applying 2022 codes to a table that
         # used an earlier version is the failure mode this guard exists for.
@@ -294,7 +308,7 @@ def transform_rows(
             )
             continue
 
-        if metric_id == "ofw_distribution_share":
+        if metric_id == "ofw_distribution_share" and row.measure != "ofw_published_share":
             peers = ofw_groups[_group_key(row)]
             expected_major_codes = {code for code in canonical_codes if len(code) == 1}
             present_codes = {peer.source_code for peer in peers}
@@ -327,7 +341,7 @@ def transform_rows(
                 metric_id=metric_id,
                 psoc_code=canonical_code,
                 value=value,
-                reason="Transformed and published.",
+                reason=f"Transformed and published. {row.notes}".strip(),
                 transformation_id=transformation.transformation_id,
                 normalised_row_id=row.normalised_row_id,
                 reference_period=row.reference_period,
@@ -340,6 +354,8 @@ def transform_rows(
                 population_scope=row.population_scope,
                 source_code_version=row.source_code_version,
                 crosswalk_id=crosswalk_id,
+                standard_error=row.standard_error,
+                coefficient_of_variation=row.coefficient_of_variation,
             )
         )
 

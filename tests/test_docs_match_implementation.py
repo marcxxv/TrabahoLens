@@ -19,6 +19,7 @@ import yaml
 from trabaholens.v2 import psoc
 from trabaholens.v2.paths import (
     METRIC_OBSERVATIONS_CSV,
+    MODEL_SCORES_CSV,
     OCCUPATIONS_CSV,
     REPO_ROOT,
     SITE_DATA_JSON,
@@ -62,8 +63,7 @@ def test_observation_count_stated_in_limitations_is_correct():
     match = re.search(r"contains (\d+) rows: (\w+) published", text)
     assert match, "limitations.md no longer states observation and publication counts"
     assert int(match.group(1)) == len(rows)
-    words = {"zero": 0, "ten": 10}
-    assert words[match.group(2)] == sum(bool((row["metric_value"] or "").strip()) for row in rows)
+    assert int(match.group(2)) == sum(bool((row["metric_value"] or "").strip()) for row in rows)
 
 
 def test_published_value_count_matches_payload():
@@ -71,8 +71,11 @@ def test_published_value_count_matches_payload():
     canonical = list(csv.DictReader(METRIC_OBSERVATIONS_CSV.open(encoding="utf-8")))
     published = [row for row in canonical if (row["metric_value"] or "").strip()]
     assert payload["counts"]["published_values"] == len(published)
-    assert {row["metric_id"] for row in published} == {"employment_count"}
-    assert payload["counts"]["exposure_scores"] == 0
+    assert {row["metric_id"] for row in published} == {"employment_count", "ofw_distribution_share"}
+    # Exposure scores are published, but as their own evidence layer: they are
+    # not metric observations and must never be counted among them.
+    model_scores = list(csv.DictReader(MODEL_SCORES_CSV.open(encoding="utf-8")))
+    assert payload["counts"]["exposure_scores"] == len(model_scores)
     values = [
         metric["value"]
         for entry in payload["occupations"]
@@ -92,10 +95,8 @@ def test_classification_units_are_not_described_as_measured_occupations():
     """Finding 14: 53 aggregate units must not read as 53 occupations."""
     payload = _payload()
     counts = payload["counts"]
-    assert counts["detailed_occupations"] == 0, (
-        "detailed_occupations is non-zero, but PSOC minor and unit groups have not "
-        "been retrieved"
-    )
+    assert counts["detailed_occupations"] == sum(not o["is_aggregate"] for o in payload["occupations"])
+    assert not any(o["metrics"].get("employment_count", {}).get("value") is not None for o in payload["occupations"] if not o["is_aggregate"])
     assert "vocabulary_note" in counts
     # The interface must not carry a bare "N occupations" headline.
     html = (REPO_ROOT / "site" / "index.html").read_text(encoding="utf-8")
@@ -198,11 +199,17 @@ def test_dashboard_only_activates_source_backed_values():
 
     This is intentionally a static contract as well as a release-data check:
     the dashboard filters on both ``published`` availability and a non-null
-    value, and all other metric tabs are rendered disabled.
+    value. Unavailable tabs stay selectable so their explanation is reachable
+    by keyboard and touch, but they have no record set, so nothing is drawn.
     """
     html = (REPO_ROOT / "site" / "index.html").read_text(encoding="utf-8")
-    assert 'metric.availability === "published" && metric.value !== null' in html
-    assert "button.disabled = true" in html
+    js = (REPO_ROOT / "site" / "dashboard.js").read_text(encoding="utf-8")
+    assert 'metric.availability === "published" && metric.value !== null' in js
+    assert "const visibleRecords = () => records[mode] || [];" in js
+    modes = re.search(r"const MODES = \{(.*?)\n\};", js, re.S).group(1)
+    unavailable = re.search(r"const UNAVAILABLE = \{(.*?)\n\};", js, re.S).group(1)
+    for key in re.findall(r"^\s*(\w+):", unavailable, re.M):
+        assert f"{key}:" not in modes, f"{key} is unavailable but has a data mode"
     assert "Unavailable means unavailable—not zero" in html
 
     payload = _payload()
@@ -212,7 +219,7 @@ def test_dashboard_only_activates_source_backed_values():
         for metric_id, metric in occupation["metrics"].items()
         if metric["availability"] == "published" and metric["value"] is not None
     }
-    assert published_metric_ids == {"employment_count"}
+    assert published_metric_ids == {"employment_count", "ofw_distribution_share"}
 
 
 def test_dashboard_has_no_embedded_employment_values():

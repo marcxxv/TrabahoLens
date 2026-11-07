@@ -29,12 +29,12 @@ the Survey on Overseas Filipinos, and informality statistics.
 
 | | |
 | --- | --- |
-| Status in this release | The LFS 2024 snapshot is retrieved into gitignored `data/raw/` and its hash/provenance are published; raw PSA bytes are not redistributed. Other PSA sources remain unavailable. |
+| Status in this release | Reviewed LFS, PSOC, SOF and OWS snapshots are retained unmodified in an explicit raw-file allowlist, with source URLs, dates and hashes. |
 | Licence | The PSA website states that its data and content are made available under **Creative Commons Attribution 4.0 International (CC BY 4.0)** unless otherwise stated. Individual datasets may carry their own terms that override that default. |
 | Licence source | The site-wide notice on `https://psa.gov.ph/`, confirmed on **2026-09-18**, states CC BY 4.0 unless otherwise stated. |
 | Dataset-specific exception | None identified. The dataset page must be checked as well as the site notice, because a per-dataset term overrides the default. |
 | Required attribution | Cite the PSA, the named survey or classification, and the round or edition. For example: *Philippine Statistics Authority, Labor Force Survey, October 2024.* |
-| How this project handles it | Data is acquired by script into `data/raw/`, which is gitignored. Only the URL, retrieval timestamp and SHA-256 are committed, in `data/sources/retrieval-manifest.json`. Anyone can confirm they hold the same bytes without this repository redistributing them. |
+| How this project handles it | Selected public snapshots are retained for reproducibility under the publisher's CC BY 4.0 notice, rechecked 2026-09-28. Source-specific exceptions were not identified. Raw bytes are unchanged; derived tables convert units, select slices and withhold inconsistent records as documented. PSA does not endorse this project. |
 | Open question | Whether bulk redistribution of PSA tables is permitted. Treated as **not permitted** until confirmed. |
 
 **A caution that is about accuracy, not licensing.** Citing "PSA" is not the
@@ -49,12 +49,12 @@ retrieval manifest entry backs it.
 
 | | |
 | --- | --- |
-| Status in this release | **O*NET 31.0 retrieved into gitignored `data/raw/`, hash committed, raw archive not redistributed.** No O*NET-derived metric is published. |
+| Status in this release | **Original O*NET 31.0 ZIP retained unmodified in the explicit raw-file allowlist.** No O*NET-derived Philippine metric is published. |
 | Licence | O\*NET data are provided by USDOL/ETA under the **Creative Commons Attribution 4.0 International (CC BY 4.0)** licence. Redistribution and adaptation are permitted with attribution. |
 | Pinned release | **31.0**, not "latest". A specific release is pinned so a score traces to the exact task text that produced it; "latest" would silently change task statements under existing scores. The prior branch pinned 30.2 with no stated reason, which was staleness rather than a reproducibility argument. Update policy: retrieve, hash, diff the mapped occupations, re-score. Scores from different releases are not comparable and the harness refuses to mix task-source versions in one run. |
-| Required attribution | *This product uses data from O\*NET OnLine by the U.S. Department of Labor, Employment and Training Administration (USDOL/ETA). O\*NET® is a trademark of USDOL/ETA. Used under CC BY 4.0.* |
+| Required attribution | This repository includes the unmodified [O*NET 31.0 Database](https://www.onetcenter.org/database.html) by the U.S. Department of Labor, Employment and Training Administration (USDOL/ETA), used under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). O*NET® is a trademark of USDOL/ETA. No endorsement is implied. |
 | Trademark | O\*NET is a registered trademark of USDOL/ETA. The licence covers the data, not the mark; do not imply endorsement. |
-| How this project handles it | Although CC BY 4.0 would permit vendoring the archive, it is downloaded by script and hashed rather than committed, so the repository stays small and the retrieved version stays verifiable. |
+| How this project handles it | The hash-pinned ZIP is allowlisted so fresh checkouts can reproduce source state without a network download. Other raw downloads remain ignored. License rechecked at https://www.onetcenter.org/license_db.html on 2026-09-28. |
 
 **Accuracy condition attached to use.** O\*NET describes **United States**
 occupations. Any O\*NET-derived value displayed against a Philippine occupation

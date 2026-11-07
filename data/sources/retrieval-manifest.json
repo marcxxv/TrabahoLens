@@ -86,6 +86,52 @@
       "last_modified": "Sun, 30 Aug 2026 08:36:25 GMT",
       "request_method": "GET",
       "expected_format": "zip"
+    },
+    {
+      "source_id": "psa_sof",
+      "url": "https://psa.gov.ph/system/files/iesd/TABLE%202.%20Percent%20Distribution%20of%20Overseas%20Filipino%20Workers%20and%20Overseas%20Contract%20Workers%20by%20Sex%2C%20Age%20Group%2C%20Major%20Occupation%2C%20and%20Region%20with%20Measures%20of%20Precision%202024.xlsx",
+      "destination": "data/raw/psa_sof/sof_2024_table_2_major_occupation.xlsx",
+      "attempted_at": "2026-09-28T03:05:50Z",
+      "http_status": 403,
+      "status": "failed",
+      "error": "HTTPError: 403 Client Error: Forbidden for url: https://psa.gov.ph/system/files/iesd/TABLE%202.%20Percent%20Distribution%20of%20Overseas%20Filipino%20Workers%20and%20Overseas%20Contract%20Workers%20by%20Sex%2C%20Age%20Group%2C%20Major%20Occupation%2C%20and%20Region%20with%20Measures%20of%20Precision%202024.xlsx",
+      "sha256": null
+    },
+    {
+      "source_id": "psa_psoc",
+      "url": "https://psa.gov.ph/sites/default/files/kmcd/files/2022-Updates-to-the-2012-PSOC.xlsx",
+      "destination": "data/raw/psa_psoc/psoc_2022_updates.xlsx",
+      "status": "hashed_existing_file",
+      "acquisition_method": "public_browser_download",
+      "retrieved_at": "2026-09-28T05:36:56Z",
+      "attempted_at": "2026-09-28T05:36:56Z",
+      "sha256": "666e276e061efcf6939a4839420ddb0a9a30d3786ab41c5892a81a915858941c",
+      "bytes": 922113,
+      "expected_format": "xlsx"
+    },
+    {
+      "source_id": "psa_sof",
+      "url": "https://psa.gov.ph/system/files/iesd/TABLE%202.%20Percent%20Distribution%20of%20Overseas%20Filipino%20Workers%20and%20Overseas%20Contract%20Workers%20by%20Sex%2C%20Age%20Group%2C%20Major%20Occupation%2C%20and%20Region%20with%20Measures%20of%20Precision%202024.xlsx",
+      "destination": "data/raw/psa_sof/sof_2024_table_2_major_occupation.xlsx",
+      "status": "hashed_existing_file",
+      "acquisition_method": "public_browser_download",
+      "retrieved_at": "2026-09-28T05:36:56Z",
+      "attempted_at": "2026-09-28T05:36:56Z",
+      "sha256": "f2ee9ecd9f2231fe235d29841dac09a4fc978a9dfe29c6b92d9a17330bc8be80",
+      "bytes": 29484,
+      "expected_format": "xlsx"
+    },
+    {
+      "source_id": "psa_ows",
+      "url": "https://psa.gov.ph/system/files/lsredsd/3_2024%20OWS%20SE%20CV_30%20October%202025.xlsx",
+      "destination": "data/raw/psa_ows/ows_2024_wage_estimates_precision.xlsx",
+      "status": "hashed_existing_file",
+      "acquisition_method": "public_browser_download",
+      "retrieved_at": "2026-09-28T05:36:56Z",
+      "attempted_at": "2026-09-28T05:36:56Z",
+      "sha256": "78823a5d60b625398ce97cebfde9e5dd0df7d412c6862d2e1b4bd245ea91eef2",
+      "bytes": 633652,
+      "expected_format": "xlsx"
     }
   ]
 }

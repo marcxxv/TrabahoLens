@@ -356,3 +356,75 @@ class PsaSofOccupationParser(_PxWebCsvParser):
     unit = "persons"
     population_scope = "overseas Filipino workers as defined by the SOF round"
     expected_source_table = "SOF overseas Filipino workers by major occupation group"
+    parser_version = "0.3.0"
+
+    def validate_format(self, path: Path) -> None:
+        if path.suffix.lower() == ".xlsx":
+            from ..acquire import _validate_download
+            _validate_download(path, "xlsx", "")
+        else:
+            super().validate_format(path)
+
+    def parse(self, path: Path) -> ParseResult:
+        if path.suffix.lower() != ".xlsx":
+            return super().parse(path)
+        from openpyxl import load_workbook
+        result = ParseResult(self.parser_id, self.parser_version)
+        workbook = load_workbook(path, read_only=True, data_only=True)
+        try:
+            sheet = workbook["Tab 2"]
+            rows = list(sheet.iter_rows(max_col=21, values_only=True))
+            expected = {
+                (1, 2): "TABLE 2. Percent Distribution of Overseas Filipino Workers and Overseas Contract Workers by Sex, Age Group, Major Occupation, and Region with Measures of Precision: 2024",
+                (2, 4): "Overseas Filipino Workers", (3, 4): "Both Sexes",
+                (4, 4): "Percent Distribution (%)", (4, 5): "Standard Error\n(%)",
+                (4, 6): "Coefficient of Variation (%)", (18, 3): "Percent Distrbution by Major Occupation",
+                (31, 3): "Percent Distrbution by Region",
+            }
+            for (r, c), label in expected.items():
+                if rows[r-1][c-1] != label:
+                    raise FormatValidationError(f"SOF Tab 2!{r},{c}: unexpected table structure")
+            labels = {name.casefold(): code for name, code in PSOC_MAJOR_LABEL_TO_CODE.items()}
+            seen = set()
+            for r in range(20, 30):
+                label = str(rows[r-1][2]).strip()
+                code = labels.get(label.casefold())
+                if code is None or code in seen:
+                    raise FormatValidationError(f"SOF Tab 2!C{r}: unknown or duplicate major-group label")
+                seen.add(code)
+                value, flag = _parse_number(rows[r-1][3])
+                se, se_flag = _parse_number(rows[r-1][4])
+                cv, cv_flag = _parse_number(rows[r-1][5])
+                if value is not None and (not math.isfinite(value) or not 0 <= value <= 100):
+                    raise FormatValidationError(f"SOF Tab 2!D{r}: impossible percentage")
+                if value is not None and (se_flag or cv_flag or se < 0 or cv < 0 or not math.isfinite(se+cv)):
+                    raise FormatValidationError(f"SOF Tab 2!E{r}: invalid precision")
+                if value is not None and value > 0 and abs(cv - 100*se/value) > 0.05:
+                    raise FormatValidationError(f"SOF Tab 2!F{r}: CV disagrees with standard error")
+                notes = (
+                    "Publisher's percentage divided by 100; not recomputed from counts or renormalised. "
+                    "PSOC version: SOF 2024 Technical Notes p.2, limitation 5. "
+                    "Blank armed-forces percentage stays missing despite zero precision cells. "
+                    "https://psa.gov.ph/system/files/iesd/SOF-2024-Technical-Notes.pdf"
+                )
+                if value is not None and cv > 10:
+                    notes += " PSA cautions that CV above 10% may be unreliable due to few observations."
+                result.rows.append(NormalisedRow(
+                    normalised_row_id=f"{self.parser_id}:Tab 2:D{r}", source_id=self.source_id,
+                    source_table="SOF 2024 Table 2; Tab 2!C20:F29; OFWs, both sexes",
+                    source_code=code, source_code_system="PSOC", source_code_version="PSOC 2012",
+                    source_label=label, measure="ofw_published_share", value=None if value is None else value/100,
+                    unit="share of all OFWs", reference_period="2024-04-01 to 2024-09-30",
+                    geography="Philippines (households reporting overseas workers)",
+                    population_scope="OFWs who departed October 2019-September 2024 and worked abroad April-September 2024; families still residing in the Philippines; both sexes",
+                    suppression_flag=flag, notes=notes,
+                    standard_error=None if value is None else se/100,
+                    coefficient_of_variation=None if value is None else cv,
+                ))
+            # The source itself discloses rounding. Do not force the sum to one.
+            published = [r.value for r in result.rows if r.value is not None]
+            if abs(sum(published)-1) > 0.001:
+                raise FormatValidationError("SOF occupation distribution does not reconcile within rounding tolerance")
+        finally:
+            workbook.close()
+        return result
