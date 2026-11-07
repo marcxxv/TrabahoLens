@@ -106,7 +106,7 @@ const UNAVAILABLE = {
 };
 const ZOOM_MIN = 1, ZOOM_MAX = 6;
 let rects = [], hovered = null, selected = null, panX = 0, panY = 0, width = 0, height = 0, returnFocus = null, keyIndex = -1;
-let compactLayout = false, gap = 1.5, zoomFrame = null, drawQueued = false, suppressClick = false, clickTimer = null, lastTap = null;
+let wheelTarget = 0, compactLayout = false, gap = 1.5, zoomFrame = null, drawQueued = false, suppressClick = false, clickTimer = null, lastTap = null;
 let isPanning = false, lastPan = null, pinch = null, colourRange = null;
 const canvas = $("canvas"), ctx = canvas.getContext("2d"), pointers = new Map(), textWidths = new Map();
 const visibleRecords = () => records[mode] || [];
@@ -291,6 +291,9 @@ function precisionText(r) {
 }
 function showTooltip(r, mx, my) {
   const tip=$("tooltip");tip.classList.toggle("compact",compactLayout);
+  tip.style.setProperty("--tt-accent", validValue(r) ? tileColour(r, 1) : "rgba(255,255,255,.25)");
+  tip.style.setProperty("--tt-pos", mode === "exposure" && validValue(r) ? `${Math.round(r.value / 5 * 100)}%` : "0%");
+  tip.classList.toggle("has-bar", mode === "exposure" && validValue(r));
   tip.querySelector(".tt-category").textContent=r.categoryLabel;tip.querySelector(".tt-title").textContent=r.title;
   tip.querySelector(".tt-percentile").textContent=[`PSOC ${r.code}`, r.reference_period].filter(Boolean).join(" · ");
   tip.querySelector(".tt-exposure").textContent=mode === "exposure" && validValue(r) ? `Technical task exposure ${displayValue(r)}` : displayValue(r);
@@ -360,7 +363,7 @@ function animateZoom(scale, targetX, targetY, duration = 520) {
   if (reducedMotion()) { zoom=end;panX=targetX;panY=targetY;clampPan();draw();return; }
   const start={zoom,panX,panY}, t0=performance.now();
   const frame = now => {
-    const raw=Math.min(1,(now-t0)/duration), ease=1-Math.pow(1-raw,3);
+    const raw=Math.min(1,(now-t0)/duration), ease=1-Math.pow(1-raw,4);
     zoom=start.zoom+(end-start.zoom)*ease;panX=start.panX+(targetX-start.panX)*ease;panY=start.panY+(targetY-start.panY)*ease;
     clampPan();draw();zoomFrame=raw<1?requestAnimationFrame(frame):null;
   };
@@ -409,7 +412,12 @@ canvas.addEventListener("click",e=>{
 canvas.addEventListener("dblclick",e=>{const r=hit(e.clientX,e.clientY);if(!r)return;e.preventDefault();clearTimeout(clickTimer);zoomToRect(r);});
 canvas.addEventListener("wheel",e=>{
   if(!e.ctrlKey&&!e.metaKey)return;e.preventDefault();
-  const b=canvas.getBoundingClientRect();zoomAt(e.clientX-b.left,e.clientY-b.top,zoom*(e.deltaY>0?.9:1.1));
+  // Proportional, eased zoom: the target accumulates across wheel ticks and the
+  // view glides toward it, so trackpad pinch and mouse wheels both feel smooth.
+  const b=canvas.getBoundingClientRect(), x=e.clientX-b.left, y=e.clientY-b.top;
+  wheelTarget=Math.max(ZOOM_MIN,Math.min(ZOOM_MAX,(zoomFrame&&wheelTarget?wheelTarget:zoom)*Math.exp(-Math.max(-60,Math.min(60,e.deltaY))*.0042)));
+  const wx=(x-panX)/zoom, wy=(y-panY)/zoom;hideTooltip();
+  animateZoom(wheelTarget,x-wx*wheelTarget,y-wy*wheelTarget,220);
 },{passive:false});
 canvas.addEventListener("pointerdown",e=>{
   if(!pointers.size)suppressClick=false;

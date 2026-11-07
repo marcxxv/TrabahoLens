@@ -108,7 +108,7 @@ await key("Escape", "Escape", { vk: 27 }); await sleep(700);
 check("Escape resets zoom", await ev(`zoom`) === 1);
 await send("Input.dispatchMouseEvent", { type: "mouseWheel", x: t.x, y: t.y, deltaX: 0, deltaY: -100, modifiers: 2 }); await sleep(100);
 check("Ctrl+wheel zooms in", await ev(`zoom`) > 1, `zoom ${(await ev("zoom")).toFixed(2)}`);
-const z = await ev(`zoom`); await send("Input.dispatchMouseEvent", { type: "mouseWheel", x: t.x, y: t.y, deltaX: 0, deltaY: 100, modifiers: 0 }); await sleep(100);
+await sleep(400); const z = await ev(`zoom`); await send("Input.dispatchMouseEvent", { type: "mouseWheel", x: t.x, y: t.y, deltaX: 0, deltaY: 100, modifiers: 0 }); await sleep(400);
 check("plain wheel does not zoom", await ev(`zoom`) === z);
 await ev(`resetZoom(false)`);
 // keyboard
