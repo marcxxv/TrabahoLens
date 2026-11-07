@@ -984,3 +984,8 @@
   .stats-row .stat-big.stat-text{font-size:14px;line-height:1.25}
   .stats-row .stat-section h3{font-size:10px;letter-spacing:.07em}
 }
+
+/* Tighter intro so the map starts higher, as in the reference. */
+.intro h1{margin-bottom:6px}
+.intro p{margin:0 0 6px;line-height:1.5}
+.intro details{margin:4px 0 0}

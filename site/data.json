@@ -4,7 +4,7 @@
     "release_id": "v2.0.0-pre",
     "release_date": "2026-01-01T00:00:00Z",
     "generated_at": "2026-01-01T00:00:00Z",
-    "code_commit": "7719bbef2733e67fed72106823639a8acd91ca52",
+    "code_commit": "f8b8c0d0db21e74721f3ca724c8e656d8d7a58c6",
     "code_commit_note": "The commit the build ran at. It necessarily precedes the commit that records it, because committing this manifest moves HEAD. Treat it as 'generated from this input state', not as a self-describing id. `make check-stale` excludes it for the same reason.",
     "schema_version": "2.0.0",
     "methodology_version": "2.0.0",
