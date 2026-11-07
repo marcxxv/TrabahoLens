@@ -64,7 +64,9 @@ for (const [label, w, h, mobile] of [["desktop", 1440, 900, false], ["tablet", 8
 if (process.env.SHOTS) { ws.close(); chrome.kill(); setTimeout(()=>process.exit(0),500); await sleep(1e9); }
 // ── Desktop interactions ─────────────────────────────────────────────────
 await viewport(1440, 900, false); await load(LOCAL);
-check("fresh profile starts on Employment", await ev(`mode`) === "employment");
+check("fresh profile starts on AI task exposure when a run is published", await ev(`mode`) === "exposure");
+await ev(`document.querySelector('#colorToggle button[data-mode="employment"]').click()`); await sleep(300);
+check("employment layer selectable", await ev(`mode`) === "employment");
 check("employment boxes equal published major groups", await ev(`rects.length`) === await ev(`records.employment.filter(validValue).length`), `${await ev("rects.length")} boxes`);
 check("employment box areas proportional to estimates", await ev(`(()=>{const t=rects.reduce((s,r)=>s+r.value,0),a=rects.reduce((s,r)=>s+r.w*r.h,0);return rects.every(r=>Math.abs(r.w*r.h/a-r.value/t)<0.02)})()`));
 let t = await target();
@@ -122,7 +124,7 @@ check("focus returns to canvas after close", await ev(`document.activeElement.id
 for (const m of ["employment", "exposure", "wages", "education", "outlook", "ofw", "informal"]) {
   await ev(`document.querySelector('#colorToggle button[data-mode="${m}"]').click()`); await sleep(250);
   const s = await ev(`({mode,boxes:rects.length,desc:layerDesc.textContent,count:resultCount.textContent,enabled:!document.querySelector('#colorToggle button[data-mode="${m}"]').disabled,pressed:document.querySelector('#colorToggle button[data-mode="${m}"]').getAttribute("aria-pressed"),legend:[legendLow.textContent,legendHigh.textContent]})`);
-  const unavailable = ["exposure", "education", "outlook", "informal"].includes(m);
+  const unavailable = ["education", "outlook", "informal"].includes(m);
   check(`layer ${m}: selectable and explained`, s.mode === m && s.enabled && s.pressed === "true" && (unavailable ? s.boxes === 0 && s.desc.includes("unavailable") : s.boxes > 0), `${s.boxes} boxes · ${s.count} · legend ${s.legend.join("–")}`);
   await shot(`local-desktop-layer-${m}`, false);
 }

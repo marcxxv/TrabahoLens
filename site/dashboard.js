@@ -6,7 +6,7 @@ const validValue = metric => metric.availability === "published" && metric.value
 const fmt = (n, digits = 0) => new Intl.NumberFormat("en-PH", { maximumFractionDigits: digits }).format(n);
 const compact = n => new Intl.NumberFormat("en-PH", { notation: "compact", maximumFractionDigits: 2 }).format(n);
 const MODES = {
-  exposure: {label:"AI task exposure", title:"Generative-AI task exposure by occupation", description:"Experimental · each PSA task statement for a PSOC unit group was scored by an AI model at least twice; the box shows the median task score (0–5).", encoding:"Equal-area boxes = PSOC unit groups, NOT employment. Colour = median technical task exposure. Faint boxes have no score.", note:"Exposure describes how much of an occupation's tasks generative AI could assist with or perform. It is not an estimate of automation, displacement, layoffs or future employment. Scores are experimental and not yet human-reviewed."},
+  exposure: {label:"AI task exposure", title:"Generative-AI task exposure by occupation", description:"Model-estimated · each PSA task statement for a PSOC unit group was scored by an AI model at least twice; the box shows the median task score (0–5).", encoding:"Equal-area boxes = PSOC unit groups, NOT employment. Colour = median technical task exposure. Faint boxes have no score.", note:"Exposure describes how much of an occupation's tasks generative AI could assist with or perform. It is not an estimate of automation, displacement, layoffs or future employment. Scores are model estimates and have not been independently validated."},
   employment: {label:"Employment", metric:"employment_count", title:"Employment by major occupation group", description:"PSA LFS · 2024 annual estimates · employed persons, not jobs or vacancies.", encoding:"Area = employed persons. Colour = group employment. No detailed occupational counts are inferred.", note:"The group estimates sum to one person more than the source total because of source rounding. We retain the published cells unchanged."},
   wages: {label:"Wage references", title:"Wage rates by occupation × industry", description:"PSA OWS · August 2024 · average monthly wage rate, including regular cash allowances. Covered formal establishments only.", encoding:"Equal-area boxes = separate job-position × industry records, NOT worker counts. Colour = monthly wage rate (log scale).", note:"Source-native occupation codes, not reconciled to PSOC 2022. Never sum or average these industry slices into national occupational pay. Withheld records remain in table view and exports."},
   ofw: {label:"OFW distribution", metric:"ofw_distribution_share", title:"How OFWs are distributed across occupations", description:"PSA SOF · April–September 2024 · share of the survey's OFWs in each major occupation group. Not the OFW share of domestic occupations.", encoding:"Area and colour = published share of all OFWs. Not domestic employment. Missing cells are not plotted.", note:"The armed-forces percentage is blank in the source, not zero. Source rounding is retained; percentages are not renormalised. CV above 10% is flagged as less precise."}
@@ -14,7 +14,7 @@ const MODES = {
 let payload, records = {}, mode = "exposure", filtered = [], zoom = 1, tableMode = false, page = 0;
 const MISSING_EXPOSURE = {no_psa_tasks:"No PSA task list", not_scored:"Not yet scored"};
 const displayValue = r => !validValue(r) ? (MISSING_EXPOSURE[r.availability] || "Unavailable") : mode === "exposure" ? `${fmt(r.value, 1)} / 5` : mode === "wages" ? `₱${fmt(r.value, 2)}` : mode === "ofw" ? `${fmt(r.value * 100, 3)}%` : `${fmt(r.value)} persons`;
-const gradeLabel = r => !validValue(r) ? (MISSING_EXPOSURE[r.availability] || "Withheld / missing") : mode === "exposure" ? `Experimental · ${r.human_review_status === "human_reviewed" ? "human-reviewed" : "not human-reviewed"}` : r.coefficient_of_variation > 10 ? "Low precision · CV > 10%" : r.standard_error === null ? "Precision not supplied" : "Published sampling precision";
+const gradeLabel = r => !validValue(r) ? (MISSING_EXPOSURE[r.availability] || "Withheld / missing") : mode === "exposure" ? `Model estimate · ${r.human_review_status === "human_reviewed" ? "expert-reviewed" : "not independently validated"}` : r.coefficient_of_variation > 10 ? "Low precision · CV > 10%" : r.standard_error === null ? "Precision not supplied" : "Published sampling precision";
 // PSA prints titles in capitals; display them in title case. Codes, not titles,
 // identify occupations, so this is presentation only.
 const KEEP_UPPER = new Set(["ICT", "TV", "IT"]), KEEP_LOWER = new Set(["and","of","in","the","for","to","or","on","with","by","a","an","as","at","excluding","except","not","elsewhere","classified"]);
@@ -41,6 +41,13 @@ function assertRelease(data) {
   }));
 }
 
+const median = values => { const s = [...values].sort((a,b)=>a-b), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m-1]+s[m])/2; };
+function neighbourContext(code) {
+  const peers = payload.occupations.filter(o => o.level === "psoc_unit_group" && o.psoc_code !== code && o.psoc_code.slice(0,3) === code.slice(0,3))
+    .map(o => (o.exposure || []).find(e => e.dimension === "A" && e.score !== null)).filter(Boolean).map(e => e.score);
+  return peers.length ? {minor:code.slice(0,3), n:peers.length, median:median(peers)} : null;
+}
+
 function buildRecords() {
   const majors = new Map(payload.occupations.filter(o => o.level === "psoc_major_group").map(o => [o.psoc_code, displayTitle(o.title)]));
   for (const key of ["employment", "ofw"]) records[key] = payload.occupations.filter(o => o.level === "psoc_major_group" && o.metrics[MODES[key].metric]).map(o => ({...o.metrics[MODES[key].metric], id:`${o.occupation_id}:${key}`, title:displayTitle(o.title), code:o.psoc_code, category:o.psoc_code, categoryLabel:displayTitle(o.title)}));
@@ -51,7 +58,9 @@ function buildRecords() {
     const base = {id:`${o.occupation_id}:exposure`, title:displayTitle(o.title), code:o.psoc_code, category:o.psoc_major, categoryLabel:majors.get(o.psoc_major) || o.psoc_major,
       source_id:"llm_scoring", derivation_class:"model_derived", source_authority:"project_generated", source_granularity:"psoc_unit_group", display_granularity:"psoc_unit_group",
       task_source:coverage.task_source, task_source_file_hash:coverage.task_source_file_hash, source_url:coverage.task_source_url, unit:"median task score, 0–5 ordinal"};
-    if (!a) return {...base, value:null, availability: noTasks.has(o.psoc_code) ? "no_psa_tasks" : "not_scored", reference_period:""};
+    // A group without a score keeps value null (never filled from siblings). Its
+    // scored neighbours are shown beside it as context, labelled as such.
+    if (!a) return {...base, value:null, availability: noTasks.has(o.psoc_code) ? "no_psa_tasks" : "not_scored", reference_period:"", context:neighbourContext(o.psoc_code)};
     return {...base, value:a.score, availability:"published", reference_period:a.scoring_date.slice(0,10), retrieved_at:a.scoring_date, confidence_grade:`evidence ${a.evidence_confidence} / 5`,
       model_id:a.model_id, model_provider:a.model_provider, rubric_version:a.rubric_version, prompt_version:a.prompt_version, human_review_status:a.human_review_status,
       raw_response_reference:a.raw_response_reference, attempted_attempts:a.attempted_attempts, successful_attempts:a.successful_attempts, temperature:a.temperature,
@@ -109,21 +118,30 @@ function requestDraw() { if (drawQueued) return; drawQueued = true; requestAnima
 function saveSetting(key, value) { try { localStorage.setItem(key, value); } catch {} }
 function loadSetting(key) { try { return localStorage.getItem(key); } catch { return null; } }
 
-// Colour encodes the layer's own published value. Neither ramp is a hazard
-// ramp: survey values use slate-to-sand, model-derived scores use their own
-// violet hue so evidence classes stay visually distinct. Exposure uses the
+// Colour encodes the layer's own published value. Survey layers use slate-to-sand
+// so they stay visually distinct from the model-derived exposure scale. Exposure uses the
 // fixed 0-5 rubric scale rather than the observed range, so a colour means
 // the same score in every filter and every future run.
+// Exposure uses the green > amber > red scale of Andrej Karpathy's US Job Market
+// Visualizer (karpathy.ai/jobs), with the same contrast boost, at the owner's
+// request: green is little task exposure, red is most task content. The colour
+// is an ordering of a task score only. It does not mean harm, and the text
+// beside it never frames exposure as risk or job loss.
+const EXPOSURE_RAMP = [[46,204,113],[241,196,15],[231,76,60]];
+const boostContrast = t => { const c = (Math.min(1, Math.max(0, t)) - .5) * 2; return .5 + .5 * Math.sign(c) * Math.pow(Math.abs(c), .55); };
+function rampAt(stops, t) {
+  const x = boostContrast(t) * (stops.length - 1), i = Math.min(stops.length - 2, Math.floor(x)), f = x - i;
+  return stops[i].map((c, k) => Math.round(c + (stops[i+1][k] - c) * f));
+}
 const scaleValue = n => mode === "wages" ? Math.log(n) : n;
 function colourAt(t, alpha) {
-  if (mode === "exposure") return `rgba(${Math.round(72+158*t)},${Math.round(84+122*t)},${Math.round(200+55*t)},${Math.min(1, alpha + .25)})`;
+  if (mode === "exposure") { const [r, g, b] = rampAt(EXPOSURE_RAMP, t); return `rgba(${r},${g},${b},${Math.min(1, alpha + .25)})`; }
   return `rgba(${Math.round(51+137*t)},${Math.round(75+104*t)},${Math.round(103+52*t)},${alpha})`;
 }
 function tileColour(r, alpha) {
   if (!validValue(r)) return `rgba(255,255,255,${alpha * .1})`;
   const [lo, hi] = colourRange; return colourAt(hi === lo ? .5 : (scaleValue(r.value)-lo)/(hi-lo), alpha);
 }
-const median = values => { const s = [...values].sort((a,b)=>a-b), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m-1]+s[m])/2; };
 
 function selectMode(key) {
   if (!MODES[key] && !UNAVAILABLE[key]) key = "employment";
@@ -157,7 +175,7 @@ function update() {
   $("statTotalLabel").textContent = UNAVAILABLE[mode] ? "no validated values" : mode === "exposure" ? "PSOC unit groups shown" : mode === "employment" ? "sum of shown group estimates" : mode === "ofw" ? "of all survey OFWs; not renormalised" : "occupation × industry records";
   const cv = usable.filter(r=>Number.isFinite(r.coefficient_of_variation));
   const scored = (records.exposure || []).filter(validValue);
-  const exposureBlock = scored.length ? ["AI task exposure", "Experimental", `${fmt(scored.length)} unit groups scored`] : ["AI task exposure", "Not scored", "no accepted scoring run"];
+  const exposureBlock = scored.length ? ["AI task exposure", "Model-estimated", `${fmt(scored.length)} unit groups scored`] : ["AI task exposure", "Not scored", "no accepted scoring run"];
   const stats = mode === "exposure" ? [
     ["Median task score", usable.length ? `${fmt(median(usable.map(r=>r.value)),1)}/5` : "—", "unweighted across shown groups"],
     ["High exposure", usable.length ? fmt(usable.filter(r=>r.value>=4).length) : "—", "unit groups with median ≥ 4"],
@@ -235,6 +253,7 @@ function draw() {
     const x=r.x+g,y=r.y+g,w=r.w-2*g,h=r.h-2*g;if(w<=0||h<=0)continue;
     const isSelected = selected?.id===r.id, isHovered = hovered?.id===r.id;
     ctx.fillStyle=tileColour(r, isHovered ? .8 : isSelected ? .7 : .5);ctx.fillRect(x,y,w,h);
+    if(!validValue(r)&&mode==="exposure"){ctx.save();ctx.strokeStyle="rgba(255,255,255,.22)";ctx.lineWidth=1/zoom;ctx.setLineDash([4/zoom,3/zoom]);ctx.strokeRect(x+.5/zoom,y+.5/zoom,w-1/zoom,h-1/zoom);ctx.restore();}
     if(isSelected||isHovered){ctx.strokeStyle="#f2c98f";ctx.lineWidth=(isSelected?2.5:1.5)/zoom;ctx.strokeRect(x,y,w,h);}
   }
   ctx.restore();
@@ -282,7 +301,8 @@ function showTooltip(r, mx, my) {
     ["Attempts", `${fmt(r.successful_attempts)} successful per task`],
     ["Model", r.model_id],
     ["Review", gradeLabel(r)]
-  ] : [["Status", displayValue(r)], ["Why", r.availability === "no_psa_tasks" ? "PSA's PSOC entry has no task list" : "Not in the published scoring run"]])
+  ] : [["Status", displayValue(r)], ["Why", r.availability === "no_psa_tasks" ? "PSA's PSOC entry has no task list" : "Not in the published scoring run"],
+      ...(r.context ? [["Nearby groups", `${r.context.n} scored in ${r.context.minor}: median ${fmt(r.context.median,1)} / 5 (context only, not this group's score)`]] : [])])
   : [["Estimate",displayValue(r)],["Precision",precisionText(r)],["Status",gradeLabel(r)],["Evidence",`${r.derivation_class} · grade ${r.confidence_grade}`],["Resolution",String(r.source_granularity).replaceAll("_"," ")],["Source",`${r.source_id} · retrieved ${String(r.retrieved_at).slice(0,10)}`]];
   tip.querySelector(".tt-stats").replaceChildren(...rows.flatMap(([label,value])=>[node("span",label,"label"),node("span",value,"value")]));
   tip.querySelector(".tt-rationale").textContent=mode === "exposure" ? "Potential task interaction with generative AI, not an employment outcome." : r.population_scope||"";

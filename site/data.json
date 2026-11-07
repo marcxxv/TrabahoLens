@@ -2,9 +2,9 @@
   "schema": "trabaholens-site-payload/2",
   "release": {
     "release_id": "v2.0.0-pre",
-    "release_date": "2026-09-14T00:00:00Z",
-    "generated_at": "2026-09-14T00:00:00Z",
-    "code_commit": "1d652a7d3b65487baa1207dbd8910d0d5376db67",
+    "release_date": "2026-01-01T00:00:00Z",
+    "generated_at": "2026-01-01T00:00:00Z",
+    "code_commit": "97787ca131d35bf0fdc18a1e937be1b3748ae2bc",
     "code_commit_note": "The commit the build ran at. It necessarily precedes the commit that records it, because committing this manifest moves HEAD. Treat it as 'generated from this input state', not as a self-describing id. `make check-stale` excludes it for the same reason.",
     "schema_version": "2.0.0",
     "methodology_version": "2.0.0",

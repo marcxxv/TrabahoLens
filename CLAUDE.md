@@ -66,8 +66,11 @@ properties for theming, with a light-mode block. No build step, no framework.
 The interface renders only what `data.json` gives it: no label set, count or
 metric name is written into the markup.
 
-**Evidence colours are not a hazard ramp.** Hue distinguishes evidence class.
-Nothing should read as danger.
+**Colour.** Survey layers use a slate-to-sand ramp. The AI exposure layer uses a
+green > amber > red scale (green = little task exposure, red = most), following
+Karpathy's US Job Market Visualizer, by the owner's decision on 2026-11-07. The
+colour only orders a task score. Text next to it must still never say risk,
+job loss or displacement (rule 4).
 
 ## Data
 
