@@ -202,7 +202,7 @@ function update() {
     ["Tasks scored", usable.length ? fmt(usable.reduce((s,r)=>s+(r.tasks_included||0),0)) : "—", "PSA task statements"],
     ["No PSA task list", fmt(filtered.filter(r=>r.availability==="no_psa_tasks").length), "never given a borrowed score"],
     ["Scoring model", usable.length ? [...new Set(usable.map(r=>r.model_id))].join(", ") : "—", "≥ 2 successful attempts per task"],
-    ["Human review", usable.some(r=>r.human_review_status==="human_reviewed") ? "Partial" : "Not yet", "experimental scores"]
+    ["Expert review", usable.some(r=>r.human_review_status==="human_reviewed") ? "Partial" : "Not yet", "scores are model estimates"]
   ] : [
     ["Reference period", usable.length ? [...new Set(usable.map(r=>r.reference_period))].join("; ") : "—", "historical, not live counts"],
     ["Resolution", UNAVAILABLE[mode] ? "—" : mode === "wages" ? "Source-native" : mode === "detail" ? "Sub-major group" : "Major group", UNAVAILABLE[mode] ? "no validated values" : mode === "wages" ? "not reconciled to PSOC" : mode === "detail" ? "ILO two-digit ISCO-08 = PSOC" : "no detailed counts inferred"],
