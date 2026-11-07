@@ -147,7 +147,10 @@ function greenRed(t) {
   if (t < .5) { const k = t / .5; return [Math.round(30 + k * 200), Math.round(180 - k * 20), Math.round(40 - k * 20)]; }
   const k = (t - .5) / .5; return [Math.round(230 + k * 25), Math.round(160 - k * 130), Math.round(20 - k * 5)];
 }
-const scaleValue = n => mode === "wages" ? Math.log(n) : n;
+// Counts and pay are heavily skewed, so colour follows their logarithm (as the
+// reference does for pay); otherwise a few large groups would decide every colour.
+const LOG_MODES = new Set(["wages", "employment", "detail", "ofw", "earnings"]);
+const scaleValue = n => LOG_MODES.has(mode) && n > 0 ? Math.log(n) : n;
 const HIGH_IS_RED = new Set(["exposure", "vulnerable"]);
 function colourAt(t, alpha) {
   const [r, g, b] = greenRed(HIGH_IS_RED.has(mode) ? t : 1 - t);
