@@ -135,24 +135,30 @@ function loadSetting(key) { try { return localStorage.getItem(key); } catch { re
 // so they stay visually distinct from the model-derived exposure scale. Exposure uses the
 // fixed 0-5 rubric scale rather than the observed range, so a colour means
 // the same score in every filter and every future run.
-// Exposure uses the green > amber > red scale of Andrej Karpathy's US Job Market
-// Visualizer (karpathy.ai/jobs), with the same contrast boost, at the owner's
-// request: green is little task exposure, red is most task content. The colour
-// is an ordering of a task score only. It does not mean harm, and the text
-// beside it never frames exposure as risk or job loss.
-const EXPOSURE_RAMP = [[46,204,113],[241,196,15],[231,76,60]];
-const boostContrast = t => { const c = (Math.min(1, Math.max(0, t)) - .5) * 2; return .5 + .5 * Math.sign(c) * Math.pow(Math.abs(c), .55); };
-function rampAt(stops, t) {
-  const x = boostContrast(t) * (stops.length - 1), i = Math.min(stops.length - 2, Math.floor(x)), f = x - i;
-  return stops[i].map((c, k) => Math.round(c + (stops[i+1][k] - c) * f));
+// Every layer uses the green > amber > red scale of Andrej Karpathy's US Job
+// Market Visualizer (karpathy.ai/jobs): the same stops and the same contrast
+// boost. Exposure runs green (little task exposure) to red (most). For the other
+// layers green is the high end, as in the reference; own-account work is the one
+// layer where high is red. The colour only orders a value. It is not a verdict,
+// and the text beside it never frames exposure as risk or job loss.
+const boostContrast = t => { const c = (t - .5) * 2; return Math.sign(c) * Math.pow(Math.abs(c), .55) / 2 + .5; };
+function greenRed(t) {
+  t = boostContrast(Math.max(0, Math.min(1, t)));
+  if (t < .5) { const k = t / .5; return [Math.round(30 + k * 200), Math.round(180 - k * 20), Math.round(40 - k * 20)]; }
+  const k = (t - .5) / .5; return [Math.round(230 + k * 25), Math.round(160 - k * 130), Math.round(20 - k * 5)];
 }
 const scaleValue = n => mode === "wages" ? Math.log(n) : n;
+const HIGH_IS_RED = new Set(["exposure", "vulnerable"]);
 function colourAt(t, alpha) {
-  if (mode === "exposure") { const [r, g, b] = rampAt(EXPOSURE_RAMP, t); return `rgba(${r},${g},${b},${Math.min(1, alpha + .25)})`; }
-  return `rgba(${Math.round(51+137*t)},${Math.round(75+104*t)},${Math.round(103+52*t)},${alpha})`;
+  const [r, g, b] = greenRed(HIGH_IS_RED.has(mode) ? t : 1 - t);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+function normalised(r) {
+  if (!validValue(r) || !colourRange) return 0;
+  const [lo, hi] = colourRange; return hi === lo ? .5 : Math.max(0, Math.min(1, (scaleValue(r.value) - lo) / (hi - lo)));
 }
 function tileColour(r, alpha) {
-  if (!validValue(r)) return `rgba(255,255,255,${alpha * .1})`;
+  if (!validValue(r)) return `rgba(128,128,128,${alpha * .18})`;
   const [lo, hi] = colourRange; return colourAt(hi === lo ? .5 : (scaleValue(r.value)-lo)/(hi-lo), alpha);
 }
 
@@ -267,7 +273,7 @@ function draw() {
     const isSelected = selected?.id===r.id, isHovered = hovered?.id===r.id;
     ctx.fillStyle=tileColour(r, isHovered ? .8 : isSelected ? .7 : .5);ctx.fillRect(x,y,w,h);
     if(!validValue(r)&&mode==="exposure"){ctx.save();ctx.strokeStyle="rgba(255,255,255,.22)";ctx.lineWidth=1/zoom;ctx.setLineDash([4/zoom,3/zoom]);ctx.strokeRect(x+.5/zoom,y+.5/zoom,w-1/zoom,h-1/zoom);ctx.restore();}
-    if(isSelected||isHovered){ctx.strokeStyle="#f2c98f";ctx.lineWidth=(isSelected?2.5:1.5)/zoom;ctx.strokeRect(x,y,w,h);}
+    if(isSelected||isHovered){ctx.strokeStyle="#fff";ctx.lineWidth=2/zoom;ctx.strokeRect(x,y,w,h);}
   }
   ctx.restore();
   for (const r of rects) {
@@ -278,7 +284,7 @@ function draw() {
     const inner=Math.max(0,sw-10), full=zoom>=1.15&&textWidth(r.title,titleFont)<=inner;
     ctx.save();
     if(!full){ctx.beginPath();ctx.rect(sx+4,sy+2,inner,Math.max(0,sh-4));ctx.clip();}
-    ctx.textBaseline="top";ctx.font=titleFont;ctx.fillStyle=hovered?.id===r.id?"#f2c98f":validValue(r)?"rgba(255,255,255,0.84)":"rgba(255,255,255,0.4)";
+    ctx.textBaseline="top";ctx.font=titleFont;ctx.fillStyle=validValue(r)?"rgba(255,255,255,0.84)":"rgba(255,255,255,0.4)";
     ctx.fillText(full?r.title:fitText(r.title,inner,titleFont),sx+5,sy+5);
     if (sh > (compactLayout ? 30 : 34) && sw > (compactLayout ? 52 : 60)) {
       ctx.font=subFont;ctx.fillStyle="rgba(255,255,255,0.58)";ctx.fillText(fitText(displayValue(r),inner,subFont),sx+5,sy+7+size);
@@ -304,12 +310,16 @@ function precisionText(r) {
 }
 function showTooltip(r, mx, my) {
   const tip=$("tooltip");tip.classList.toggle("compact",compactLayout);
-  tip.style.setProperty("--tt-accent", validValue(r) ? tileColour(r, 1) : "rgba(255,255,255,.25)");
-  tip.style.setProperty("--tt-pos", mode === "exposure" && validValue(r) ? `${Math.round(r.value / 5 * 100)}%` : "0%");
-  tip.classList.toggle("has-bar", mode === "exposure" && validValue(r));
   tip.querySelector(".tt-category").textContent=r.categoryLabel;tip.querySelector(".tt-title").textContent=r.title;
   tip.querySelector(".tt-percentile").textContent=[`PSOC ${r.code}`, r.reference_period].filter(Boolean).join(" · ");
-  tip.querySelector(".tt-exposure").textContent=mode === "exposure" && validValue(r) ? `Technical task exposure ${displayValue(r)}` : displayValue(r);
+  // As in the reference: the value in its own colour, with a thin bar below it.
+  const highlight=tip.querySelector(".tt-exposure"), colour=validValue(r) ? tileColour(r, 1) : "";
+  const label=node("span", mode === "exposure" && validValue(r) ? `Technical task exposure ${displayValue(r)}` : `${MODES[mode].label}: ${displayValue(r)}`);
+  if (colour) { label.style.color=colour; label.style.fontWeight="600"; }
+  const track=node("div"), fill=node("div");
+  track.style.cssText="margin-top:3px;height:4px;background:rgba(255,255,255,0.08);border-radius:2px";
+  fill.style.cssText=`height:100%;width:${Math.round(normalised(r)*100)}%;background:${colour};border-radius:2px`;
+  track.append(fill); highlight.replaceChildren(label, ...(colour ? [track] : []));
   const rows = mode === "exposure" ? (validValue(r) ? [
     ["Task exposure", `${fmt(r.value,1)} / 5 · IQR ${fmt(r.score_iqr_lower,1)}–${fmt(r.score_iqr_upper,1)}`],
     ["Physical presence", r.human_interaction_median === null ? "—" : `${fmt(r.human_interaction_median,1)} / 5`],
@@ -327,17 +337,36 @@ function showTooltip(r, mx, my) {
   else{let x=mx+16,y=my-16;if(x+340>innerWidth)x=mx-356;if(y<10)y=my+16;if(y+200>innerHeight)y=my-200;tip.style.left=`${Math.max(8,x)}px`;tip.style.top=`${Math.max(8,y)}px`;}
   tip.classList.add("visible");
 }
+const FIELD_LABELS = {
+  availability:"Availability", unit:"Unit", derivation_class:"How it was produced", source_authority:"Who produced it",
+  confidence_grade:"Confidence grade", source_id:"Source", reference_period:"Reference period", standard_error:"Standard error",
+  coefficient_of_variation:"Coefficient of variation", uncertainty_lower:"Interval, lower", uncertainty_upper:"Interval, upper",
+  confidence_level:"Interval confidence level", source_granularity:"Published at", display_granularity:"Shown at",
+  source_table:"Source table", normalised_row_id:"Source row", source_file_hash:"File fingerprint (SHA-256)", retrieved_at:"Retrieved",
+  model_provider:"Model provider", model_id:"Scoring model", rubric_version:"Rubric version", prompt_version:"Prompt version",
+  temperature:"Temperature", attempted_attempts:"Attempts made", successful_attempts:"Successful attempts per task",
+  tasks_included:"Tasks scored", tasks_total_for_occupation:"PSA tasks listed", score_iqr_lower:"Task scores, lower quartile",
+  score_iqr_upper:"Task scores, upper quartile", human_interaction_median:"Physical presence (median, 0-5)",
+  run_disagreement_range:"Largest gap between attempts", stability:"Stability", human_review_status:"Expert review",
+  task_source:"Task source", task_source_file_hash:"Task file fingerprint (SHA-256)", raw_response_reference:"Raw model responses"
+};
 function showDetail(r) {
   clearTimeout(clickTimer); if(!compactLayout) hideTooltip(); selected=r;returnFocus=document.activeElement;
   $("riskTitle").textContent=r.title;
   $("riskMeta").replaceChildren(node("span",`${r.code} · ${r.reference_period}`),node("span",r.categoryLabel));
-  $("riskGauge").replaceChildren(node("div",displayValue(r),"risk-gauge-label"));$("riskComparative").textContent=gradeLabel(r);
+  // As in the tooltip: the value in its own colour with a thin bar beneath it.
+  const gaugeColour = validValue(r) ? tileColour(r, 1) : "", gaugeLabel = node("div", displayValue(r), "risk-gauge-label");
+  if (gaugeColour) gaugeLabel.style.color = gaugeColour;
+  const gaugeTrack = node("div", undefined, "risk-gauge-bar"), gaugeFill = node("div", undefined, "risk-gauge-fill");
+  gaugeFill.style.cssText = `width:${Math.round(normalised(r) * 100)}%;background:${gaugeColour}`;
+  gaugeTrack.append(gaugeFill);
+  $("riskGauge").replaceChildren(gaugeLabel, ...(gaugeColour ? [gaugeTrack] : []));$("riskComparative").textContent=gradeLabel(r);
   $("riskMeaning").textContent=r.population_scope||MODES[mode].description;
   $("detailFields").replaceChildren();
   $("taskCard").hidden = mode !== "exposure" || !validValue(r);
   if (!$("taskCard").hidden) renderTasks(r);
   const fields=mode === "exposure" ? ["availability","unit","derivation_class","source_authority","model_provider","model_id","rubric_version","prompt_version","temperature","reference_period","attempted_attempts","successful_attempts","tasks_included","tasks_total_for_occupation","score_iqr_lower","score_iqr_upper","human_interaction_median","run_disagreement_range","stability","confidence_grade","human_review_status","task_source","task_source_file_hash","raw_response_reference"] : ["availability","unit","derivation_class","source_authority","confidence_grade","source_id","reference_period","standard_error","coefficient_of_variation","uncertainty_lower","uncertainty_upper","confidence_level","source_granularity","display_granularity","source_table","normalised_row_id","source_file_hash","retrieved_at"];
-  for(const key of fields){let value=r[key];if(key==="standard_error"&&value!==null&&value!==undefined&&mode==="ofw")value=`${fmt(value*100,5)} percentage points`;else if(key==="coefficient_of_variation"&&Number.isFinite(value))value=`${fmt(value,4)}%`;$("detailFields").append(node("dt",key.replaceAll("_"," ")),node("dd",value===null||value===undefined||value===""?"Not supplied":String(value)));}
+  for(const key of fields){let value=r[key];if(key==="standard_error"&&value!==null&&value!==undefined&&mode==="ofw")value=`${fmt(value*100,5)} percentage points`;else if(key==="coefficient_of_variation"&&Number.isFinite(value))value=`${fmt(value,4)}%`;if(key==="derivation_class"&&r.derivation_class_label)value=r.derivation_class_label;else if(key==="source_authority"&&r.source_authority_label)value=r.source_authority_label;else if(/granularity$/.test(key)&&typeof value==="string")value=value.replaceAll("_"," ");$("detailFields").append(node("dt",FIELD_LABELS[key]||key.replaceAll("_"," ")),node("dd",value===null||value===undefined||value===""?"Not supplied":String(value)));}
   $("detailNotes").textContent=[MODES[mode].note,r.notes,...(r.confidence_reasons||[])].filter(Boolean).join(" ");
   let url;try{url=new URL(r.source_url);}catch{}$("detailSource").hidden=!url||url.protocol!=="https:";if(!$("detailSource").hidden)$("detailSource").href=url.href;
   $("riskPanel").inert=false;$("riskPanel").setAttribute("aria-hidden","false");$("riskPanel").classList.add("visible");$("riskOverlay").classList.add("visible");$("wrapper").inert=true;$("riskClose").focus({preventScroll:true});requestDraw();
