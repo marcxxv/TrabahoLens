@@ -375,6 +375,15 @@ sources:
     purpose: Would support a job-posting demand signal.
     authoritative_url: https://www.philjobnet.gov.ph/
     api_or_download: No documented public bulk download or API identified.
+    alternatives_checked: >-
+      2026-11-07, all without a usable Philippine posting-demand series by
+      occupation. ILOSTAT: no vacancy or job-posting dataflow exists (1,215
+      dataflows searched). Indeed Hiring Lab open data: no Philippines folder
+      (AU, CA, DE, EA, ES, FR, GB, IE, IT, NL, US only). PSA OpenSTAT: vacancies
+      by the nine major groups end in the Sep 2021 to Aug 2022 round. PIDS
+      reports that DOLE-BLE holds PhilJobNet and permission is needed. Scraping
+      the public listings was not done: it is not a documented data channel and
+      would be a platform-selection sample, not labour demand.
     classification_version: Unknown; postings are not reliably occupation-coded.
     survey_universe: >-
       Employers who choose to post on one government platform. Not a sample of
