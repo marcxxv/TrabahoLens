@@ -171,6 +171,40 @@ industry projections stay labelled industry-level. For POEA, the functions moved
 to the **Department of Migrant Workers** in 2022, so a current dataset would be
 attributed to DMW; no generic attribution is re-added without a named table.
 
+### 3.4a ILOSTAT: the occupation breakdowns PSA does not publish
+
+PSA's public OpenSTAT tables give employment by the ten major groups only, with
+no table of pay, education or informality by occupation. The International
+Labour Organization re-tabulates the same Philippine Labor Force Survey
+microdata (its record says "LFS - Labour Force Survey ... Micro data
+processing") and publishes it through the open ILOSTAT SDMX API. The ILO states
+its datasets are CC BY 4.0. Four pinned extracts are registered, each retrieved
+by `make fetch-data`, hash-verified, and parsed by `v2/sources/ilo.py`:
+
+* `employment_count_subgroup`: employed persons by the 43 sub-major groups
+  (ISCO-08 level 2), 2024 annual.
+* `earnings_monthly_mean` and `earnings_monthly_median`: monthly earnings of
+  **employees only** by major group, 2024 annual, Philippine pesos.
+* `education_advanced_share`: the share of employed persons with advanced
+  (tertiary) attainment by major group. It is **calculated** here from published
+  counts, after checking that the four education aggregates add to the total.
+
+Rules that keep this honest:
+
+* **It is not PSA's figure.** The ILO's 2024 employed total is 47,524 thousand;
+  PSA's is 48,841 thousand (about 2.7% apart). The two are different processings
+  of one survey. They are never added together or compared cell by cell, and the
+  interface names the ILO as the source of these layers.
+* **Classification.** ISCO-08 levels 1 and 2 map to the PSOC major and
+  sub-major group with the same code. That is structural (PSOC 2012 is built on
+  ISCO-08), and the build confirms it: a crosswalk row is marked
+  `source_verified` only when its code appears in the hash-verified ILO file, and
+  a test compares the code sets (10 major, 43 sub-major) with the PSA workbook.
+* **Employees only.** Earnings exclude own-account workers and employers.
+* **No informal-employment layer.** ILOSTAT holds no Philippine series of
+  informal employment by occupation (every such dataflow returns no data for the
+  Philippines), and PSA publishes none. The layer stays unavailable.
+
 ### 3.5 O\*NET
 
 O\*NET is used for occupational descriptions, task statements, task importance
@@ -406,6 +440,10 @@ The release publishes ten 2024 annual LFS employment estimates, one for each
 PSOC major group. PSA matrix 1B3FEMP4 is queried for one annual slice, stored as
 a hash-verified JSON-stat snapshot, normalized from thousands to persons, and
 reconciled through an explicit PSOC 2012-to-2022 major-group correspondence.
+
+ILOSTAT adds 73 values from four pinned extracts (see 3.4a): 43 sub-major
+employment counts, ten mean and ten median monthly earnings of employees, and
+ten advanced-education shares. They are labelled as ILO-processed everywhere.
 
 SOF Table 2 adds nine published occupation shares with their standard errors
 and CVs. The blank armed-forces share remains missing. Percentages and standard

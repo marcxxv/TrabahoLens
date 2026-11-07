@@ -5,10 +5,22 @@ occupation-level exposure product or an independently validated statistical serv
 
 ## Published evidence
 
-`data/canonical/metric_observations.csv` contains 20 rows: 19 published
-estimates and one missing SOF value. Employment is limited to PSOC major groups.
+`data/canonical/metric_observations.csv` contains 93 rows: 92 published
+estimates and one missing SOF value. PSA employment is limited to PSOC major
+groups; ILOSTAT adds sub-major employment, employee earnings and an education
+share (see below). Not every layer is available: informal employment by
+occupation and job-posting demand have no usable public source.
 SOF is the distribution of the survey's OFWs across occupations, not the share
 of a domestic occupation working overseas.
+
+**ILO-processed layers.** Employment by sub-major group, employee earnings and
+the advanced-education share come from the ILO's tabulation of the Philippine
+Labor Force Survey. They differ from PSA's own published totals (the 2024
+employed total is about 2.7% lower), cover employees only for earnings, and
+describe who works in a group, not what its jobs require. Earnings are by major
+group, so they cannot rank individual occupations. The ILO series publishes the
+same median (PHP 30,416.67) for Managers and Professionals; it is kept as
+published and not smoothed, and the interface says so.
 
 `data/reference/ows_wage_benchmarks.csv` contains 693 source-native
 occupation-by-industry records. 684 wage-rate estimates are available and nine

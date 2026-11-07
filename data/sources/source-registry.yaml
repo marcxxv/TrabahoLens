@@ -490,3 +490,183 @@ sources:
     notes: >-
       Scores are experimental and have not undergone independent
       labour-economist validation. A model's rationale is not validation.
+
+  - source_id: ilostat_employment_isco2
+    tier: 3
+    organization: International Labour Organization (ILOSTAT)
+    dataset: "ILOSTAT: Employment by sex and occupation, ISCO level 2 (DF_EMP_TEMP_SEX_OC2_NB)"
+    purpose: Employed persons by sub-major occupation group (43 groups).
+    authoritative_url: https://ilostat.ilo.org/data/
+    api_or_download: https://sdmx.ilo.org/rest/data/ILO,DF_EMP_TEMP_SEX_OC2_NB/PHL.A..SEX_T.?startPeriod=2024&endPeriod=2024&format=csv
+    table_identification: >-
+      CONFIRMED ILOSTAT SDMX dataflow DF_EMP_TEMP_SEX_OC2_NB. Pinned query: Philippines, annual,
+      both sexes, 2024, ISCO-08 two-digit occupation. The ILO builds this series from Philippine
+      Labor Force Survey microdata (source field "LFS - Labour Force Survey";
+      note "Repository: ILO-STATISTICS - Micro data processing"). It is an ILO
+      re-tabulation, so it is NOT interchangeable with PSA's own published
+      figures: the 2024 employed total is 47,524 thousand here against 48,841
+      thousand in the PSA OpenSTAT table. The two are never summed or mixed.
+    classification_version: ISCO-08 (levels 1-2 are structurally identical to PSOC 2012 major and sub-major groups; code sets compared and tested)
+    survey_universe: Employed persons 15 years and over (ILO employment definition applied to the LFS).
+    exclusions: Institutional population; see ILOSTAT metadata for the Philippines LFS.
+    reference_period: 2024 annual
+    redistribution: Unmodified API response retained, with ILO attribution.
+    license: >-
+      ILO states that its databases and datasets, with their referential
+      metadata, are available under CC BY 4.0 (rights and permissions page, read
+      2026-11-07). The licence excludes microdata held under partner restrictions;
+      only the published tabulation is used here.
+    license_source_page: https://www.ilo.org/node/9321
+    license_retrieved_at: "2026-11-07"
+    dataset_specific_exception: none identified; re-check on retrieval
+    attribution: "International Labour Organization, ILOSTAT (DF_EMP_TEMP_SEX_OC2_NB); source: Philippine Statistics Authority Labor Force Survey, processed by the ILO."
+    retrieval:
+      status: identified_automated
+      blocked_reason: ""
+      automated:
+        method: GET
+        url: https://sdmx.ilo.org/rest/data/ILO,DF_EMP_TEMP_SEX_OC2_NB/PHL.A..SEX_T.?startPeriod=2024&endPeriod=2024&format=csv
+        destination_filename: ilo_employment_isco2_2024.csv
+        expected_format: csv
+        timeout_seconds: 120
+      manual_instruction: "`make fetch-data` re-fetches this exact query. The API rate-limits parallel calls; keep them sequential."
+    granularity_available: Sub-major occupation group (two-digit).
+    used_for:
+      - metric employment_count_subgroup
+    notes: >-
+      Gives finer detail than the PSA major-group table, from a different processing of the same survey. Labelled as ILO-processed wherever shown.
+
+  - source_id: ilostat_earnings_mean
+    tier: 3
+    organization: International Labour Organization (ILOSTAT)
+    dataset: "ILOSTAT: Average monthly earnings of employees by sex and occupation (DF_EAR_EMTA_SEX_OCU_NB)"
+    purpose: Average monthly earnings of employees by major occupation group.
+    authoritative_url: https://ilostat.ilo.org/data/
+    api_or_download: https://sdmx.ilo.org/rest/data/ILO,DF_EAR_EMTA_SEX_OCU_NB/PHL.A..SEX_T.?startPeriod=2024&endPeriod=2024&format=csv
+    table_identification: >-
+      CONFIRMED ILOSTAT SDMX dataflow DF_EAR_EMTA_SEX_OCU_NB. Pinned query: Philippines, annual,
+      both sexes, 2024, ISCO-08 one-digit occupation, Philippine pesos. The ILO builds this series from Philippine
+      Labor Force Survey microdata (source field "LFS - Labour Force Survey";
+      note "Repository: ILO-STATISTICS - Micro data processing"). It is an ILO
+      re-tabulation, so it is NOT interchangeable with PSA's own published
+      figures: the 2024 employed total is 47,524 thousand here against 48,841
+      thousand in the PSA OpenSTAT table. The two are never summed or mixed.
+    classification_version: ISCO-08 (levels 1-2 are structurally identical to PSOC 2012 major and sub-major groups; code sets compared and tested)
+    survey_universe: Employees (wage and salary workers) only. Own-account workers and employers are not included.
+    exclusions: Institutional population; see ILOSTAT metadata for the Philippines LFS.
+    reference_period: 2024 annual
+    redistribution: Unmodified API response retained, with ILO attribution.
+    license: >-
+      ILO states that its databases and datasets, with their referential
+      metadata, are available under CC BY 4.0 (rights and permissions page, read
+      2026-11-07). The licence excludes microdata held under partner restrictions;
+      only the published tabulation is used here.
+    license_source_page: https://www.ilo.org/node/9321
+    license_retrieved_at: "2026-11-07"
+    dataset_specific_exception: none identified; re-check on retrieval
+    attribution: "International Labour Organization, ILOSTAT (DF_EAR_EMTA_SEX_OCU_NB); source: Philippine Statistics Authority Labor Force Survey, processed by the ILO."
+    retrieval:
+      status: identified_automated
+      blocked_reason: ""
+      automated:
+        method: GET
+        url: https://sdmx.ilo.org/rest/data/ILO,DF_EAR_EMTA_SEX_OCU_NB/PHL.A..SEX_T.?startPeriod=2024&endPeriod=2024&format=csv
+        destination_filename: ilo_earnings_mean_2024.csv
+        expected_format: csv
+        timeout_seconds: 120
+      manual_instruction: "`make fetch-data` re-fetches this exact query. The API rate-limits parallel calls; keep them sequential."
+    granularity_available: Major occupation group (one-digit).
+    used_for:
+      - metric earnings_monthly_mean
+    notes: >-
+      Employees only, so it is not the earnings of everyone working in the occupation. A mean is pulled up by high earners; the median is published beside it.
+
+  - source_id: ilostat_earnings_median
+    tier: 3
+    organization: International Labour Organization (ILOSTAT)
+    dataset: "ILOSTAT: Median monthly earnings of employees by sex and occupation (DF_EAR_EMTM_SEX_OCU_NB)"
+    purpose: Median monthly earnings of employees by major occupation group.
+    authoritative_url: https://ilostat.ilo.org/data/
+    api_or_download: https://sdmx.ilo.org/rest/data/ILO,DF_EAR_EMTM_SEX_OCU_NB/PHL.A..SEX_T.?startPeriod=2024&endPeriod=2024&format=csv
+    table_identification: >-
+      CONFIRMED ILOSTAT SDMX dataflow DF_EAR_EMTM_SEX_OCU_NB. Pinned query: Philippines, annual,
+      both sexes, 2024, ISCO-08 one-digit occupation, Philippine pesos. The ILO builds this series from Philippine
+      Labor Force Survey microdata (source field "LFS - Labour Force Survey";
+      note "Repository: ILO-STATISTICS - Micro data processing"). It is an ILO
+      re-tabulation, so it is NOT interchangeable with PSA's own published
+      figures: the 2024 employed total is 47,524 thousand here against 48,841
+      thousand in the PSA OpenSTAT table. The two are never summed or mixed.
+    classification_version: ISCO-08 (levels 1-2 are structurally identical to PSOC 2012 major and sub-major groups; code sets compared and tested)
+    survey_universe: Employees (wage and salary workers) only. Own-account workers and employers are not included.
+    exclusions: Institutional population; see ILOSTAT metadata for the Philippines LFS.
+    reference_period: 2024 annual
+    redistribution: Unmodified API response retained, with ILO attribution.
+    license: >-
+      ILO states that its databases and datasets, with their referential
+      metadata, are available under CC BY 4.0 (rights and permissions page, read
+      2026-11-07). The licence excludes microdata held under partner restrictions;
+      only the published tabulation is used here.
+    license_source_page: https://www.ilo.org/node/9321
+    license_retrieved_at: "2026-11-07"
+    dataset_specific_exception: none identified; re-check on retrieval
+    attribution: "International Labour Organization, ILOSTAT (DF_EAR_EMTM_SEX_OCU_NB); source: Philippine Statistics Authority Labor Force Survey, processed by the ILO."
+    retrieval:
+      status: identified_automated
+      blocked_reason: ""
+      automated:
+        method: GET
+        url: https://sdmx.ilo.org/rest/data/ILO,DF_EAR_EMTM_SEX_OCU_NB/PHL.A..SEX_T.?startPeriod=2024&endPeriod=2024&format=csv
+        destination_filename: ilo_earnings_median_2024.csv
+        expected_format: csv
+        timeout_seconds: 120
+      manual_instruction: "`make fetch-data` re-fetches this exact query. The API rate-limits parallel calls; keep them sequential."
+    granularity_available: Major occupation group (one-digit).
+    used_for:
+      - metric earnings_monthly_median
+    notes: >-
+      Employees only. The median is the pay of the middle employee and is less affected by a few very high earners than the mean.
+
+  - source_id: ilostat_education_attainment
+    tier: 3
+    organization: International Labour Organization (ILOSTAT)
+    dataset: "ILOSTAT: Employment by sex, occupation and education (DF_EMP_TEMP_SEX_OCU_EDU_NB)"
+    purpose: Education profile of employed persons by major occupation group.
+    authoritative_url: https://ilostat.ilo.org/data/
+    api_or_download: https://sdmx.ilo.org/rest/data/ILO,DF_EMP_TEMP_SEX_OCU_EDU_NB/PHL.A..SEX_T..?startPeriod=2024&endPeriod=2024&format=csv
+    table_identification: >-
+      CONFIRMED ILOSTAT SDMX dataflow DF_EMP_TEMP_SEX_OCU_EDU_NB. Pinned query: Philippines, annual,
+      both sexes, 2024, ISCO-08 one-digit occupation, ILO education aggregate levels. The ILO builds this series from Philippine
+      Labor Force Survey microdata (source field "LFS - Labour Force Survey";
+      note "Repository: ILO-STATISTICS - Micro data processing"). It is an ILO
+      re-tabulation, so it is NOT interchangeable with PSA's own published
+      figures: the 2024 employed total is 47,524 thousand here against 48,841
+      thousand in the PSA OpenSTAT table. The two are never summed or mixed.
+    classification_version: ISCO-08 (levels 1-2 are structurally identical to PSOC 2012 major and sub-major groups; code sets compared and tested)
+    survey_universe: Employed persons 15 years and over.
+    exclusions: Institutional population; see ILOSTAT metadata for the Philippines LFS.
+    reference_period: 2024 annual
+    redistribution: Unmodified API response retained, with ILO attribution.
+    license: >-
+      ILO states that its databases and datasets, with their referential
+      metadata, are available under CC BY 4.0 (rights and permissions page, read
+      2026-11-07). The licence excludes microdata held under partner restrictions;
+      only the published tabulation is used here.
+    license_source_page: https://www.ilo.org/node/9321
+    license_retrieved_at: "2026-11-07"
+    dataset_specific_exception: none identified; re-check on retrieval
+    attribution: "International Labour Organization, ILOSTAT (DF_EMP_TEMP_SEX_OCU_EDU_NB); source: Philippine Statistics Authority Labor Force Survey, processed by the ILO."
+    retrieval:
+      status: identified_automated
+      blocked_reason: ""
+      automated:
+        method: GET
+        url: https://sdmx.ilo.org/rest/data/ILO,DF_EMP_TEMP_SEX_OCU_EDU_NB/PHL.A..SEX_T..?startPeriod=2024&endPeriod=2024&format=csv
+        destination_filename: ilo_education_2024.csv
+        expected_format: csv
+        timeout_seconds: 120
+      manual_instruction: "`make fetch-data` re-fetches this exact query. The API rate-limits parallel calls; keep them sequential."
+    granularity_available: Major occupation group (one-digit).
+    used_for:
+      - metric education_advanced_share
+    notes: >-
+      Counts by ILO education aggregate (less than basic, basic, intermediate, advanced). The advanced share is calculated by this project as advanced divided by total, from published counts.

@@ -90,7 +90,7 @@ Interface rebuilt around evidence:
 - Six normalised tables under `data/canonical/`.
 - Six metric definitions written before any value exists, each naming its
   required source, expected granularity, denominator and common misreading.
-- `data/sources/source-registry.yaml` — 10 sources with universe, exclusions,
+- `data/sources/source-registry.yaml` — 14 sources with universe, exclusions,
   reference period, classification version, licensing and attribution recorded
   separately per source.
 - `data/sources/retrieval-manifest.json` — hashed, timestamped attempts.
@@ -150,3 +150,13 @@ every row marked `unverified_pending_source`.
 This is the intended outcome under the operating principle. See
 [`readiness-report.md`](readiness-report.md) for a component-by-component
 assessment.
+
+## 2026-11-07: ILOSTAT layers
+
+Four ILOSTAT SDMX extracts (Philippines, annual 2024, both sexes) are registered,
+fetched, hash-verified and parsed: employment by sub-major group, mean and
+median monthly earnings of employees, and the education profile. Each is an ILO
+re-tabulation of the Philippine LFS and is labelled so. Structural ISCO-08 links
+for the 10 major and 43 sub-major groups are marked `source_verified` only when
+the code appears in the verified file. Informal employment by occupation remains
+unavailable: no Philippine series exists in ILOSTAT or PSA.

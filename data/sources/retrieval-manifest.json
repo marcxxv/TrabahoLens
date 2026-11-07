@@ -132,6 +132,66 @@
       "sha256": "78823a5d60b625398ce97cebfde9e5dd0df7d412c6862d2e1b4bd245ea91eef2",
       "bytes": 633652,
       "expected_format": "xlsx"
+    },
+    {
+      "source_id": "ilostat_employment_isco2",
+      "url": "https://sdmx.ilo.org/rest/data/ILO,DF_EMP_TEMP_SEX_OC2_NB/PHL.A..SEX_T.?startPeriod=2024&endPeriod=2024&format=csv",
+      "destination": "data/raw/ilostat_employment_isco2/ilo_employment_isco2_2024.csv",
+      "attempted_at": "2026-11-07T14:10:12Z",
+      "http_status": 200,
+      "status": "retrieved",
+      "bytes": 7946,
+      "sha256": "ec6cd5ecbbc34bc8a13fbef6f1b5deb83e33f7eb38a638c4c8466bcd6f0da07b",
+      "retrieved_at": "2026-11-07T14:10:13Z",
+      "content_type": "application/vnd.sdmx.data+csv; charset=utf-8",
+      "last_modified": "",
+      "request_method": "GET",
+      "expected_format": "csv"
+    },
+    {
+      "source_id": "ilostat_earnings_mean",
+      "url": "https://sdmx.ilo.org/rest/data/ILO,DF_EAR_EMTA_SEX_OCU_NB/PHL.A..SEX_T.?startPeriod=2024&endPeriod=2024&format=csv",
+      "destination": "data/raw/ilostat_earnings_mean/ilo_earnings_mean_2024.csv",
+      "attempted_at": "2026-11-07T14:10:16Z",
+      "http_status": 200,
+      "status": "retrieved",
+      "bytes": 3354,
+      "sha256": "0a97ff6e8b02a5f138ebf3b08d2f14c552903b515a677363216329b6762cc53b",
+      "retrieved_at": "2026-11-07T14:10:18Z",
+      "content_type": "application/vnd.sdmx.data+csv; charset=utf-8",
+      "last_modified": "",
+      "request_method": "GET",
+      "expected_format": "csv"
+    },
+    {
+      "source_id": "ilostat_earnings_median",
+      "url": "https://sdmx.ilo.org/rest/data/ILO,DF_EAR_EMTM_SEX_OCU_NB/PHL.A..SEX_T.?startPeriod=2024&endPeriod=2024&format=csv",
+      "destination": "data/raw/ilostat_earnings_median/ilo_earnings_median_2024.csv",
+      "attempted_at": "2026-11-07T14:10:21Z",
+      "http_status": 200,
+      "status": "retrieved",
+      "bytes": 3353,
+      "sha256": "5a73221530a82b4956d92c11fa0ab3c4d8d013a497de83a261e5b7fa49dfa413",
+      "retrieved_at": "2026-11-07T14:10:22Z",
+      "content_type": "application/vnd.sdmx.data+csv; charset=utf-8",
+      "last_modified": "",
+      "request_method": "GET",
+      "expected_format": "csv"
+    },
+    {
+      "source_id": "ilostat_education_attainment",
+      "url": "https://sdmx.ilo.org/rest/data/ILO,DF_EMP_TEMP_SEX_OCU_EDU_NB/PHL.A..SEX_T..?startPeriod=2024&endPeriod=2024&format=csv",
+      "destination": "data/raw/ilostat_education_attainment/ilo_education_2024.csv",
+      "attempted_at": "2026-11-07T14:10:25Z",
+      "http_status": 200,
+      "status": "retrieved",
+      "bytes": 49512,
+      "sha256": "43d5e49e030af94c5fd55e2bc0b5ccd3720974fc4100e8a5ed204a84fb9cceb1",
+      "retrieved_at": "2026-11-07T14:10:27Z",
+      "content_type": "application/vnd.sdmx.data+csv; charset=utf-8",
+      "last_modified": "",
+      "request_method": "GET",
+      "expected_format": "csv"
     }
   ]
 }

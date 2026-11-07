@@ -96,6 +96,40 @@ TRANSFORMATIONS: dict[str, Transformation] = {
         description="PSA Table 2 percentage and standard error divided by 100 by the parser; no re-estimation, no renormalisation, no domestic denominator.",
         applies_to_measure="ofw_published_share", produces_metric="ofw_distribution_share",
     ),
+    "T-015-ilo-employment-isco2": Transformation(
+        transformation_id="T-015-ilo-employment-isco2",
+        name="ILO ISCO-08 level-2 employment to employment_count_subgroup",
+        description=(
+            "Take the ILO's employed-persons count for an ISCO-08 two-digit group "
+            "unchanged (already converted from thousands by the parser) and place "
+            "it on the PSOC sub-major group with the same code through the "
+            "structural ISCO-08 correspondence. Never mixed with PSA counts."
+        ),
+        applies_to_measure="ilo_employed_persons_isco2", produces_metric="employment_count_subgroup",
+    ),
+    "T-016-ilo-earnings-mean": Transformation(
+        transformation_id="T-016-ilo-earnings-mean",
+        name="ILO mean monthly earnings of employees to earnings_monthly_mean",
+        description="Take the ILO mean for the ISCO-08 major group unchanged; carries the employees-only universe.",
+        applies_to_measure="ilo_mean_monthly_earnings_employees", produces_metric="earnings_monthly_mean",
+    ),
+    "T-017-ilo-earnings-median": Transformation(
+        transformation_id="T-017-ilo-earnings-median",
+        name="ILO median monthly earnings of employees to earnings_monthly_median",
+        description="Take the ILO median for the ISCO-08 major group unchanged; carries the employees-only universe.",
+        applies_to_measure="ilo_median_monthly_earnings_employees", produces_metric="earnings_monthly_median",
+    ),
+    "T-018-ilo-advanced-education-share": Transformation(
+        transformation_id="T-018-ilo-advanced-education-share",
+        name="Advanced-education share of employed persons",
+        description=(
+            "Advanced-attainment count divided by the published total for the same "
+            "ISCO-08 major group, computed by the parser from published counts "
+            "after checking that the four aggregates add to the total. Not "
+            "redistributed, rounded or adjusted."
+        ),
+        applies_to_measure="ilo_advanced_education_share", produces_metric="education_advanced_share",
+    ),
 }
 
 TRANSFORMATION_BY_METRIC = {
@@ -139,7 +173,14 @@ def _crosswalk_target(row: NormalisedRow, crosswalk_rows: list[dict[str, Any]]) 
         edge for edge in crosswalk_rows
         if edge.get("source_code") == row.source_code
         and edge.get("source_classification") == row.source_code_system
-        and edge.get("review_status") == "human_reviewed"
+        and (
+            edge.get("review_status") == "human_reviewed"
+            # A structural ISCO-08 link is accepted without a human title review
+            # only where the build verified it from the code lists themselves
+            # (major and sub-major levels). Title-similarity is never accepted.
+            or (edge.get("review_status") == "source_verified"
+                and edge.get("mapping_basis") == "structural_derivation")
+        )
         and edge.get("match_quality") in {"high", "medium"}
         and edge.get("mapping_basis") not in {"title_similarity_only", "undocumented_heuristic"}
     ]

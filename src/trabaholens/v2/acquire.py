@@ -102,6 +102,14 @@ def _validate_download(path: Path, expected_format: str, content_type: str) -> N
             "dimension" in payload or "dataset" in payload
         ):
             raise ValueError("response is JSON but not a PXWeb JSON-stat dataset")
+    elif expected_format == "csv":
+        # SDMX CSV from ILOSTAT. An API error body is plain text with a 200 or
+        # 404, so the header row is checked rather than the status alone.
+        with open(path, encoding="utf-8-sig", newline="") as handle:
+            header = handle.readline().strip().split(",")
+        missing = {"REF_AREA", "TIME_PERIOD", "OBS_VALUE"} - set(header)
+        if missing:
+            raise ValueError(f"response is not an SDMX CSV dataset (missing columns {sorted(missing)})")
     elif expected_format in {"zip", "xlsx"}:
         if not zipfile.is_zipfile(path):
             raise ValueError(f"response is not a valid {expected_format} archive")

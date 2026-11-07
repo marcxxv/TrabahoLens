@@ -411,6 +411,89 @@ METRIC_DEFINITIONS: dict[str, MetricDefinition] = {
             "compatible universe. The two are not interchangeable."
         ),
     ),
+    "employment_count_subgroup": MetricDefinition(
+        metric_id="employment_count_subgroup",
+        metric_name="Employed persons by sub-major group (ILO-processed LFS)",
+        unit="persons",
+        definition=(
+            "Number of employed persons in each of the 43 PSOC sub-major groups, "
+            "from the Philippine Labor Force Survey as tabulated by the ILO at "
+            "ISCO-08 level 2."
+        ),
+        required_source_id="ilostat_employment_isco2",
+        expected_source_granularity="psoc_sub_major_group",
+        expected_derivation_class="estimated",
+        expected_source_authority="international_official_occupational",
+        denominator="n/a (a count)",
+        parser_id="ilo_employment_isco2",
+        common_misreading=(
+            "An ILO re-tabulation of the same survey, not PSA's published figure: "
+            "the ILO total for 2024 is about 2.7% lower than PSA's. Do not add "
+            "these to, or compare them cell by cell with, the PSA major-group counts."
+        ),
+    ),
+    "earnings_monthly_mean": MetricDefinition(
+        metric_id="earnings_monthly_mean",
+        metric_name="Average monthly earnings of employees (ILO-processed LFS)",
+        unit="PHP per month",
+        definition=(
+            "Average monthly earnings of employees (wage and salary workers) whose "
+            "main job falls in this major occupation group, from the Philippine "
+            "Labor Force Survey as tabulated by the ILO."
+        ),
+        required_source_id="ilostat_earnings_mean",
+        expected_source_granularity="psoc_major_group",
+        expected_derivation_class="estimated",
+        expected_source_authority="international_official_occupational",
+        denominator="employees only",
+        parser_id="ilo_earnings_mean",
+        common_misreading=(
+            "Employees only: it leaves out own-account workers and employers. A "
+            "mean is pulled up by a few very high earners, so read it with the "
+            "median. It describes the group, not any single occupation inside it."
+        ),
+    ),
+    "earnings_monthly_median": MetricDefinition(
+        metric_id="earnings_monthly_median",
+        metric_name="Median monthly earnings of employees (ILO-processed LFS)",
+        unit="PHP per month",
+        definition=(
+            "Median monthly earnings of employees (wage and salary workers) whose "
+            "main job falls in this major occupation group, from the Philippine "
+            "Labor Force Survey as tabulated by the ILO."
+        ),
+        required_source_id="ilostat_earnings_median",
+        expected_source_granularity="psoc_major_group",
+        expected_derivation_class="estimated",
+        expected_source_authority="international_official_occupational",
+        denominator="employees only",
+        parser_id="ilo_earnings_median",
+        common_misreading=(
+            "Employees only. The middle employee's pay for the whole group, not "
+            "the pay of any one occupation inside it, and not a wage floor."
+        ),
+    ),
+    "education_advanced_share": MetricDefinition(
+        metric_id="education_advanced_share",
+        metric_name="Share of employed persons with advanced (tertiary) education",
+        unit="share of employed persons",
+        definition=(
+            "Employed persons in the major occupation group whose highest "
+            "attainment is advanced (tertiary, ISCED 2011 levels 5-8), divided by "
+            "all employed persons in the group. Calculated from ILO-tabulated "
+            "Labor Force Survey counts."
+        ),
+        required_source_id="ilostat_education_attainment",
+        expected_source_granularity="psoc_major_group",
+        expected_derivation_class="calculated",
+        expected_source_authority="international_official_occupational",
+        denominator="employed persons in the same group",
+        parser_id="ilo_education_attainment",
+        common_misreading=(
+            "Describes who works in the group today, not what the occupation "
+            "requires. A high share does not mean a degree is needed for the job."
+        ),
+    ),
     "onet_job_zone": MetricDefinition(
         metric_id="onet_job_zone",
         metric_name="O*NET Job Zone (US)",

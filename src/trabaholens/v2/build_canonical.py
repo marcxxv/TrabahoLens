@@ -27,6 +27,7 @@ from .pipeline import Stage, StageReport, StageStatus
 from .sources import get_parser
 from .sources import onet as _onet_parsers  # noqa: F401  (registers parsers)
 from .sources import psa as _psa_parsers  # noqa: F401  (registers parsers)
+from .sources import ilo as _ilo_parsers  # noqa: F401  (registers parsers)
 from .sources import psoc_importer as _psoc_parser  # noqa: F401
 from .transform import TransformOutcome, confidence_for, transform_rows
 from .paths import (
@@ -407,6 +408,27 @@ def pipeline_stage_reports() -> list[StageReport]:
 # Crosswalks
 # ---------------------------------------------------------------------------
 
+def _ilo_isco_code_lists() -> set[str]:
+    """ISCO-08 major and sub-major codes present in the verified ILO tabulations.
+
+    Used to promote a structural PSOC-to-ISCO link from machine_proposed to
+    source_verified: the code has to appear in a hash-verified source file, not
+    just in our own classification table.
+    """
+    codes: set[str] = set()
+    for source_id, parser_id in (("ilostat_employment_isco2", "ilo_employment_isco2"),
+                                 ("ilostat_earnings_mean", "ilo_earnings_mean")):
+        record = verify_all([source_id]).get(source_id)
+        parser = get_parser(parser_id)
+        if record is None or not record.acquired or parser is None:
+            continue
+        try:
+            codes |= {row.source_code for row in parser.run(record.path).rows}
+        except Exception:  # an unreadable source verifies nothing
+            continue
+    return codes
+
+
 def build_crosswalk(
     classifications: list[dict[str, Any]],
     version_correspondence_rows: list[dict[str, Any]] | None = None,
@@ -430,11 +452,19 @@ def build_crosswalk(
 
     # PSOC 2012 adopts the ISCO-08 structure at major and sub-major level, so
     # the correspondence is structural rather than a judgement about titles.
+    verified_codes = _ilo_isco_code_lists()
     for entry in classifications:
         code = entry["psoc_code"]
         isco_code = entry.get("isco08_code", "")
+        structural_level = entry.get("level") in {"psoc_major_group", "psoc_sub_major_group"}
+        if not isco_code and structural_level:
+            # The PSA workbook carries no ISCO column. At major and sub-major
+            # level the codes are the ISCO-08 codes by construction, which is
+            # checked below against the code lists of the ILO's own tabulation.
+            isco_code = code
         if not isco_code:
             continue
+        verified = structural_level and code in verified_codes
         rows.append(
             {
                 "crosswalk_id": f"XW-ISCO-{code}",
@@ -445,7 +475,9 @@ def build_crosswalk(
                 "match_type": "exact",
                 "match_quality": "high",
                 "mapping_basis": "structural_derivation",
-                "review_status": "machine_proposed",
+                # source_verified only when this exact code is present in the
+                # hash-verified ILO tabulation, not merely assumed to be.
+                "review_status": "source_verified" if verified else "machine_proposed",
                 "notes": (
                     "PSOC 2012 is built on ISCO-08; major and sub-major skeletons "
                     "correspond by construction. Confirm against the PSA volume, "

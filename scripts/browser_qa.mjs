@@ -121,10 +121,10 @@ check("Enter opens drawer for focused box", await ev(`selected?.id`) === await e
 await key("Escape", "Escape", { vk: 27 }); await sleep(200);
 check("focus returns to canvas after close", await ev(`document.activeElement.id`) === "canvas");
 // layers
-for (const m of ["employment", "exposure", "wages", "education", "outlook", "ofw", "informal"]) {
+for (const m of ["employment", "detail", "earnings", "exposure", "wages", "education", "outlook", "ofw", "informal"]) {
   await ev(`document.querySelector('#colorToggle button[data-mode="${m}"]').click()`); await sleep(250);
   const s = await ev(`({mode,boxes:rects.length,desc:layerDesc.textContent,count:resultCount.textContent,enabled:!document.querySelector('#colorToggle button[data-mode="${m}"]').disabled,pressed:document.querySelector('#colorToggle button[data-mode="${m}"]').getAttribute("aria-pressed"),legend:[legendLow.textContent,legendHigh.textContent]})`);
-  const unavailable = ["education", "outlook", "informal"].includes(m);
+  const unavailable = ["outlook", "informal"].includes(m);
   check(`layer ${m}: selectable and explained`, s.mode === m && s.enabled && s.pressed === "true" && (unavailable ? s.boxes === 0 && s.desc.includes("unavailable") : s.boxes > 0), `${s.boxes} boxes · ${s.count} · legend ${s.legend.join("–")}`);
   await shot(`local-desktop-layer-${m}`, false);
 }

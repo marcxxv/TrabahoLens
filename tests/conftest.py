@@ -111,4 +111,5 @@ def score_row(**overrides) -> dict[str, str]:
 
 @pytest.fixture
 def registry_ids() -> set[str]:
-    return {"psa_lfs", "psa_ows", "psa_sof", "psa_informal", "onet", "llm_scoring"}
+    return {"psa_lfs", "psa_ows", "psa_sof", "psa_informal", "onet", "llm_scoring",
+            "ilostat_employment_isco2", "ilostat_earnings_mean", "ilostat_earnings_median", "ilostat_education_attainment"}

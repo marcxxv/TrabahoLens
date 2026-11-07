@@ -26,7 +26,14 @@ test('the adapter preserves source values, missingness and population separation
   assert.equal(run('records.wages.filter(validValue).length'),release.wage_references.filter(r=>r.availability==='published').length);
   assert.equal(run('records.employment.length'),release.occupations.filter(o=>o.level==='psoc_major_group'&&o.metrics.employment_count).length);
   assert.equal(run('records.ofw.find(r=>r.code === "0").value'),null);
-  assert.equal(run('Object.keys(records).sort().join(",")'),'employment,exposure,ofw,wages');
+  assert.equal(run('Object.keys(records).sort().join(",")'),'detail,earnings,education,employment,exposure,ofw,wages');
+  // New ILO layers: counts match the release, area for pay/education follows PSA
+  // employment, and nothing is filled in for a missing value.
+  assert.equal(run('records.detail.length'),release.occupations.filter(o=>o.level==='psoc_sub_major_group'&&o.metrics.employment_count_subgroup).length);
+  assert.equal(run('records.detail.every(r=>r.category.length===1)'),true);
+  assert.equal(run('records.earnings.every(r=>r.areaWeight>0)'),true);
+  assert.equal(run('records.education.every(r=>r.areaWeight>0&&r.value>=0&&r.value<=1)'),true);
+  assert.equal(run('records.earnings.find(r=>r.code==="1").meanEarnings.value>records.earnings.find(r=>r.code==="1").value'),true);
   const units=release.occupations.filter(o=>o.level==='psoc_unit_group');
   assert.equal(run('records.exposure.length'),units.length);
   const scored=units.filter(o=>(o.exposure||[]).some(e=>e.dimension==='A'&&e.score!==null)).length;

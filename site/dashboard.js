@@ -8,12 +8,15 @@ const compact = n => new Intl.NumberFormat("en-PH", { notation: "compact", maxim
 const MODES = {
   exposure: {label:"AI task exposure", title:"Generative-AI task exposure by occupation", description:"Model-estimated · each PSA task statement for a PSOC unit group was scored by an AI model at least twice; the box shows the median task score (0–5).", encoding:"Equal-area boxes = PSOC unit groups, NOT employment. Colour = median technical task exposure. Faint boxes have no score.", note:"Exposure describes how much of an occupation's tasks generative AI could assist with or perform. It is not an estimate of automation, displacement, layoffs or future employment. Scores are model estimates and have not been independently validated."},
   employment: {label:"Employment", metric:"employment_count", title:"Employment by major occupation group", description:"PSA LFS · 2024 annual estimates · employed persons, not jobs or vacancies.", encoding:"Area = employed persons. Colour = group employment. No detailed occupational counts are inferred.", note:"The group estimates sum to one person more than the source total because of source rounding. We retain the published cells unchanged."},
+  detail: {label:"Employment detail", metric:"employment_count_subgroup", level:"psoc_sub_major_group", title:"Employment by sub-major occupation group (ILO-processed LFS)", description:"ILOSTAT · 2024 annual · employed persons in each of the 43 PSOC sub-major groups, from the Philippine Labor Force Survey as tabulated by the ILO.", encoding:"Area = employed persons. Colour = group employment. Finer than PSA's published groups, but an ILO tabulation: totals differ from PSA's by about 2.7%.", note:"These counts are an ILO re-tabulation of the same survey, not PSA's published figures. Do not add them to, or compare them cell by cell with, the major-group layer."},
+  earnings: {label:"Earnings", metric:"earnings_monthly_median", level:"psoc_major_group", areaFrom:"employment_count", title:"Median monthly earnings of employees by major group", description:"ILOSTAT · 2024 annual · median monthly earnings of employees (wage and salary workers) in each major occupation group, Philippine Labor Force Survey as tabulated by the ILO.", encoding:"Area = employed persons (PSA). Colour = median monthly earnings of employees. Employees only; own-account workers and employers are not included.", note:"Earnings are published for major groups, so they describe a whole group and cannot rank the occupations inside it. The mean is shown in the details panel. Managers and Professionals share the same published median; the ILO series repeats that value and we keep it unchanged."},
+  education: {label:"Education", metric:"education_advanced_share", level:"psoc_major_group", areaFrom:"employment_count", title:"Employed persons with advanced education, by major group", description:"ILOSTAT · 2024 annual · share of employed persons whose highest attainment is tertiary, calculated from the ILO's published counts.", encoding:"Area = employed persons (PSA). Colour = share with advanced (tertiary) education.", note:"This shows who works in a group today, not what the occupation requires. A high share does not mean a degree is needed for the job."},
   wages: {label:"Wage references", title:"Wage rates by occupation × industry", description:"PSA OWS · August 2024 · average monthly wage rate, including regular cash allowances. Covered formal establishments only.", encoding:"Equal-area boxes = separate job-position × industry records, NOT worker counts. Colour = monthly wage rate (log scale).", note:"Source-native occupation codes, not reconciled to PSOC 2022. Never sum or average these industry slices into national occupational pay. Withheld records remain in table view and exports."},
   ofw: {label:"OFW distribution", metric:"ofw_distribution_share", title:"How OFWs are distributed across occupations", description:"PSA SOF · April–September 2024 · share of the survey's OFWs in each major occupation group. Not the OFW share of domestic occupations.", encoding:"Area and colour = published share of all OFWs. Not domestic employment. Missing cells are not plotted.", note:"The armed-forces percentage is blank in the source, not zero. Source rounding is retained; percentages are not renormalised. CV above 10% is flagged as less precise."}
 };
 let payload, records = {}, mode = "exposure", filtered = [], zoom = 1, tableMode = false, page = 0;
 const MISSING_EXPOSURE = {no_psa_tasks:"No PSA task list", not_scored:"Not yet scored"};
-const displayValue = r => !validValue(r) ? (MISSING_EXPOSURE[r.availability] || "Unavailable") : mode === "exposure" ? `${fmt(r.value, 1)} / 5` : mode === "wages" ? `₱${fmt(r.value, 2)}` : mode === "ofw" ? `${fmt(r.value * 100, 3)}%` : `${fmt(r.value)} persons`;
+const displayValue = r => !validValue(r) ? (MISSING_EXPOSURE[r.availability] || "Unavailable") : mode === "exposure" ? `${fmt(r.value, 1)} / 5` : mode === "wages" ? `₱${fmt(r.value, 2)}` : mode === "earnings" ? `₱${fmt(r.value)} / month` : mode === "education" ? `${fmt(r.value * 100, 1)}% advanced` : mode === "ofw" ? `${fmt(r.value * 100, 3)}%` : `${fmt(r.value)} persons`;
 const gradeLabel = r => !validValue(r) ? (MISSING_EXPOSURE[r.availability] || "Withheld / missing") : mode === "exposure" ? `Model estimate · ${r.human_review_status === "human_reviewed" ? "expert-reviewed" : "not independently validated"}` : r.coefficient_of_variation > 10 ? "Low precision · CV > 10%" : r.standard_error === null ? "Precision not supplied" : "Published sampling precision";
 // PSA prints titles in capitals; display them in title case. Codes, not titles,
 // identify occupations, so this is presentation only.
@@ -50,7 +53,17 @@ function neighbourContext(code) {
 
 function buildRecords() {
   const majors = new Map(payload.occupations.filter(o => o.level === "psoc_major_group").map(o => [o.psoc_code, displayTitle(o.title)]));
-  for (const key of ["employment", "ofw"]) records[key] = payload.occupations.filter(o => o.level === "psoc_major_group" && o.metrics[MODES[key].metric]).map(o => ({...o.metrics[MODES[key].metric], id:`${o.occupation_id}:${key}`, title:displayTitle(o.title), code:o.psoc_code, category:o.psoc_code, categoryLabel:displayTitle(o.title)}));
+  const psaEmployment = new Map(payload.occupations.filter(o => o.metrics.employment_count && validValue(o.metrics.employment_count)).map(o => [o.psoc_code, o.metrics.employment_count.value]));
+  for (const key of ["employment", "ofw", "detail", "earnings", "education"]) {
+    const level = MODES[key].level || "psoc_major_group", detail = level !== "psoc_major_group";
+    records[key] = payload.occupations.filter(o => o.level === level && o.metrics[MODES[key].metric]).map(o => ({
+      ...o.metrics[MODES[key].metric], id:`${o.occupation_id}:${key}`, title:displayTitle(o.title), code:o.psoc_code,
+      category: detail ? o.psoc_major : o.psoc_code, categoryLabel: detail ? (majors.get(o.psoc_major) || o.psoc_major) : displayTitle(o.title),
+      // Box area for earnings and education follows PSA employment of the same
+      // group, as in the reference design; colour is the layer's own value.
+      areaWeight: MODES[key].areaFrom ? psaEmployment.get(o.psoc_code) : undefined,
+      meanEarnings: key === "earnings" ? o.metrics.earnings_monthly_mean : undefined}));
+  }
   records.wages = payload.wage_references.map(r => ({...r, id:r.observation_id, title:r.source_occupation, code:r.source_code, category:r.industry_code, categoryLabel:r.industry}));
   const coverage = payload.exposure_coverage || {}, noTasks = new Set((coverage.unit_groups_without_psa_tasks || []).map(u => u.psoc_code));
   records.exposure = payload.occupations.filter(o => o.level === "psoc_unit_group").map(o => {
@@ -100,7 +113,6 @@ function exportCSV() {
 // Interaction constants and thresholds follow the deployed page's script so
 // hover, tap, zoom and label behaviour match; only the data semantics differ.
 const UNAVAILABLE = {
-  education: "Education is unavailable: no compatible occupation-level attainment source has been validated.",
   outlook: "Posting demand is unavailable: no verified job-posting dataset has been acquired. It is not an employment forecast.",
   informal: "Informality is unavailable: no compatible occupation-level source has been validated."
 };
@@ -170,9 +182,9 @@ function update() {
   const usable = filtered.filter(validValue), withheld = filtered.length - usable.length;
   $("resultCount").textContent = UNAVAILABLE[mode] ? "Layer unavailable" : mode === "exposure" ? `${fmt(usable.length)} scored · ${fmt(withheld)} without a score` : `${fmt(usable.length)} available · ${fmt(withheld)} withheld / missing`;
   $("industryFilterNote").textContent = UNAVAILABLE[mode] || MODES[mode].note;
-  $("statTotalHeading").textContent = mode === "exposure" ? "Occupations scored" : mode === "employment" ? "Employed persons" : mode === "ofw" ? "OFW distribution" : "Available source records";
-  $("statTotalJobs").textContent = mode === "exposure" ? `${fmt(usable.length)}/${fmt(filtered.length)}` : !usable.length ? "—" : mode === "employment" ? compact(usable.reduce((s,r)=>s+r.value,0)) : mode === "ofw" ? `${fmt(usable.reduce((s,r)=>s+r.value,0)*100,3)}%` : fmt(usable.length);
-  $("statTotalLabel").textContent = UNAVAILABLE[mode] ? "no validated values" : mode === "exposure" ? "PSOC unit groups shown" : mode === "employment" ? "sum of shown group estimates" : mode === "ofw" ? "of all survey OFWs; not renormalised" : "occupation × industry records";
+  $("statTotalHeading").textContent = mode === "exposure" ? "Occupations scored" : mode === "employment" ? "Employed persons" : mode === "detail" ? "Employed persons (ILO)" : mode === "earnings" ? "Median monthly pay" : mode === "education" ? "Advanced education" : mode === "ofw" ? "OFW distribution" : "Available source records";
+  $("statTotalJobs").textContent = mode === "exposure" ? `${fmt(usable.length)}/${fmt(filtered.length)}` : !usable.length ? "—" : mode === "employment" || mode === "detail" ? compact(usable.reduce((s,r)=>s+r.value,0)) : mode === "earnings" ? `₱${compact(median(usable.map(r=>r.value)))}` : mode === "education" ? `${fmt(median(usable.map(r=>r.value))*100,0)}%` : mode === "ofw" ? `${fmt(usable.reduce((s,r)=>s+r.value,0)*100,3)}%` : fmt(usable.length);
+  $("statTotalLabel").textContent = UNAVAILABLE[mode] ? "no validated values" : mode === "exposure" ? "PSOC unit groups shown" : mode === "employment" ? "sum of shown group estimates" : mode === "detail" ? "sum of shown ILO sub-group counts" : mode === "earnings" ? "median across shown groups, employees only" : mode === "education" ? "median share across shown groups" : mode === "ofw" ? "of all survey OFWs; not renormalised" : "occupation × industry records";
   const cv = usable.filter(r=>Number.isFinite(r.coefficient_of_variation));
   const scored = (records.exposure || []).filter(validValue);
   const exposureBlock = scored.length ? ["AI task exposure", "Model-estimated", `${fmt(scored.length)} unit groups scored`] : ["AI task exposure", "Not scored", "no accepted scoring run"];
@@ -186,7 +198,7 @@ function update() {
     ["Human review", usable.some(r=>r.human_review_status==="human_reviewed") ? "Partial" : "Not yet", "experimental scores"]
   ] : [
     ["Reference period", usable.length ? [...new Set(usable.map(r=>r.reference_period))].join("; ") : "—", "historical, not live counts"],
-    ["Resolution", UNAVAILABLE[mode] ? "—" : mode === "wages" ? "Source-native" : "Major group", UNAVAILABLE[mode] ? "no validated values" : mode === "wages" ? "not reconciled to PSOC" : "no detailed counts inferred"],
+    ["Resolution", UNAVAILABLE[mode] ? "—" : mode === "wages" ? "Source-native" : mode === "detail" ? "Sub-major group" : "Major group", UNAVAILABLE[mode] ? "no validated values" : mode === "wages" ? "not reconciled to PSOC" : mode === "detail" ? "ILO two-digit ISCO-08 = PSOC" : "no detailed counts inferred"],
     ["Matching records", UNAVAILABLE[mode] ? "—" : fmt(filtered.length), "incl. withheld / missing"],
     ["Precision cautions", cv.length ? fmt(cv.filter(r=>r.coefficient_of_variation>10).length) : "Not assessed", "CV above 10%"],
     ["Withheld / missing", UNAVAILABLE[mode] ? "—" : fmt(withheld), "never filled with zero"],
@@ -202,7 +214,7 @@ function update() {
   // colour when the filter changes, matching the fixed legend.
   const vals = visibleRecords().filter(validValue).map(r=>r.value);
   colourRange = mode === "exposure" ? [0, 5] : vals.length ? [Math.min(...vals.map(scaleValue)), Math.max(...vals.map(scaleValue))] : [0, 0];
-  const legendValue = n => mode === "wages" ? `₱${compact(n)}` : mode === "ofw" ? `${fmt(n*100,2)}%` : compact(n);
+  const legendValue = n => mode === "wages" || mode === "earnings" ? `₱${compact(n)}` : mode === "education" ? `${fmt(n*100,0)}%` : mode === "ofw" ? `${fmt(n*100,2)}%` : compact(n);
   $("legendLow").textContent = mode === "exposure" ? (vals.length ? "0 · little task exposure" : "Not scored") : vals.length ? legendValue(Math.min(...vals)) : "Unavailable";
   $("legendHigh").textContent = mode === "exposure" ? (vals.length ? "5 · most task content" : "") : vals.length ? legendValue(Math.max(...vals)) : "";
   const legend = $("gradientLegend").getContext("2d");
@@ -223,7 +235,7 @@ function layout() {
   // Equal-area layers (wages, exposure) never imply worker counts. Exposure also
   // lays out unscored unit groups, drawn faint, so the classification stays whole.
   const equalArea = mode === "wages" || mode === "exposure";
-  const items = filtered.filter(r=>mode === "exposure" || (validValue(r) && (mode === "wages" || r.value>0))).map(r=>({...r,weight:equalArea ? 1 : r.value}));
+  const items = filtered.filter(r=>mode === "exposure" || (validValue(r) && (mode === "wages" || r.value>0))).map(r=>({...r,weight:equalArea ? 1 : (r.areaWeight ?? r.value)}));
   // Group source-native wage records by their published industry, never by a
   // guessed PSOC match. Employment and SOF remain separate major-group maps.
   const groups = new Map();
@@ -306,7 +318,7 @@ function showTooltip(r, mx, my) {
     ["Review", gradeLabel(r)]
   ] : [["Status", displayValue(r)], ["Why", r.availability === "no_psa_tasks" ? "PSA's PSOC entry has no task list" : "Not in the published scoring run"],
       ...(r.context ? [["Nearby groups", `${r.context.n} scored in ${r.context.minor}: median ${fmt(r.context.median,1)} / 5 (context only, not this group's score)`]] : [])])
-  : [["Estimate",displayValue(r)],["Precision",precisionText(r)],["Status",gradeLabel(r)],["Evidence",`${r.derivation_class} · grade ${r.confidence_grade}`],["Resolution",String(r.source_granularity).replaceAll("_"," ")],["Source",`${r.source_id} · retrieved ${String(r.retrieved_at).slice(0,10)}`]];
+  : [["Estimate",displayValue(r)],mode==="earnings"&&r.meanEarnings&&validValue(r.meanEarnings)?["Mean pay",`₱${fmt(r.meanEarnings.value)} / month`]:["Precision",precisionText(r)],["Status",gradeLabel(r)],["Evidence",`${r.derivation_class} · grade ${r.confidence_grade}`],["Resolution",String(r.source_granularity).replaceAll("_"," ")],["Source",`${r.source_id} · retrieved ${String(r.retrieved_at).slice(0,10)}`]];
   tip.querySelector(".tt-stats").replaceChildren(...rows.flatMap(([label,value])=>[node("span",label,"label"),node("span",value,"value")]));
   tip.querySelector(".tt-rationale").textContent=mode === "exposure" ? "Potential task interaction with generative AI, not an employment outcome." : r.population_scope||"";
   tip.querySelector(".tt-click-hint").style.display=compactLayout?"none":"block";

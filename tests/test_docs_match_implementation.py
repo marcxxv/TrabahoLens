@@ -71,7 +71,10 @@ def test_published_value_count_matches_payload():
     canonical = list(csv.DictReader(METRIC_OBSERVATIONS_CSV.open(encoding="utf-8")))
     published = [row for row in canonical if (row["metric_value"] or "").strip()]
     assert payload["counts"]["published_values"] == len(published)
-    assert {row["metric_id"] for row in published} == {"employment_count", "ofw_distribution_share"}
+    assert {row["metric_id"] for row in published} == {
+        "employment_count", "ofw_distribution_share", "employment_count_subgroup",
+        "earnings_monthly_mean", "earnings_monthly_median", "education_advanced_share",
+    }
     # Exposure scores are published, but as their own evidence layer: they are
     # not metric observations and must never be counted among them.
     model_scores = list(csv.DictReader(MODEL_SCORES_CSV.open(encoding="utf-8")))
@@ -219,7 +222,10 @@ def test_dashboard_only_activates_source_backed_values():
         for metric_id, metric in occupation["metrics"].items()
         if metric["availability"] == "published" and metric["value"] is not None
     }
-    assert published_metric_ids == {"employment_count", "ofw_distribution_share"}
+    assert published_metric_ids == {
+        "employment_count", "ofw_distribution_share", "employment_count_subgroup",
+        "earnings_monthly_mean", "earnings_monthly_median", "education_advanced_share",
+    }
 
 
 def test_dashboard_has_no_embedded_employment_values():

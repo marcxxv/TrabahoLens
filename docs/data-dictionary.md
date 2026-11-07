@@ -171,6 +171,10 @@ One row per (occupation unit, metric, reference period).
 | `employment_count` | Employed persons | persons | PSA LFS | PSOC major group |
 | `wage_basic_pay` | Average monthly basic pay, OWS establishments | PHP/month | PSA OWS | occupation |
 | `ofw_distribution_share` | Distribution of OFWs by major occupation group | share of all OFWs | PSA SOF | PSOC major group |
+| `employment_count_subgroup` | Employed persons by sub-major group (ILO-processed LFS) | persons | ILOSTAT | PSOC sub-major group |
+| `earnings_monthly_mean` | Average monthly earnings of employees (ILO-processed LFS) | PHP/month | ILOSTAT | PSOC major group |
+| `earnings_monthly_median` | Median monthly earnings of employees (ILO-processed LFS) | PHP/month | ILOSTAT | PSOC major group |
+| `education_advanced_share` | Share of employed persons with advanced (tertiary) education | share of employed persons | ILOSTAT (calculated) | PSOC major group |
 | `onet_job_zone` | O\*NET Job Zone (US) | ordinal 1–5 | O\*NET | occupation |
 | `gen_ai_task_exposure` | Generative-AI technical task exposure | 0–5 rubric score | LLM scoring | occupation |
 
