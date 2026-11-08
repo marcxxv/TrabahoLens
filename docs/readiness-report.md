@@ -1,7 +1,9 @@
 # Readiness report
 
-Source review: 2026-09-28. **Local research preview; not yet an approved
-production exposure product.** No merge, push or deployment is implied.
+Source review: 2026-09-28; interface and documentation updated 2026-11-08.
+**Research preview; not yet an approved production exposure product.** The
+exposure scores await independent review. Publication of any kind, including use
+in the Philippine AI Report, depends on the gates below.
 
 | Component | Status |
 | --- | --- |
@@ -12,8 +14,8 @@ production exposure product.** No merge, push or deployment is implied.
 | Wage references | Real-source verified at job-position × industry level; nine records quarantined |
 | Canonical occupational basic pay | Unavailable; wage concept/version mismatch unresolved |
 | O*NET Philippine correspondence | Missing; no title-similarity substitute |
-| Exposure model run and expert review | Full task-file run, experimental: 447 of 447 PSOC unit groups with PSA tasks scored (894 dimension scores) from 3,318 of 3,362 statements, `deepseek-v4.1-flash` via NYO, 2 attempts at temperature 0; not human-reviewed; multi-model agreement measured, no independent validation |
-| Interface | Deployed CSS, structure and interaction model restored; 61/61 headless-Chrome checks pass (`make browser-qa`) at desktop, tablet and phone sizes; user acceptance on real devices pending |
+| Exposure model run and expert review | Full task-file run, experimental, shown as the map's opening layer: 447 of 447 PSOC unit groups with PSA tasks scored (894 dimension scores) from 3,318 of 3,362 statements, `deepseek-v4.1-flash` via NYO, 2 attempts at temperature 0; not human-reviewed; multi-model agreement measured, no independent validation |
+| Interface | Ten layers on one treemap, laid out and coloured after karpathy.ai/jobs. 65/65 headless-Chrome checks pass (`make browser-qa`) at desktop and phone sizes, with 227 Python and 5 Node tests; user acceptance on real devices pending. Exposure box area is a display stretch (cube of PSA task statements), not employment |
 | External integration | Philippine AI Report public API checked; HTTP 402 provider quota restriction; no survey values imported |
 
 ## Data delivered by this pass

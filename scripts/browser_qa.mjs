@@ -64,7 +64,7 @@ for (const [label, w, h, mobile] of [["desktop", 1440, 900, false], ["tablet", 8
 if (process.env.SHOTS) { ws.close(); chrome.kill(); setTimeout(()=>process.exit(0),500); await sleep(1e9); }
 // ── Desktop interactions ─────────────────────────────────────────────────
 await viewport(1440, 900, false); await load(LOCAL);
-{ const m0 = await ev(`mode`); check("fresh profile starts on AI task exposure when a run is published", m0 === "exposure", `mode=${m0} saved=${await ev(`(()=>{try{return localStorage.getItem("trabaholens_verified_layer")}catch(e){return "err"}})()`)}`); }
+{ const m0 = await ev(`mode`); check("fresh profile starts on AI task exposure when a run is published", m0 === "exposure", `mode=${m0} saved=${await ev(`(()=>{try{return localStorage.getItem("trabaholens_layer_v2")}catch(e){return "err"}})()`)}`); }
 await ev(`document.querySelector('#colorToggle button[data-mode="employment"]').click()`); await sleep(300);
 check("employment layer selectable", await ev(`mode`) === "employment");
 check("employment boxes equal published major groups", await ev(`rects.length`) === await ev(`records.employment.filter(validValue).length`), `${await ev("rects.length")} boxes`);

@@ -7,9 +7,10 @@ fields was an observed Philippine statistic. PSOC replaces O\*NET-SOC as the
 canonical key; every value now carries its provenance; unsupported metrics were
 withdrawn rather than relabelled.
 
-**This release publishes no metric values** — no source could be retrieved from
-the build environment, and v1's numbers were not carried forward to fill the
-space.
+**At this first entry the release published no metric values** — no source could
+be retrieved from the build environment, and v1's numbers were not carried
+forward to fill the space. That has since changed; see the later entries below
+and the current state in [`README.md`](README.md).
 
 Full detail: [`docs/changelog-v2.md`](docs/changelog-v2.md).
 Evidence: [`docs/audit/baseline-audit.md`](docs/audit/baseline-audit.md).
@@ -23,6 +24,15 @@ canonical provenance retention, OFW slice denominators, duplicate blocking,
 derived release status, ordinal exposure analysis, and current documentation.
 Phase 2 remains partially implemented because no real primary source or reviewed
 PSOC↔O\*NET crosswalk has passed through the pipeline.
+
+### Layers, exposure run and interface — 2026-11-08
+
+Real PSA LFS, SOF and OWS values plus 83 ILOSTAT values are published across
+ten layers. The AI task-exposure layer is scored for 447 of 466 unit groups as an
+experimental, unreviewed model estimate. The treemap follows the layout and
+colour scale of karpathy.ai/jobs. Details:
+[`docs/changelog-v2.md`](docs/changelog-v2.md). Status:
+[`docs/readiness-report.md`](docs/readiness-report.md).
 
 ---
 

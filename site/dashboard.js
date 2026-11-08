@@ -6,7 +6,7 @@ const validValue = metric => metric.availability === "published" && metric.value
 const fmt = (n, digits = 0) => new Intl.NumberFormat("en-PH", { maximumFractionDigits: digits }).format(n);
 const compact = n => new Intl.NumberFormat("en-PH", { notation: "compact", maximumFractionDigits: 2 }).format(n);
 const MODES = {
-  exposure: {label:"AI task exposure", title:"Generative-AI task exposure by occupation", description:"Model-estimated · each PSA task statement for a PSOC unit group was scored by an AI model at least twice; the box shows the median task score (0–5).", encoding:"Equal-area boxes = PSOC unit groups, NOT employment. Colour = median technical task exposure. Faint boxes have no score.", note:"Exposure describes how much of an occupation's tasks generative AI could assist with or perform. It is not an estimate of automation, displacement, layoffs or future employment. Scores are model estimates and have not been independently validated."},
+  exposure: {label:"AI task exposure", title:"Generative-AI task exposure by occupation", description:"Model-estimated · each PSA task statement for a PSOC unit group was scored by an AI model at least twice; the box shows the median task score (0–5).", encoding:"Box area grows with the cube of the PSA task statements listed for the group (stretched so differences show), NOT employment. Colour = median technical task exposure. Faint boxes have no score.", note:"Exposure describes how much of an occupation's tasks generative AI could assist with or perform. It is not an estimate of automation, displacement, layoffs or future employment. Scores are model estimates and have not been independently validated."},
   employment: {label:"Employment", metric:"employment_count", title:"Employment by major occupation group", description:"PSA LFS · 2024 annual estimates · employed persons, not jobs or vacancies.", encoding:"Area = employed persons. Colour = group employment. No detailed occupational counts are inferred.", note:"The group estimates sum to one person more than the source total because of source rounding. We retain the published cells unchanged."},
   detail: {label:"Employment detail", metric:"employment_count_subgroup", level:"psoc_sub_major_group", title:"Employment by sub-major occupation group (ILO-processed LFS)", description:"ILOSTAT · 2024 annual · employed persons in each of the 43 PSOC sub-major groups, from the Philippine Labor Force Survey as tabulated by the ILO.", encoding:"Area = employed persons. Colour = group employment. Finer than PSA's published groups, but an ILO tabulation: totals differ from PSA's by about 2.7%.", note:"These counts are an ILO re-tabulation of the same survey, not PSA's published figures. Do not add them to, or compare them cell by cell with, the major-group layer."},
   earnings: {label:"Earnings", metric:"earnings_monthly_median", level:"psoc_major_group", areaFrom:"employment_count", title:"Median monthly earnings of employees by major group", description:"ILOSTAT · 2024 annual · median monthly earnings of employees (wage and salary workers) in each major occupation group, Philippine Labor Force Survey as tabulated by the ILO.", encoding:"Area = employed persons (PSA). Colour = median monthly earnings of employees. Employees only; own-account workers and employers are not included.", note:"Earnings are published for major groups, so they describe a whole group and cannot rank the occupations inside it. The mean is shown in the details panel. Managers and Professionals share the same published median; the ILO series repeats that value and we keep it unchanged."},
@@ -121,7 +121,7 @@ const ZOOM_MIN = 1, ZOOM_MAX = 6;
 let rects = [], hovered = null, selected = null, panX = 0, panY = 0, width = 0, height = 0, returnFocus = null, keyIndex = -1;
 let wheelTarget = 0, compactLayout = false, gap = 1.5, zoomFrame = null, drawQueued = false, suppressClick = false, clickTimer = null, lastTap = null;
 let isPanning = false, lastPan = null, pinch = null, colourRange = null;
-const canvas = $("canvas"), ctx = canvas.getContext("2d"), pointers = new Map(), textWidths = new Map();
+const canvas = $("canvas"), ctx = canvas.getContext("2d"), pointers = new Map();
 const visibleRecords = () => records[mode] || [];
 const panelOpen = () => $("riskPanel").classList.contains("visible");
 const reducedMotion = () => window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -178,7 +178,7 @@ function selectMode(key) {
   $("filterLabel").textContent = mode === "wages" ? "Industry (source grouping)" : "Occupation Group";
   document.querySelectorAll("#colorToggle button").forEach(b => { b.classList.toggle("active", b.dataset.mode === mode); b.setAttribute("aria-pressed",String(b.dataset.mode === mode)); });
   $("layerDesc").textContent = MODES[mode] ? `${MODES[mode].description} ${MODES[mode].encoding}` : UNAVAILABLE[mode];
-  saveSetting("trabaholens_verified_layer", mode);
+  saveSetting("trabaholens_layer_v2", mode);
   canvas.classList.add("switching");
   update();
   requestAnimationFrame(() => requestAnimationFrame(() => canvas.classList.remove("switching")));
@@ -242,28 +242,25 @@ function layout() {
   gap = compactLayout ? 1 : 1.5;
   canvas.width = width*dpr; canvas.height = height*dpr;
   canvas.style.width = `${width}px`; canvas.style.height = `${height}px`;
-  // Equal-area layers (wages, exposure) never imply worker counts. Exposure also
-  // lays out unscored unit groups, drawn faint, so the classification stays whole.
-  const equalArea = mode === "wages" || mode === "exposure";
-  const items = filtered.filter(r=>mode === "exposure" || (validValue(r) && (mode === "wages" || (r.areaWeight ?? r.value)>0))).map(r=>({...r,weight:equalArea ? 1 : (r.areaWeight ?? r.value)}));
+  // Wages are equal-area and never imply worker counts. Exposure area is the cube of
+  // the PSA task statements listed for the group (published count, stretched so
+  // differences show; not employment); groups
+  // with no list or no score get the minimum box. Unscored groups are drawn faint.
+  const equalArea = mode === "wages";
+  const items = filtered.filter(r=>mode === "exposure" || (validValue(r) && (mode === "wages" || (r.areaWeight ?? r.value)>0))).map(r=>({...r,weight:equalArea ? 1 : mode === "exposure" ? Math.max(1, r.tasks_total_for_occupation || 0) ** 3 : (r.areaWeight ?? r.value)}));
   // Group source-native wage records by their published industry, never by a
   // guessed PSOC match. Employment and SOF remain separate major-group maps.
   const groups = new Map();
   for (const r of items) { if(!groups.has(r.category)) groups.set(r.category,[]);groups.get(r.category).push(r); }
   const parents = [...groups].map(([id,children])=>({id,children,weight:children.reduce((s,r)=>s+r.weight,0)})).sort((a,b)=>b.weight-a.weight || a.id.localeCompare(b.id));
+  // Same nesting as Karpathy's visualizer: each major group is inset by the gap
+  // and each box by half the gap, so group edges are 3x the gutter between boxes.
   rects = squarify(parents,margin,margin,width-2*margin,height-2*margin).flatMap(g=>squarify(g.children,g.x+gap,g.y+gap,g.w-2*gap,g.h-2*gap));
   keyIndex = -1;
   if (zoom > 1) { panX *= width/prevW; panY *= height/prevH; }
   clampPan(); draw();
 }
 function clampPan() { if (zoom <= 1) { zoom = 1; panX = panY = 0; return; } panX=Math.max(width*(1-zoom),Math.min(0,panX));panY=Math.max(height*(1-zoom),Math.min(0,panY)); }
-function textWidth(text, font) { const key=`${font}|${text}`; if(!textWidths.has(key)){ctx.font=font;textWidths.set(key,ctx.measureText(text).width);} return textWidths.get(key); }
-function fitText(text, max, font) {
-  if (textWidth(text,font) <= max) return text;
-  let lo = 0, hi = text.length;
-  while (lo < hi) { const mid = Math.ceil((lo+hi)/2); if (textWidth(text.slice(0,mid)+"…",font) <= max) lo = mid; else hi = mid-1; }
-  return lo ? text.slice(0,lo)+"…" : "";
-}
 function draw() {
   drawQueued = false;
   const dpr = window.devicePixelRatio || 1;
@@ -282,19 +279,22 @@ function draw() {
   for (const r of rects) {
     const sx=(r.x+g)*zoom+panX, sy=(r.y+g)*zoom+panY, sw=(r.w-2*g)*zoom, sh=(r.h-2*g)*zoom;
     if (sw < (compactLayout ? 42 : 50) || sh < (compactLayout ? 20 : 18) || sx > width || sy > height || sx+sw < 0 || sy+sh < 0) continue;
-    const size = Math.max(compactLayout ? 10 : 11, Math.min(compactLayout ? 18 : 17, Math.min(sh/2.8, sw/11)*textScale));
+    // Text sizing and clipping follow the reference: the title is clipped at the
+    // box edge rather than shortened with an ellipsis, so every box shows as much
+    // of its name as fits.
+    const size = Math.min(13, Math.max(9, Math.min(sw/10, sh/3))) * textScale;
     const titleFont=`500 ${size}px -apple-system, system-ui, sans-serif`, subFont=`400 ${Math.max(8,size-2)}px -apple-system, system-ui, sans-serif`;
-    const inner=Math.max(0,sw-10), full=zoom>=1.15&&textWidth(r.title,titleFont)<=inner;
+    const inner=Math.max(0,sw-10), isOn=hovered?.id===r.id;
     ctx.save();
-    if(!full){ctx.beginPath();ctx.rect(sx+4,sy+2,inner,Math.max(0,sh-4));ctx.clip();}
-    ctx.textBaseline="top";ctx.font=titleFont;ctx.fillStyle=validValue(r)?"rgba(255,255,255,0.84)":"rgba(255,255,255,0.4)";
-    ctx.fillText(full?r.title:fitText(r.title,inner,titleFont),sx+5,sy+5);
+    ctx.beginPath();ctx.rect(sx+4,sy+2,inner,Math.max(0,sh-4));ctx.clip();
+    ctx.textBaseline="top";ctx.font=titleFont;ctx.fillStyle=!validValue(r)?"rgba(255,255,255,0.4)":isOn?"#fff":"rgba(255,255,255,0.85)";
+    ctx.fillText(r.title,sx+5,sy+4);
     if (sh > (compactLayout ? 30 : 34) && sw > (compactLayout ? 52 : 60)) {
-      ctx.font=subFont;ctx.fillStyle="rgba(255,255,255,0.58)";ctx.fillText(fitText(displayValue(r),inner,subFont),sx+5,sy+7+size);
+      ctx.font=subFont;ctx.fillStyle="rgba(255,255,255,0.5)";ctx.fillText(displayValue(r),sx+5,sy+4+size+2);
       if (zoom >= 2 && sh > 56) {
         const detailFont=`400 ${Math.max(8,size-3)}px -apple-system, system-ui, sans-serif`, line=gradeLabel(r);
         ctx.font=detailFont;ctx.fillStyle="rgba(255,255,255,0.46)";
-        if(textWidth(line,detailFont)<=inner)ctx.fillText(line,sx+5,sy+7+size+Math.max(13,size-1));
+        ctx.fillText(line,sx+5,sy+4+size+2+Math.max(11,size-1));
       }
     }
     ctx.restore();
@@ -526,7 +526,8 @@ addEventListener("orientationchange",()=>{if(payload&&!tableMode){hideTooltip();
     document.querySelectorAll("#colorToggle button").forEach(button=>{if(UNAVAILABLE[button.dataset.mode]){button.title=UNAVAILABLE[button.dataset.mode];button.classList.add("unavailable");}button.addEventListener("click",()=>selectMode(button.dataset.mode));});
     // The exposure layer leads when a scored run is published; otherwise the
     // first survey layer does, so an empty model layer is never the front page.
-    const saved=loadSetting("trabaholens_verified_layer"), hasScores=records.exposure.some(validValue);
-    selectMode(MODES[saved]||UNAVAILABLE[saved]?saved:hasScores?"exposure":"employment");
+    // A first visit opens on AI task exposure when a scoring run is published.
+        const saved=loadSetting("trabaholens_layer_v2");
+    selectMode(MODES[saved]||UNAVAILABLE[saved]?saved:records.exposure.some(validValue)?"exposure":"employment");
   }catch(error){payload=null;$("loadError").hidden=false;$("loadError").textContent=`No estimates displayed: ${error.message}`;$("canvas").hidden=true;$("statsRow").hidden=true;document.querySelectorAll("#colorToggle button,.evidence-tools button,.evidence-tools input,#industryFilter").forEach(n=>n.disabled=true);}
 })();

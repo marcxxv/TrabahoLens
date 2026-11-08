@@ -3,7 +3,8 @@
 Branch `audit/rebuild-v2`, from `128dd2238bc3e9657ab84467d0876ffbdf88f494`.
 
 Phases 1–3 of the rebuild. Phase 4 (Philippine AI Report integration) is out of
-scope. Not deployed. Not merged to `main`.
+scope. The rebuild has since landed on `main`; entries after the phase 1–3
+list below record later work.
 
 ---
 
@@ -160,3 +161,25 @@ re-tabulation of the Philippine LFS and is labelled so. Structural ISCO-08 links
 for the 10 major and 43 sub-major groups are marked `source_verified` only when
 the code appears in the verified file. Informal employment by occupation remains
 unavailable: no Philippine series exists in ILOSTAT or PSA.
+
+---
+
+## 2026-11-07 to 2026-11-08 — layers, exposure run and interface
+
+- **Exposure scored.** 447 of 466 PSOC unit groups scored from 3,318 of 3,362
+  PSA task statements (894 dimension scores), `deepseek-v4.1-flash` via NYO, two
+  attempts at temperature 0. The 19 unit groups with no PSA task list stay
+  unscored and faint. Experimental; not human-reviewed.
+- **ILOSTAT layers.** Employment by 43 sub-major groups, mean and median
+  earnings, advanced-education share and own-account/family share, each with its
+  source hash and reference period. 83 published values.
+- **Posting demand** recorded as unavailable, with the alternatives checked
+  (ILOSTAT, Indeed Hiring Lab, PSA, PhilJobNet) in the source docs.
+- **Interface.** One colour scale on every layer (green > amber > red), flat
+  hover and panel, a compact control strip, and a no-store local server.
+- **Treemap layout after karpathy.ai/jobs.** Text size 9–13 px, clipped at the
+  box edge instead of ending in an ellipsis; the same gutters; boxes nested in
+  major-group blocks. On exposure, area grows with the cube of PSA task
+  statements (a display stretch, stated on the page, not employment).
+- **Verification.** 227 Python tests, 65 of 65 browser QA checks, 5 Node tests;
+  `check`, `determinism`, `check-stale` and `validate-release` pass.

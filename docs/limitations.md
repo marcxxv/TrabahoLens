@@ -118,6 +118,13 @@ are heuristic backstops, not proofs of statistical validity.
 
 The dashboard uses observed employment to size the employment map; published
 OFW shares to size its separate map; and equal record areas for wage references.
+On the AI Task Exposure map, box area grows with the cube of the PSA task
+statements listed for the occupation (3 to 14 statements). This is a display
+stretch of a real, published count so that differences are visible, in the
+manner of karpathy.ai/jobs. It is not employment, not importance and not a
+weighting of the score: PSA publishes employment only at major group and the
+project does not apportion it. Groups with no task list or no score get the
+minimum box and are drawn faint.
 Small boxes can be inspected by zoom, keyboard or table view. Filtered shares
 retain their original denominator. No missing value is filled to improve visual
 density.

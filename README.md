@@ -5,11 +5,14 @@ Standard Occupational Classification (PSOC)**, built so that every figure states
 what kind of evidence it is, where it came from, and what period it covers — and
 so that a gap in the evidence appears as a gap, not as a number.
 
-> **Research preview, not a completed exposure product.** This release carries
-> real PSA LFS employment, SOF occupation distributions and separately scoped
-> OWS wage references. No synthetic v1 values are carried forward. Detailed
-> employment and the AI, education, hiring and informality layers remain
-> unavailable. See [`docs/limitations.md`](docs/limitations.md).
+> **Research preview — awaiting independent review.** This release carries real
+> PSA LFS employment, SOF overseas-worker distributions and OWS wage references,
+> plus ILOSTAT tabulations of the Philippine LFS. No synthetic v1 values are
+> carried forward. The AI task-exposure layer is an **experimental model
+> estimate**: it is not human-reviewed and has had no independent validation.
+> Posting demand and informal employment remain unavailable. See
+> [`docs/limitations.md`](docs/limitations.md) and
+> [`docs/readiness-report.md`](docs/readiness-report.md).
 
 ## Why this version exists
 
@@ -40,11 +43,26 @@ never measured still publishes it.
 
 ## What it shows now
 
-- The official 2022 PSOC workbook's explicit hierarchy, including unit groups.
-- Employment and OFW distribution at major-group level only.
-- OWS job-position × industry wage references, not mapped to canonical PSOC.
-- The original treemap/bento interaction pattern, with search, filters, zoom,
-  source details, table view, CSV export, keyboard access and light/dark themes.
+Ten layers, all read from `site/data.json`. The interface writes no label set,
+count or metric name into its own markup.
+
+| Layer | Source | Resolution | Published |
+| --- | --- | --- | --- |
+| AI Task Exposure | Model-scored PSA task statements (experimental) | 447 of 466 PSOC unit groups | 894 dimension scores |
+| Employment | PSA LFS 2024 | 10 major groups | 10 values |
+| Employment Detail | ILOSTAT, ISCO-08 two-digit = PSOC sub-major | 43 sub-major groups | 43 values |
+| Earnings (PHP) | ILOSTAT, employees only | 10 major groups | 10 mean, 10 median |
+| Wage Rates (OWS) | PSA OWS, source-native job position × industry | not mapped to PSOC | 684 records, 9 withheld |
+| Education | ILOSTAT, share with tertiary education | 10 major groups | 10 values |
+| Own-Account & Family | ILOSTAT status in employment | 10 major groups | 10 values |
+| OFW Distribution | PSA SOF Apr–Sep 2024 | 10 major groups | 9 values; armed forces blank in source |
+| Posting Demand | none verified | — | unavailable |
+| Informal % | none published by occupation | — | unavailable |
+
+- The official 2022 PSOC workbook's explicit hierarchy, including 466 unit groups.
+- A treemap with search, filters, zoom, source details, table view, CSV export,
+  keyboard access and light/dark themes. Its look follows
+  [karpathy.ai/jobs](https://karpathy.ai/jobs/).
 - Every metric the project intends to publish, defined **before** it has a
   value, with the source that would satisfy it, the level that source publishes
   at, the denominator, and the reading it is most often confused with.
@@ -53,23 +71,44 @@ never measured still publishes it.
 - Every source and its current state, including the ones that turned out not to
   be used at all.
 
+Missing means missing: an unavailable value is empty with a stated reason, never
+zero, a group average or a midpoint.
+
+### Reading the map
+
+- **Area** is employed persons on every layer except two. On Wage Rates every
+  box is equal. On AI Task Exposure, area grows with the **cube of the PSA task
+  statements listed for the occupation**. That is a display stretch of a real,
+  published count so that differences show. It is **not** employment: PSA
+  publishes employment only at major group, and the project does not apportion
+  it to occupations.
+- **Colour** orders the selected layer on a green > amber > red scale, following
+  karpathy.ai/jobs. On exposure, green is little task exposure and red is most.
+  Colour is not a verdict, and no text next to it frames exposure as risk or
+  job loss.
+
 ## On AI exposure
 
 > Generative-AI task exposure indicates how much an occupation's tasks may be
 > affected or assisted by generative AI. It is not an estimate of automation,
 > displacement, layoffs, or future employment.
 
-The measure is rebuilt as two model-scored 0–5 dimensions — technical task
-exposure and human-interaction/physical-presence intensity — scored on **task
-statements** rather than job titles. Adoption friction is not model-scored;
-evidence confidence is derived from provenance.
-The rubric prohibits combining them, because any weighted sum reads as a
-job-loss probability.
+Two model-scored 0–5 dimensions — technical task exposure and
+human-interaction/physical-presence intensity — scored on **task statements**
+rather than job titles. Adoption friction is not model-scored; evidence
+confidence is derived from provenance. The rubric prohibits combining the
+dimensions, because any weighted sum reads as a job-loss probability.
 
-No score is published: O*NET task evidence is retained, but no accepted
-Philippine correspondence or reviewed scoring run exists. The harness refuses
-to fall back to title-based scoring. **This experimental score has not yet undergone independent
-labour-economist validation.**
+Current run: 447 of 466 unit groups scored from 3,318 of 3,362 PSA task
+statements, by `deepseek-v4.1-flash` through NYO, two attempts per task at
+temperature 0, raw responses retained. The 19 unit groups with no PSA task list
+are shown faint and unscored; no score is borrowed from a neighbour. The harness
+refuses to fall back to title-based scoring.
+
+**This is an experimental score. It has not been human-reviewed and has not
+undergone independent labour-economist validation.** Multi-model agreement has
+been measured (see the [sensitivity report](docs/sensitivity-report.md)); it is
+not validation.
 
 ## Quickstart
 
@@ -90,9 +129,17 @@ make score-exposure MODEL=<provider/model-id>
 make sensitivity       # stability and sensitivity report
 make build-site        # release manifest + site payload, then validate
 make test              # validators, scoring harness, reproducibility
+make check             # structural and consistency checks
 make check-stale       # prove committed artifacts match their inputs
 make determinism       # prove two builds are byte-identical
+make validate-release  # validate the release manifest and site payload
+make browser-qa        # headless Chrome interaction QA (needs the local server)
 ```
+
+Last full run on this branch: 227 Python tests, 65 of 65 browser QA checks and
+5 Node dashboard tests pass, along with `check`, `determinism`, `check-stale`
+and `validate-release`. Automated checks do not prove source statistics are
+error-free, and they do not establish visual acceptance on real devices.
 
 ## Data layout
 
@@ -133,5 +180,18 @@ US-derived proxy for any Philippine occupation.
 
 ## Credits
 
-Visualisation approach inspired by [karpathy.ai/jobs](https://karpathy.ai/jobs/).
-No data is drawn from it.
+Visualisation approach and colour scale follow Andrej Karpathy's
+[US Job Market Visualizer](https://karpathy.ai/jobs/)
+([source](https://github.com/karpathy/jobs)). No data is drawn from it.
+
+## For reviewers
+
+Start with [`docs/readiness-report.md`](docs/readiness-report.md), which lists
+the remaining gates. What a reviewer is most needed for:
+
+1. The exposure scores: rubric (`data/exposure/`), method
+   ([exposure protocol](docs/exposure-protocol.md)) and results.
+2. Whether ILOSTAT's ISCO-08 two-digit tabulation is an acceptable stand-in for
+   PSOC sub-major groups (the layers say it is an ILO re-tabulation whose totals
+   differ from PSA's by about 2.7%).
+3. The exposure map's box-area stretch and the wording around it.
