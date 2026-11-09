@@ -57,3 +57,26 @@ test('layout allocates areas only in proportion to explicit weights',()=>{
   for(const r of rects)assert.ok(Math.abs(r.w*r.h-150000*r.weight/10)<1e-7);
   assert.equal(run('squarify([],0,0,500,300).length'),0);
 });
+test('overview charts preserve the actual source populations and missingness',()=>{
+  const run=adapter();run('payload=release;buildRecords()');
+  for(const key of ['exposure','employment','detail','earnings','education','vulnerable','ofw','wages']){
+    const overview=run(`summariseOverview("${key}",records.${key})`);
+    const published=run(`records.${key}.filter(validValue).length`);
+    assert.equal(overview.published,published);
+    assert.equal(overview.bins.reduce((s,b)=>s+b.count,0),published);
+    assert.equal(overview.withheld,run(`records.${key}.length`)-published);
+  }
+  const summary=run('summariseOverview("exposure",records.exposure)');
+  assert.equal(summary.tiers.reduce((s,t)=>s+t.count,0),summary.published);
+  assert.equal(summary.tasks.included,run('records.exposure.filter(validValue).reduce((s,r)=>s+r.tasks_included,0)'));
+  assert.equal(summary.tasks.listed,run('records.exposure.filter(validValue).reduce((s,r)=>s+r.tasks_total_for_occupation,0)'));
+});
+test('overview retains half-point medians, refuses unknown task counts, and leaves empty views empty',()=>{
+  const run=adapter();
+  const summary=run('summariseOverview("exposure",[{availability:"published",value:2.5},{availability:"no_psa_tasks",value:null}])');
+  assert.equal(summary.bins.find(b=>b.lower===2.5).count,1);
+  assert.equal(summary.tasks,null);
+  assert.equal(summary.withheld,1);
+  assert.equal(run('summariseOverview("wages",[]).available'),false);
+  assert.equal(run('summariseOverview("wages",[{availability:"blocked_source_inconsistency",value:null}]).available'),false);
+});

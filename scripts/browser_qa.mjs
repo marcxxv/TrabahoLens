@@ -72,7 +72,7 @@ check("employment box areas proportional to estimates", await ev(`(()=>{const t=
 let t = await target();
 await mouse("mouseMoved", t.x, t.y, { buttons: 0 }); await sleep(150);
 check("hover shows tooltip", await ev(`document.getElementById("tooltip").classList.contains("visible")`), await ev(`document.querySelector("#tooltip .tt-title").textContent`));
-check("tooltip rows use deployed label/value layout", await ev(`document.querySelectorAll("#tooltip .tt-stats .label").length`) === 6);
+check("hover preview stays concise with period and evidence", await ev(`document.querySelectorAll("#tooltip .tt-stats .label").length===2&&tooltip.textContent.includes(hovered.reference_period)`));
 check("hovered box highlighted", await ev(`hovered?.id`) === t.id);
 await shot("local-desktop-hover", false);
 await mouse("mousePressed", t.x, t.y); await mouse("mouseReleased", t.x, t.y); await sleep(500);
@@ -156,6 +156,155 @@ await ev(`view.click()`);
 await load(LOCAL);
 check("layer persists across reload", await ev(`mode`) === "wages");
 check("no page errors on desktop", errors.length === 0, errors.join(" | "));
+
+// ── Profile redesign: evidence, disclosure and responsive boundaries ──────
+await ev(`selectMode("exposure")`); await sleep(250);
+const previewTarget = await target();
+await mouse("mouseMoved", previewTarget.x, previewTarget.y, {buttons:0}); await sleep(150);
+check("exposure preview shows the source score", await ev(`document.querySelector(".preview-value").textContent === displayValue(hovered)`));
+check("preview rail announces the ordinal scale", await ev(`document.querySelector("#tooltip .score-rail").getAttribute("aria-label").includes("out of 5")`));
+check("preview retains independent-validation disclosure", await ev(`tooltip.textContent.includes("Not independently validated")`));
+for (const [edge,x,y] of [["top-left",2,2],["bottom-right",1438,898]]) {
+  await ev(`showTooltip(records.exposure.find(validValue),${x},${y})`);
+  check(`preview stays within ${edge} viewport edges`,await ev(`(()=>{const b=tooltip.getBoundingClientRect();return b.x>=0&&b.y>=0&&b.right<=innerWidth&&b.bottom<=innerHeight})()`));
+}
+await ev(`showDetail(records.exposure.find(validValue))`); await sleep(350);
+for(let i=0;i<30;i++){if(await ev(`taskList.children.length>0`))break;await sleep(100);}
+check("profile displays the exact selected score",await ev(`profileValue.textContent === displayValue(selected)`));
+await ev(`tabEvidence.click()`);
+check("task distribution counts match the selected source distribution",await ev(`JSON.stringify([...taskDistribution.querySelectorAll("strong")].map(n=>Number(n.textContent))) === JSON.stringify(Object.values(selected.score_distribution))`));
+check("task chart has accessible per-category counts",await ev(`taskDistribution.children.length>0&&[...taskDistribution.children].every(n=>n.getAttribute("aria-label").includes("tasks"))`));
+check("task statements match published evidence coverage",await ev(`taskList.children.length === selected.tasks_included`));
+check("task reasoning starts collapsed",await ev(`taskList.querySelectorAll("details").length===taskList.children.length&&![...taskList.querySelectorAll("details")].some(n=>n.open)`));
+await ev(`taskList.querySelector("summary").click()`);
+check("task reasoning can be expanded",await ev(`taskList.querySelector("details").open&&taskList.querySelector(".task-scores").textContent.includes("Task exposure")`));
+await ev(`tabSource.click()`);
+check("full provenance starts collapsed but preserves the hash",await ev(`!provenanceDetails.open&&detailFields.textContent.includes(selected.task_source_file_hash)`));
+await ev(`provenanceDetails.querySelector("summary").click()`);
+check("full provenance can be expanded",await ev(`provenanceDetails.open&&detailFields.getBoundingClientRect().height>0`));
+await ev(`tabOverview.click()`); await shot("profile-exposure-desktop",false);
+await ev(`tabEvidence.click();taskList.querySelector("details").open=false;provenanceDetails.open=false;document.querySelector(".risk-body").scrollTop=0`);await shot("profile-evidence-desktop",false);
+check("drawer hides hover preview and locks page scrolling",await ev(`!tooltip.classList.contains("visible")&&getComputedStyle(document.body).overflow==="hidden"`));
+await ev(`closeDetail();showDetail(records.exposure.find(r=>!validValue(r)))`);await sleep(250);
+check("unscored profile has no invented score or chart",await ev(`distributionCard.hidden&&taskCard.hidden&&!document.querySelector("#profileVisual .score-rail")&&profileValue.textContent===displayValue(selected)`));
+await shot("profile-unscored-desktop",false);
+await ev(`closeDetail();selectMode("wages");showDetail(records.wages.find(r=>!validValue(r)))`);await sleep(250);
+check("withheld wage profile preserves missingness",await ev(`distributionCard.hidden&&taskCard.hidden&&profileValue.textContent===displayValue(selected)&&selected.value===null`));
+check("wage record code is not labelled PSOC",await ev(`riskMeta.textContent.includes("Source code")&&!riskMeta.textContent.includes("PSOC")`));
+await ev(`closeDetail()`);
+check("closing drawer unlocks page scrolling",await ev(`!document.body.classList.contains("detail-open")&&!wrapper.inert`));
+for(const layer of ["employment","detail","earnings","education","vulnerable","ofw","wages","exposure"]){
+  await ev(`selectMode("${layer}");showDetail(records[mode].find(validValue))`);await sleep(80);
+  check(`${layer}: profile preserves source value and has no horizontal overflow`,await ev(`profileValue.textContent===displayValue(selected)&&riskPanel.scrollWidth<=riskPanel.clientWidth&&detailFields.textContent.includes(selected.reference_period)`));
+  await ev(`closeDetail()`);
+}
+await ev(`showDetail(records.exposure.find(validValue))`);await sleep(100);
+await ev(`tabSource.click();riskClose.focus()`);await key("Tab","Tab",{vk:9,modifiers:8});
+check("Shift+Tab wraps to final provenance control",await ev(`document.activeElement===provenanceDetails.querySelector("summary")`));
+await key("Tab","Tab",{vk:9});
+check("Tab wraps back to close after final control",await ev(`document.activeElement===riskClose`));
+await ev(`closeDetail()`);
+
+for(const [label,w,h,mobile] of [["small-phone",320,740,true],["phone",390,844,true],["tablet",820,1180,true]]){
+  await viewport(w,h,mobile);await ev(`selectMode("exposure");showDetail(records.exposure.find(validValue))`);await sleep(300);
+  check(`${label}: profile fits viewport without horizontal overflow`,await ev(`(()=>{const b=riskPanel.getBoundingClientRect();return b.left>=-1&&b.right<=innerWidth+1&&b.top>=-1&&b.bottom<=innerHeight+1&&riskPanel.scrollWidth<=riskPanel.clientWidth})()`));
+  check(`${label}: body scrolls within fixed profile header and footer`,await ev(`(()=>{const b=document.querySelector(".risk-body");return getComputedStyle(b).overflowY==="auto"&&riskClose.getBoundingClientRect().top>=0})()`));
+  await shot(`profile-exposure-${label}`,false);await ev(`closeDetail()`);
+}
+await send("Emulation.setEmulatedMedia",{features:[{name:"prefers-reduced-motion",value:"reduce"}]});
+check("reduced-motion preference disables drawer movement",await ev(`getComputedStyle(riskPanel).transitionDuration === "0s"`));
+await send("Emulation.setEmulatedMedia",{features:[]});
+check("no page errors in redesigned profiles",errors.length===0,errors.join(" | "));
+
+// ── Local review refinements: concise UI and discoverable meaning ────────
+await viewport(1440,900,false);await ev(`selectMode("exposure")`);await sleep(250);
+check("main legend offers meanings for all score categories",await ev(`!legendSteps.hidden&&legendSteps.children.length===6`));
+const legendPoint=await ev(`(()=>{legendSteps.scrollIntoView({block:"center"});const b=legendSteps.children[3].getBoundingClientRect();return {x:b.x+b.width/2,y:b.y+b.height/2}})()`);
+await mouse("mouseMoved",legendPoint.x,legendPoint.y,{buttons:0});await sleep(100);
+check("hovering 3 on the main legend explains the category",await ev(`!explainPopover.hidden&&explainPopover.textContent.includes("Substantial assistance")`));
+await ev(`hideExplanation()`);
+check("supporting evidence starts behind a disclosure",await ev(`!evidenceStats.open&&statsRow.children.length===4`));
+check("all summary figures have plain-language explanations",await ev(`document.querySelectorAll("#statsRow [data-explanation],#evidenceStats [data-explanation]").length===8&&[...document.querySelectorAll("#statsRow [data-explanation],#evidenceStats [data-explanation]")].every(b=>b.dataset.explanation.length>60)`));
+await ev(`document.querySelector("#statTotalHeading button").focus()`);await sleep(80);
+check("keyboard focus opens summary explanation",await ev(`!explainPopover.hidden&&explainPopover.textContent.includes("unit groups")`));
+await key("Escape","Escape",{vk:27});
+check("Escape dismisses explanatory help",await ev(`explainPopover.hidden`));
+await ev(`evidenceStats.querySelector("summary").click();document.querySelector("#block7 button").click()`);
+check("model help explains limits of agreement",await ev(`!explainPopover.hidden&&explainPopover.textContent.includes("Agreement between models")`));
+await shot("summary-help-desktop",false);await ev(`hideExplanation();evidenceStats.open=false`);
+const borderTarget=await target();await click(borderTarget.x,borderTarget.y);await sleep(500);await key("Escape","Escape",{vk:27});
+check("mouse use has no large canvas focus border",await ev(`getComputedStyle(canvas).outlineStyle==="none"&&!canvas.classList.contains("keyboard-navigation")`));
+await mouse("mouseMoved",borderTarget.x,borderTarget.y,{buttons:0});await sleep(120);
+check("hover card is compact",await ev(`(()=>{const b=tooltip.getBoundingClientRect();return b.width<=270&&b.height<=285})()`));
+await shot("compact-hover-desktop",false);
+await ev(`showDetail(records.exposure.find(validValue))`);await sleep(280);
+check("profile opens with overview only",await ev(`!profileOverview.hidden&&profileEvidence.hidden&&profileSource.hidden&&tabOverview.getAttribute("aria-selected")==="true"`));
+check("close control is labelled and has no circular border",await ev(`riskClose.textContent.includes("Close")&&getComputedStyle(riskClose).borderTopWidth==="0px"`));
+const originalScore=await ev(`selected.value`);
+await ev(`document.querySelectorAll("#profileVisual .scale-options button")[3].dispatchEvent(new PointerEvent("pointerenter",{pointerType:"mouse"}))`);
+check("hovering score 3 explains substantial assistance",await ev(`document.querySelector("#profileVisual .scale-description").textContent.includes("Substantial assistance")`));
+await ev(`document.querySelectorAll("#profileVisual .scale-options button")[2].focus()`);
+check("focusing score 2 explains its category",await ev(`document.querySelector("#profileVisual .scale-description").textContent.includes("meaningful slice")`));
+await ev(`document.querySelectorAll("#profileVisual .scale-options button")[4].click()`);
+check("clicking a scale point pins its explanation without changing the score",await ev(`document.querySelectorAll("#profileVisual .scale-options button")[4].getAttribute("aria-pressed")==="true"&&selected.value===${originalScore}&&profileValue.textContent===displayValue(selected)`));
+await ev(`tabOverview.focus()`);await key("ArrowRight","ArrowRight",{vk:39});
+check("profile tabs support arrow-key navigation",await ev(`!profileEvidence.hidden&&profileOverview.hidden&&document.activeElement===tabEvidence`));
+await ev(`tabSource.click();document.querySelector(".profile-limits summary").click()`);
+check("record limitations remain available in source tab",await ev(`!profileSource.hidden&&document.querySelector(".profile-limits").open&&detailNotes.getBoundingClientRect().height>0`));
+await ev(`closeDetail();methodGuide.open=true`);await sleep(150);
+check("method guide has a readable structure and interactive scale",await ev(`methodGuide.querySelectorAll(".method-content h2").length===3&&methodScale.querySelectorAll("button").length===6`));
+await ev(`methodScale.querySelectorAll("button")[5].click()`);
+check("method guide scale explains accountability at score 5",await ev(`methodScale.textContent.includes("accountability")`));
+await ev(`document.querySelector(".method-notes summary").click()`);
+check("classification and all published limitations remain accessible",await ev(`classificationNote.getBoundingClientRect().height>0&&limitations.children.length===payload.release.known_limitations.length`));
+await ev(`methodGuide.scrollIntoView({block:"start"})`);await shot("method-guide-desktop",false);
+await ev(`methodGuide.open=false`);
+for(const [label,w,h] of [["small-phone",320,740],["phone",390,844],["tablet",820,1180]]){
+  await viewport(w,h,true);await ev(`methodGuide.open=true`);await sleep(100);
+  check(`${label}: expanded method guide has no page overflow`,await ev(`document.documentElement.scrollWidth<=innerWidth`));
+  await ev(`methodGuide.open=false;showDetail(records.exposure.find(validValue))`);await sleep(250);
+  await ev(`document.querySelectorAll("#profileVisual .scale-options button")[3].click()`);
+  check(`${label}: tapping scale reveals explanation`,await ev(`document.querySelector("#profileVisual .scale-description").textContent.includes("Substantial assistance")`));
+  await shot(`refined-profile-${label}`,false);await ev(`closeDetail()`);
+}
+check("no errors in local-review refinements",errors.length===0,errors.join(" | "));
+
+// ── Layer consistency, source-backed charts and readable profile ─────────
+await viewport(1440,900,false);await ev(`selectMode("exposure");evidenceStats.open=false`);await sleep(250);
+const layerGeometry=[];
+for(const layer of ["exposure","employment","detail","earnings","wages","education","vulnerable","ofw","outlook","informal"]){
+  await ev(`selectMode("${layer}")`);await sleep(80);
+  const geometry=await ev(`({buttons:[...colorToggle.children].map(b=>{const r=b.getBoundingClientRect();return [r.width,r.height]}),mapTop:canvas.getBoundingClientRect().top,charts:overviewCharts.getBoundingClientRect().height})`);layerGeometry.push(geometry);
+  check(`${layer}: chart counts match the published source records`,await ev(`!overviewData.available ? document.querySelectorAll(".chart-empty").length===3 : [...distributionPlot.querySelectorAll("[data-count]")].reduce((s,b)=>s+Number(b.dataset.count),0)===filtered.filter(validValue).length`));
+}
+check("layer buttons keep identical dimensions across every mode",layerGeometry.every(g=>JSON.stringify(g.buttons)===JSON.stringify(layerGeometry[0].buttons)));
+check("summary charts retain the same height across layers",layerGeometry.every(g=>Math.abs(g.charts-layerGeometry[0].charts)<1));
+check("map starts at a consistent position across layers",layerGeometry.every(g=>Math.abs(g.mapTop-layerGeometry[0].mapTop)<1),JSON.stringify(layerGeometry.map(g=>g.mapTop)));
+await ev(`selectMode("exposure")`);await sleep(100);
+check("exposure tiers partition scored unit groups without employment weighting",await ev(`overviewData.tiers.reduce((s,t)=>s+t.count,0)===filtered.filter(validValue).length&&distributionCaption.textContent.includes("not workers")`));
+check("task coverage uses the published task totals",await ev(`overviewData.tasks.listed===filtered.filter(validValue).reduce((s,r)=>s+r.tasks_total_for_occupation,0)&&overviewData.tasks.included===filtered.filter(validValue).reduce((s,r)=>s+r.tasks_included,0)`));
+await ev(`search.value="no-source-record-matches-this-query";search.dispatchEvent(new Event("input"))`);await sleep(80);
+check("an empty search leaves charts explicitly unavailable",await ev(`!overviewData.available&&document.querySelectorAll(".chart-column").length===0&&document.querySelectorAll(".chart-empty").length===3`));
+await ev(`search.value="";search.dispatchEvent(new Event("input"));search.focus()`);
+check("search has a subtle focus cue instead of thick outline",await ev(`getComputedStyle(search).outlineStyle==="none"&&parseFloat(getComputedStyle(search).borderTopWidth)<=1`));
+await ev(`header.scrollIntoView({block:"start"})`);await shot("overview-exposure-desktop",false);
+for(const layer of ["employment","wages","education"]){await ev(`selectMode("${layer}")`);await sleep(120);await shot(`overview-${layer}-desktop`,false);}
+await ev(`selectMode("exposure");showDetail(records.exposure.find(validValue))`);await sleep(250);
+check("sidebar reading text is at least 14px",await ev(`parseFloat(getComputedStyle(riskMeaning).fontSize)>=14`));
+check("close icon has a 44px target and an accessible label",await ev(`riskClose.getBoundingClientRect().width>=44&&riskClose.getBoundingClientRect().height>=44&&riskClose.getAttribute("aria-label").includes("Close")`));
+await shot("readable-sidebar-desktop",false);await ev(`tabEvidence.click()`);await sleep(100);
+check("task statements use readable body type",await ev(`parseFloat(getComputedStyle(taskList.querySelector("summary")).fontSize)>=14`));
+await shot("readable-tasks-desktop",false);await ev(`closeDetail()`);
+for(const [label,w,h] of [["small-phone",320,740],["phone",390,844],["tablet",820,1180]]){
+  await viewport(w,h,true);await ev(`selectMode("exposure")`);await sleep(180);
+  check(`${label}: charts and layers cause no page overflow`,await ev(`document.documentElement.scrollWidth<=innerWidth`));
+  check(`${label}: all charts remain reachable`,await ev(`overviewCharts.querySelectorAll(".overview-chart").length===3&&[...overviewCharts.querySelectorAll(".overview-chart")].every(n=>n.getBoundingClientRect().height>0)`));
+  const dimensions=await ev(`[...colorToggle.children].map(b=>[b.getBoundingClientRect().width,b.getBoundingClientRect().height])`);
+  await ev(`selectMode("employment")`);await sleep(100);
+  check(`${label}: layer button sizes remain consistent`,JSON.stringify(dimensions)===JSON.stringify(await ev(`[...colorToggle.children].map(b=>[b.getBoundingClientRect().width,b.getBoundingClientRect().height])`)));
+  await shot(`overview-${label}`,false);
+}
+check("no errors in layer/chart improvements",errors.length===0,errors.join(" | "));
 
 // ── Mobile touch ─────────────────────────────────────────────────────────
 await viewport(390, 844, true); await load(LOCAL);

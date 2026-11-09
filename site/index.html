@@ -20,9 +20,17 @@
       <header id="header">
         <div class="intro">
           <h1>TrabahoLens — Philippine Job Market Visualizer</h1>
-          <p>Philippine occupations from PSA and ILO sources. <b>Colour</b> shows the selected layer; <b>area</b> shows employed persons, except in AI Task Exposure, where area grows with the cube of the PSA task statements listed for each occupation (stretched so differences show), not employment. Select a box for its source and limitations.</p>
+          <p>Explore Philippine labour statistics and model-estimated AI task exposure. Choose a layer, then select a box to inspect its evidence. Area and colour have different meanings across layers; see Method &amp; limitations.</p>
           <p><b>Caveat:</b> Task exposure is a model estimate and has not been independently validated. It is not an estimate of automation, displacement, layoffs, or future employment. Unavailable means unavailable—not zero.</p>
-          <details><summary>Method &amp; limitations</summary><p>Generative-AI task exposure indicates how much an occupation's tasks may be affected or assisted by generative AI. It is not an estimate of automation, displacement, layoffs, or future employment.</p><p id="classificationNote"></p><ul id="limitations"></ul><p>No independent Philippine statistical review has been completed. <a href="data.json">Full release and provenance</a>.</p></details>
+          <details id="methodGuide" class="method-guide">
+            <summary>Method &amp; limitations <span class="method-summary-hint">A guide to the map</span></summary>
+            <div class="method-content">
+              <section><h2>Start with the map</h2><p>Choose a layer, then hover for a quick preview or select a box to explore its evidence.</p><dl class="method-encodings"><dt>Colour</dt><dd>The value in the selected layer. On task exposure, green means lower exposure and red means higher exposure.</dd><dt>Box size</dt><dd>Employed persons on survey layers. Exposure uses the cube of listed PSA task counts, a display stretch—not worker counts. Wage references use equal boxes.</dd></dl></section>
+              <section><h2>Understand the score</h2><p>Explore each point on the task-exposure scale. These are ordered categories, not percentages.</p><div id="methodScale"></div></section>
+              <section class="method-boundary"><h2>Keep the limits in view</h2><p>Generative-AI task exposure indicates how much an occupation's tasks may be affected or assisted by generative AI. It is not an estimate of automation, displacement, layoffs, or future employment.</p><p>No independent Philippine statistical review has been completed. Missing values stay missing.</p></section>
+              <details class="method-notes"><summary>Classification &amp; source coverage <span>Read the details</span></summary><p id="classificationNote"></p><ul id="limitations"></ul><a href="data.json">Full release and provenance ↗</a></details>
+            </div>
+          </details>
         </div>
         <div class="controls-row">
           <div class="stat-section">
@@ -55,11 +63,12 @@
           </div>
           <div class="gradient-legend">
             <span id="legendLow">Low exposure</span>
-            <canvas id="gradientLegend" width="80" height="8"></canvas>
+            <div class="legend-scale"><canvas id="gradientLegend" width="80" height="8"></canvas><div id="legendSteps" aria-label="Task-exposure score meanings" hidden></div></div>
             <span id="legendHigh">High exposure</span>
           </div>
         </div>
 
+        <div class="summary-workspace">
         <div class="stats-row" id="statsRow">
           <div class="stat-section">
             <h3 id="statTotalHeading">Employed persons</h3>
@@ -69,14 +78,19 @@
           <div class="stat-section" id="block2"><div class="skeleton skeleton-block"></div></div>
           <div class="stat-section" id="block3"><div class="skeleton skeleton-block"></div></div>
           <div class="stat-section" id="block4"><div class="skeleton skeleton-block"></div></div>
-          <div class="stat-section" id="block5"><div class="skeleton skeleton-block"></div></div>
-          <div class="stat-section" id="block6"><div class="skeleton skeleton-block"></div></div>
-          <div class="stat-section" id="block7"><div class="skeleton skeleton-block"></div></div>
-          <div class="stat-section" id="block8"><div class="skeleton skeleton-block"></div></div>
         </div>
+        <section class="overview-charts" id="overviewCharts" aria-label="Selected layer summaries">
+          <section class="overview-chart" id="distributionSummary"><h3 id="distributionTitle"></h3><div id="distributionPlot"></div><p id="distributionCaption"></p></section>
+          <section class="overview-chart" id="breakdownSummary"><h3 id="breakdownTitle"></h3><div id="breakdownPlot"></div><p id="breakdownCaption"></p></section>
+          <section class="overview-chart" id="coverageSummary"><h3 id="coverageTitle"></h3><div id="coveragePlot"></div><p id="coverageCaption"></p></section>
+        </section>
+        </div>
+        <details class="evidence-stats" id="evidenceStats"><summary>Evidence &amp; review <span>Tasks, coverage, model and review status</span></summary><div class="evidence-stat-grid">
+          <div class="stat-section" id="block5"></div><div class="stat-section" id="block6"></div><div class="stat-section" id="block7"></div><div class="stat-section" id="block8"></div>
+        </div></details>
       </header>
 
-<div class="evidence-tools"><input id="search" type="search" aria-label="Search source records" placeholder="Search titles or codes…"><button id="view">Table view</button><button id="download">Export CSV</button><button id="resetZoom">Reset zoom</button><span id="resultCount" role="status" aria-live="polite"></span></div>
+<div class="evidence-tools"><input id="search" type="search" aria-label="Search source records" placeholder="Search titles or codes…"><button id="view">Table view</button><button id="download">Export CSV</button><button id="resetZoom" title="Ctrl/⌘ + scroll to zoom. Esc resets the view.">Reset zoom</button><span id="resultCount" role="status" aria-live="polite"></span></div>
       <p id="loadError" role="alert" hidden></p>
       <canvas id="canvas" tabindex="0" aria-label="Occupation map. Arrow keys move between boxes, Enter opens source details, plus and minus zoom. Table view lists every record."></canvas>
       <section class="evidence-table" id="tableView" hidden><table><caption id="tableCaption">Source records</caption><thead><tr><th>Occupation</th><th>Group / industry</th><th>Estimate</th><th>Evidence</th></tr></thead><tbody id="rows"></tbody></table><div class="evidence-tools"><button id="prev">Previous</button><span id="page"></span><button id="next">Next</button></div></section>
@@ -87,35 +101,48 @@
       </footer>
     </div>
 
-    <div id="tooltip">
+    <div id="tooltip" role="tooltip" aria-hidden="true">
       <div class="tt-category"></div>
       <div class="tt-title"></div>
       <div class="tt-percentile"></div>
       <div class="tt-exposure"></div>
       <div class="tt-stats"></div>
       <div class="tt-rationale"></div>
-      <div class="tt-click-hint">Click for detailed breakdown</div>
+      <div class="tt-click-hint"><span>Explore evidence</span><span>Click or press Enter ↗</span></div>
     </div>
 
     <div class="risk-overlay" id="riskOverlay"></div>
     <aside class="risk-panel" id="riskPanel" role="dialog" aria-modal="true" aria-labelledby="riskTitle" aria-hidden="true" inert>
       <div class="risk-head">
         <div>
-          <div class="risk-title" id="riskTitle">Evidence record</div>
+          <div class="profile-eyebrow" id="profileEyebrow">Occupation profile</div><div class="risk-title" id="riskTitle">Evidence record</div>
           <div class="risk-meta" id="riskMeta"></div>
-          <div class="risk-gauge" id="riskGauge"></div>
-          <div class="risk-comparative" id="riskComparative"></div>
         </div>
         <button
           class="risk-close"
           id="riskClose"
-          aria-label="Close source details"
+          aria-label="Close source details" title="Close details (Esc)"
         >
-          ×
+          <span class="sr-only">Close</span><svg width="20" height="20" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4 4 8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
         </button>
       </div>
-      <div class="risk-body"><div class="risk-card"><h4>What this measures</h4><p id="riskMeaning"></p></div><div class="risk-card" id="taskCard" hidden><h4>PSA tasks behind this score</h4><p id="taskCaption"></p><ol id="taskList"></ol></div><div class="risk-card"><h4>Source and precision</h4><dl id="detailFields"></dl></div><div class="risk-card"><h4>Limitations</h4><p id="detailNotes"></p></div><div class="risk-card"><a id="detailSource" target="_blank" rel="noopener noreferrer">Open original source ↗</a></div></div>
+      <div class="profile-tabs" id="profileTabs" role="tablist" aria-label="Occupation profile sections">
+        <button id="tabOverview" role="tab" aria-controls="profileOverview" aria-selected="true" data-profile-tab="overview">Overview</button><button id="tabEvidence" role="tab" aria-controls="profileEvidence" aria-selected="false" tabindex="-1" data-profile-tab="evidence">Task evidence</button><button id="tabSource" role="tab" aria-controls="profileSource" aria-selected="false" tabindex="-1" data-profile-tab="source">Source</button>
+      </div>
+      <div class="risk-body">
+        <div id="profileOverview" role="tabpanel" aria-labelledby="tabOverview">
+        <section class="profile-overview" aria-label="Selected measure"><div class="profile-section-label" id="profileMetricLabel"></div><div id="profileValue"></div><div id="profileVisual"></div><p id="profileStatus"></p></section>
+        <section class="profile-section"><h3>Reading this measure</h3><p id="riskMeaning"></p><p class="profile-caveat" id="profileBoundary"></p></section>
+        </div><div id="profileEvidence" role="tabpanel" aria-labelledby="tabEvidence" hidden>
+        <section class="profile-section" id="distributionCard" hidden><div class="section-heading"><h3>Across the task profile</h3><span>0–5 scale</span></div><div id="taskDistribution"></div><p class="profile-caption">Task counts in each published technical-exposure category. These describe the scoring model’s judgements.</p></section>
+        <section class="profile-section" id="taskCard" hidden><div class="section-heading"><h3>Behind the score</h3><span>PSA task statements</span></div><p id="taskCaption"></p><ol id="taskList"></ol></section>
+        </div><div id="profileSource" role="tabpanel" aria-labelledby="tabSource" hidden>
+        <section class="profile-section source-section"><h3>Evidence &amp; provenance</h3><div id="sourceSummary"></div><a id="detailSource" target="_blank" rel="noopener noreferrer">Open original source ↗</a><details class="profile-limits"><summary>Limitations of this record</summary><p id="detailNotes"></p></details><details id="provenanceDetails"><summary>Inspect full source record <span>+</span></summary><dl id="detailFields"></dl></details></section>
+        </div>
+      </div>
+      <div class="profile-footer"><span>TrabahoLens</span><span>Research preview · independent review pending</span></div>
     </aside>
 
+<div id="explainPopover" role="tooltip" hidden><strong></strong><p></p></div>
 <script src="dashboard.js" defer></script>
 </body></html>
